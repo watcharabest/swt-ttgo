@@ -4,6 +4,7 @@
   "private": true,
   "type": "module",
   "scripts": {
+    "watch:git": "chokidar \"src/**/*\" -c \"git add . && git commit -m 'auto save' && git push\"",
     "dev": "vite",
     "build": "run-p type-check \"build-only {@}\" --",
     "preview": "vite preview",

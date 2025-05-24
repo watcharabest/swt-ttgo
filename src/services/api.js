@@ -1,12 +1,9 @@
-// src/services/api.js
+// ตัวอย่าง src/services/api.js หรือที่ไหนก็ได้
 import axios from 'axios';
 
 const api = axios.create({
-  baseURL: process.env.VUE_APP_API_URL,  // อ่านจาก .env.production / Vercel
+  baseURL: import.meta.env.VITE_API_URL,
   timeout: 5000,
-  headers: {
-    'Content-Type': 'application/json'
-  }
 });
 
 export default api;
