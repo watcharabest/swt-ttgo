@@ -42,6 +42,7 @@
 <script setup>
 import { ref } from 'vue'
 import axios from 'axios'
+import api from '@/services/api';
 
 const mac     = ref('')
 const order   = ref('')
@@ -69,7 +70,7 @@ const onSubmit = async () => {
 
   loading.value = true
   try {
-    await axios.post('http://192.168.1.218:8000/get-product-info', {
+    await api.post('/get-product-info', {
       mac_address: mac.value,
       product_order: order.value
     })
