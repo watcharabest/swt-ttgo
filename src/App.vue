@@ -4,7 +4,7 @@
       <div class="nav-container">
         <div class="logo" @click="goHome">
           <span class="logo-icon">●</span>
-          <span class="logo-text">ProductHub</span>
+          <span class="logo-text">Product Order</span>
         </div>
         
         <button 
@@ -24,16 +24,17 @@
           </router-link>
           <router-link to="/update" class="nav-link" @click="closeMobileMenu">
             <i class="fas fa-sync-alt"></i>
-            Update Order
-          </router-link>
-          <router-link to="/table" class="nav-link" @click="closeMobileMenu">
-            <i class="fas fa-edit"></i>
-            Edit Order
+            Update Display
           </router-link>
           <router-link to="/tray" class="nav-link" @click="closeMobileMenu">
             <i class="fas fa-utensils"></i>
-            Edit Tray
+            Update Tray
           </router-link>
+          <router-link to="/table" class="nav-link" @click="closeMobileMenu">
+            <i class="fas fa-edit"></i>
+            Edit Database
+          </router-link>
+
           <router-link to="/showtable" class="nav-link" @click="closeMobileMenu">
             <i class="fas fa-table"></i>
             Show Table
@@ -62,6 +63,20 @@
                 <i class="fas fa-arrow-right"></i>
               </div>
             </div>
+            
+            <div 
+              class="dashboard-card"
+              @click="navigateTo('/tray')"
+            >
+              <div class="card-icon tray">
+                <i class="fas fa-utensils"></i>
+              </div>
+              <h3 class="card-title">Update Tray</h3>
+              <p class="card-description">Insert / Delete Product Order</p>
+              <div class="card-arrow">
+                <i class="fas fa-arrow-right"></i>
+              </div>
+            </div>
 
             <div 
               class="dashboard-card"
@@ -70,26 +85,13 @@
               <div class="card-icon edit">
                 <i class="fas fa-edit"></i>
               </div>
-              <h3 class="card-title">Update Tray</h3>
+              <h3 class="card-title">Edit Database</h3>
               <p class="card-description">Add / Delete TrayID</p>
               <div class="card-arrow">
                 <i class="fas fa-arrow-right"></i>
               </div>
             </div>
 
-            <div 
-              class="dashboard-card"
-              @click="navigateTo('/tray')"
-            >
-              <div class="card-icon tray">
-                <i class="fas fa-utensils"></i>
-              </div>
-              <h3 class="card-title">Edit Database</h3>
-              <p class="card-description">Insert / Delete Product Order</p>
-              <div class="card-arrow">
-                <i class="fas fa-arrow-right"></i>
-              </div>
-            </div>
 
             <div 
               class="dashboard-card"
@@ -329,7 +331,7 @@ onUnmounted(() => {
 
 .dashboard-grid {
   display: grid;
-  grid-template-columns: repeat(auto-fit, minmax(280px, 1fr));
+  grid-template-columns: repeat(2, minmax(280px, 1fr));
   gap: 1.5rem;
   max-width: 1000px;
   margin: 0 auto;

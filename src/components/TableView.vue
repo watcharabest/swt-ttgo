@@ -73,7 +73,7 @@ const currentPage = ref(1)
 const pageSize = 10
 
 const tableTitle = computed(() =>
-  viewTable.value === 'table01' ? 'Product Table' : 'Track Table'
+  viewTable.value === 'table01' ? 'Product Table' : 'Track Product Order'
 )
 
 // คำนวณหน้าทั้งหมด และข้อมูลที่จะแสดง
@@ -85,7 +85,7 @@ const pagedRows = computed(() => {
 
 async function loadTable() {
   try {
-    const res = await axios.get(`http://192.168.1.218:8000/${viewTable.value}`)
+    const res = await axios.get(`https://192.168.1.218:8000/${viewTable.value}`)
     rows.value = Array.isArray(res.data) ? res.data : []
     currentPage.value = 1
   } catch (err) {

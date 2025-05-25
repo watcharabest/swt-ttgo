@@ -4,6 +4,7 @@ import { defineConfig } from 'vite'
 import vue from '@vitejs/plugin-vue'
 import vueJsx from '@vitejs/plugin-vue-jsx'
 import vueDevTools from 'vite-plugin-vue-devtools'
+import fs from 'fs'
 
 // https://vite.dev/config/
 export default defineConfig({
@@ -18,17 +19,19 @@ export default defineConfig({
     },
   },
   server: {
-    host: true,
+    https: {
+      key: fs.readFileSync('./cert/key.pem'),
+      cert: fs.readFileSync('./cert/cert.pem'),
+    },
+    host: '0.0.0.0',
     port: 5173,
     strictPort: false,
     cors: true,
     proxy: {
-      // ทุก request ที่ขึ้นต้น /images จะถูกยิงไปยัง backend:8000
       '/images': {
-        target: 'http://192.168.1.218:8000',
+        target: 'https://192.168.1.218:8000',
         changeOrigin: true,
-        // (ถ้า backend ไม่ต้องการ /images นำหน้าก็ uncomment บรรทัดด้านล่าง)
-        // rewrite: path => path.replace(/^\/images/, '')
+        secure: false,
       }
     }
   }

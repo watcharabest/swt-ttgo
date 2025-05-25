@@ -10,7 +10,7 @@
     <!-- Insert Form -->
     <div v-if="mode === 'insert'" class="box">
       <h2>Insert Product & Upload Image</h2>
-      <form @submit.prevent="onSubmit" novalidate>
+      <form @submit.prevent="submit" novalidate>
         <!-- Select Table -->
         <div class="form-group">
           <label for="editTableSelect">Select Table to Edit</label>
@@ -93,22 +93,17 @@
             <span v-if="errors.mac_address" class="error-text">Required</span>
           </div>
         </div>
-
+        <div v-if="editTable === 'table01'">
+          <h2>Image Preview & Upload</h2>
+          <div class="preview" v-if="previewUrl">
+            <img :src="previewUrl" alt="Preview" />
+          </div>
+          <p v-else>No image selected</p>
+        </div>
         <button type="submit" :disabled="loading" class="btn-submit">{{ loading ? 'Processing…' : 'Submit' }}</button>
         <p v-if="error" class="error">{{ error }}</p>
         <p v-if="success" class="success">Success!</p>
       </form>
-
-      <div v-if="editTable === 'table01'">
-        <h2>Image Preview & Upload</h2>
-        <div class="preview" v-if="previewUrl">
-          <img :src="previewUrl" alt="Preview" />
-        </div>
-        <p v-else>No image selected</p>
-        <button @click="uploadImage" :disabled="loadingImage" class="btn-upload">{{ loadingImage ? 'Uploading…' : 'Upload Image' }}</button>
-        <p v-if="imageError" class="error">{{ imageError }}</p>
-        <p v-if="imageSuccess" class="success">Image uploaded!</p>
-      </div>
     </div>
 
     <!-- Delete Form -->
@@ -160,66 +155,75 @@ function handleFileChange(e) {
   previewUrl.value = file ? URL.createObjectURL(file) : ''
 }
 
-async function uploadImage() {
-  if (!selectedFile.value || !form.product_order) {
-    imageError.value = 'Product Order and image are required'
-    return
-  }
+const submit = async () => {
+  // รีเซ็ตสถานะ
   imageError.value = null
   imageSuccess.value = false
-  loadingImage.value = true
-  try {
-    const data = new FormData()
-    data.append('product_order', form.product_order)
-    data.append('image', selectedFile.value)
-    await axios.post('http://192.168.1.218:8000/upload-image', data)
-    imageSuccess.value = true
-  } catch (err) {
-    imageError.value = err.response?.data?.detail || err.message
-  } finally {
-    loadingImage.value = false
-  }
-}
-
-async function onSubmit() {
   error.value = null
   success.value = false
-  Object.keys(errors).forEach(k => errors[k] = false)
+  loading.value = true
 
+  // ตรวจสอบฟิลด์พื้นฐาน
   if (!form.product_order) {
-    errors.product_order = true
+    error.value = 'Product Order is required'
+    loading.value = false
     return
   }
 
+  // ตรวจสอบฟิลด์ตาม table ที่เลือก
   if (editTable.value === 'table01') {
-    if (!form.material) errors.material = true
-    if (!form.name_product) errors.name_product = true
-    if (errors.material || errors.name_product) return
+    if (!form.material || !form.name_product) {
+      error.value = 'Material and Name Product are required'
+      loading.value = false
+      return
+    }
   } else {
-    if (!form.tray_id) errors.tray_id = true
-    if (!form.mac_address) errors.mac_address = true
-    if (errors.tray_id || errors.mac_address) return
+    if (!form.tray_id || !form.mac_address) {
+      error.value = 'Tray ID and MAC Address are required'
+      loading.value = false
+      return
+    }
   }
 
-  loading.value = true
+  // สร้าง FormData เดียว
+  const data = new FormData()
+  data.append('product_order', form.product_order)
+  data.append('table', editTable.value)           // ระบุว่าจะเก็บลง table ไหน
+  if (selectedFile.value) {
+    data.append('image', selectedFile.value)      // ถ้ามีรูป ก็ใส่เข้าไป
+  }
+  if (editTable.value === 'table01') {
+    data.append('material', form.material)
+    data.append('name_product', form.name_product)
+  } else {
+    data.append('tray_id', form.tray_id)
+    data.append('mac_address', form.mac_address)
+  }
+
   try {
-    const payload = { product_order: form.product_order }
-    if (editTable.value === 'table01') {
-      payload.material = form.material
-      payload.name_product = form.name_product
-    } else {
-      payload.tray_id = form.tray_id
-      payload.mac_address = form.mac_address
-    }
-    await axios.post(`http://192.168.1.218:8000/${editTable.value}`, payload)
+    // เรียก endpoint เดียว
+    await axios.post('https://192.168.1.218:8000/submit-product-info', data)
     success.value = true
-    Object.assign(form, { product_order: '', material: '', name_product: '', tray_id: '', mac_address: '' })
+    imageSuccess.value = !!selectedFile.value
+    // เคลียร์ฟอร์ม
+    Object.assign(form, {
+      product_order: '',
+      material: '',
+      name_product: '',
+      tray_id: '',
+      mac_address: ''
+    })
+    selectedFile.value = null
   } catch (err) {
-    error.value = err.response?.data?.detail || err.message
+    // แยก error ของรูปกับข้อมูล text ออกได้ถ้าต้องการ
+    const msg = err.response?.data?.detail || err.message
+    if (msg.includes('image')) imageError.value = msg
+    else error.value = msg
   } finally {
     loading.value = false
   }
 }
+
 
 async function onDelete() {
   deleteSuccess.value = false
@@ -230,7 +234,7 @@ async function onDelete() {
   }
   loading.value = true
   try {
-    await axios.delete(`http://192.168.1.218:8000/delete-product/${deletePo.value}`)
+    await axios.delete(`https://192.168.1.218:8000/delete-product/${deletePo.value}`)
     deleteSuccess.value = true
     deletePo.value = ''
   } catch (err) {
@@ -317,6 +321,8 @@ button:disabled {
   cursor: pointer;
   color: #2c3e50;
   font-weight: bold;
+  width : 100%;
+  margin-top: 1rem;
 }
 
 .btn-submit:hover {

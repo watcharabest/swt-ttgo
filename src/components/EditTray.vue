@@ -134,7 +134,7 @@ const lookupTray = async () => {
   errorMessage.value = ''
   try {
     const res = await axios.post(
-      'http://192.168.1.218:8000/lookup-product-order',
+      'https://192.168.1.218:8000/lookup-product-order',
       { product_order: productOrder.value }
     )
     trayMain.value = res.data.tray_id_main
@@ -158,7 +158,7 @@ const acceptTray = async (index) => {
   if (!confirm(`Add new tray ID "${newId}" at slot #${index + 1}?`)) return
   try {
     await axios.post(
-      'http://192.168.1.218:8000/add-tray',
+      'https://192.168.1.218:8000/add-tray',
       { tray_id_main: trayMain.value, tray_id: newId }
     )
     await lookupTray()
@@ -173,7 +173,7 @@ const deleteTray = async (index) => {
   if (!confirm(`Delete tray ID "${idToDelete}" at slot #${index + 1}?`)) return
   try {
     await axios.post(
-      'http://192.168.1.218:8000/delete-tray',
+      'https://192.168.1.218:8000/delete-tray',
       { tray_id_main: trayMain.value, tray_id: idToDelete }
     )
     await lookupTray()
@@ -187,7 +187,7 @@ const clearTray = async () => {
   if (!confirm(`Clear all trays for PO "${productOrder.value}"?`)) return
   try {
     await axios.post(
-      'http://192.168.1.218:8000/clear-tray',
+      'https://192.168.1.218:8000/clear-tray',
       { tray_id_main: trayMain.value }
     )
     await lookupTray()
@@ -203,7 +203,7 @@ const submitTrayInfo = async () => {
     // หา first non-empty tray_id
     const firstTray = trayIds.value.find(v => v) || ''
     await axios.post(
-      'http://192.168.1.218:8000/get-tray-info',
+      'https://192.168.1.218:8000/get-tray-info',
       {
         tray_id_main: trayMain.value,  // ให้ตรงกับ Pydantic model Tray
         tray_id: firstTray             // ส่ง tray_id ที่เลือก
