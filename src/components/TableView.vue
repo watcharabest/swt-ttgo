@@ -85,7 +85,7 @@ const pagedRows = computed(() => {
 
 async function loadTable() {
   try {
-    const res = await axios.get(`https://192.168.1.218:8000/${viewTable.value}`)
+    const res = await axios.get(`https://10.100.67.37:8000/${viewTable.value}`)
     rows.value = Array.isArray(res.data) ? res.data : []
     currentPage.value = 1
   } catch (err) {

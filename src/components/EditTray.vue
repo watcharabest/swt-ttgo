@@ -2,8 +2,8 @@
   <div class="form-page">
     <h1>Lookup & Edit Tray</h1>
     <!-- Product Order Input -->
+    <label for="productOrder">Product Order</label>
     <div class="input-section">
-      <label for="productOrder">Product Order</label>
       <input
         id="productOrder"
         v-model="productOrder"
@@ -15,7 +15,7 @@
     </div>
     <!-- Initial Lookup Button -->
     <div v-if="!searched" class="lookup-button">
-      <button @click="handleAction" :disabled="loading" class="btn-action">
+    <button @click="handleAction" :disabled="loading" class="btn-action">
         {{ actionLabel }}
       </button>
     </div>
@@ -25,7 +25,8 @@
     <!-- Table Section -->
     <div v-if="searched">
       <div v-if="found">
-        <h2 class="mt-6">Tray Management (12 slots)</h2>
+        <h2 class="mt-6 "style="text-align: center;">Tray Management (12 slots)</h2>
+        <div class="table-container">
         <table>
           <thead>
             <tr>
@@ -70,6 +71,7 @@
             </tr>
           </tbody>
         </table>
+        </div>
         <!-- Edit Controls on Right -->
         <div v-if="found" class="table-action">
           <button @click="handleAction" class="btn-action" :class="editMode ? 'btn-lookup' : 'btn-edit'"
@@ -134,7 +136,7 @@ const lookupTray = async () => {
   errorMessage.value = ''
   try {
     const res = await axios.post(
-      'https://192.168.1.218:8000/lookup-product-order',
+      'https://10.100.67.37:8000/lookup-product-order',
       { product_order: productOrder.value }
     )
     trayMain.value = res.data.tray_id_main
@@ -158,7 +160,7 @@ const acceptTray = async (index) => {
   if (!confirm(`Add new tray ID "${newId}" at slot #${index + 1}?`)) return
   try {
     await axios.post(
-      'https://192.168.1.218:8000/add-tray',
+      'https://10.100.67.37:8000/add-tray',
       { tray_id_main: trayMain.value, tray_id: newId }
     )
     await lookupTray()
@@ -173,7 +175,7 @@ const deleteTray = async (index) => {
   if (!confirm(`Delete tray ID "${idToDelete}" at slot #${index + 1}?`)) return
   try {
     await axios.post(
-      'https://192.168.1.218:8000/delete-tray',
+      'https://10.100.67.37:8000/delete-tray',
       { tray_id_main: trayMain.value, tray_id: idToDelete }
     )
     await lookupTray()
@@ -187,7 +189,7 @@ const clearTray = async () => {
   if (!confirm(`Clear all trays for PO "${productOrder.value}"?`)) return
   try {
     await axios.post(
-      'https://192.168.1.218:8000/clear-tray',
+      'https://10.100.67.37:8000/clear-tray',
       { tray_id_main: trayMain.value }
     )
     await lookupTray()
@@ -203,7 +205,7 @@ const submitTrayInfo = async () => {
     // หา first non-empty tray_id
     const firstTray = trayIds.value.find(v => v) || ''
     await axios.post(
-      'https://192.168.1.218:8000/get-tray-info',
+      'https://10.100.67.37:8000/get-tray-info',
       {
         tray_id_main: trayMain.value,  // ให้ตรงกับ Pydantic model Tray
         tray_id: firstTray             // ส่ง tray_id ที่เลือก
@@ -219,11 +221,30 @@ const submitTrayInfo = async () => {
 </script>
 
 <style scoped>
-.form-page { max-width:500px; margin:2rem auto; padding:1rem; border:1px solid #ccc; border-radius:8px; background:rgba(255,255,255,0.85)}
-.input-section { margin-bottom:1rem }
+.form-page {   
+  max-width: 500px;
+  margin: 2rem auto;
+  padding: 1rem;
+  border: 1px solid #ccc;
+  border-radius: 8px;
+  background: rgba(255, 255, 255, 0.85);
+}
+
+.input-section {   
+  display :flex;
+  gap: 0.5rem;
+  align-items: center; 
+}
+
+
 label { display:block; font-weight:bold; margin-bottom:0.5rem }
-input { width:150px; padding:0.5rem; border:1px solid #ccc; border-radius:4px }
-.error-text { color:#c00; font-size:0.85rem }
+input {
+  flex: 1;
+  padding: 0.5rem;
+  box-sizing: border-box;
+  border: 1px solid #ccc;
+  border-radius: 4px;
+}
 .lookup-button { margin-bottom:1rem } 
 .btn-action {
   padding: 0.5rem 1rem;
@@ -233,6 +254,8 @@ input { width:150px; padding:0.5rem; border:1px solid #ccc; border-radius:4px }
   font-weight: bold;
   background: #8DBAED;
   color: #2c3e50;
+  margin-top: 1rem;
+  width: 100%;
 }
 
 .btn-action:hover {
@@ -249,7 +272,7 @@ input { width:150px; padding:0.5rem; border:1px solid #ccc; border-radius:4px }
 
 /* “Lookup” mode button */
 .btn-lookup {
-  background: #2196f3;    /* blue */
+  background: #8DBAED;    /* blue */
 }
 
 .btn-lookup:hover {
@@ -266,6 +289,7 @@ input { width:150px; padding:0.5rem; border:1px solid #ccc; border-radius:4px }
   font-weight: bold;
   background: #FCCF61 ;
   color: #2c3e50;
+  width: 100%;
 }
 .btn-clear:hover { color : #fff }
 .btn-accept-row { 
@@ -302,11 +326,17 @@ input { width:150px; padding:0.5rem; border:1px solid #ccc; border-radius:4px }
   color: #2c3e50;
   font-weight: bold;
   margin-top : 1rem;
+  width: 100%;
  }
-
+.table-container {
+  max-width: 100%;
+  overflow-x: auto;
+}
 .btn-submit-final:hover { color: #fff;}
 .main-row td:nth-child(1), .main-row td:nth-child(2) { color:#c00; font-weight:bold }
-table { width:100%; border-collapse:collapse; margin-top:1rem ;}
+table {   width: 100%;
+  border-collapse: collapse;
+  margin-top: 1rem;}
 th, td { border:1px solid #ccc; padding:0.5rem; text-align:left ;}
 th:nth-child(1), td:nth-child(1) {
   width: 40%;
@@ -317,11 +347,11 @@ th:nth-child(2), td:nth-child(2) {
 th:nth-child(3), td:nth-child(3) {
   width: 60%;
 }
-th:nth-child(), td:nth-child(2) {
+th:nth-child(4), td:nth-child(4) {
   width: 60%;
 }
 .error { margin-top:1rem; color:#c00 }
 .success { margin-top:1rem; color:#080 }
-#productOrder { margin-top: 1rem;}
 
+.error-text { color:#c00 }
 </style>
