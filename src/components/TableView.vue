@@ -36,11 +36,10 @@
             <td>{{ row.material }}</td>
             <td>{{ row.name_product }}</td>
             <td class="image-cell">
-              <img
-                :src="`/images/${row.material}.jpg`"
-                :alt="row.material"
-              />
+              <img v-if="row.material" :src="`/images/${row.material}.jpg`" :alt="row.material" />
+              <span v-else>No image</span>
             </td>
+
           </tr>
         </tbody>
         <!-- Body สำหรับ table02 -->
@@ -118,15 +117,17 @@ function nextPage() {
   border-radius: 8px;
   padding: 1rem;
   background: rgba(255, 255, 255, 0.85);
-  box-shadow: 0 2px 4px rgba(0,0,0,0.1);
+  box-shadow: 0 2px 4px rgba(0, 0, 0, 0.1);
   margin: 3%;
 }
+
 .table-select {
   max-width: 150px;
   padding: 5px;
   margin-left: 1rem;
   border-radius: 4px;
 }
+
 .btn-load {
   padding: .5rem 1rem;
   cursor: pointer;
@@ -137,47 +138,57 @@ function nextPage() {
   color: #2c3e50;
   font-weight: bold;
 }
+
 .btn-load:hover {
   color: #fff;
 }
+
 .image-cell img {
   width: 80px;
   height: 80px;
   object-fit: cover;
   border-radius: 4px;
 }
+
 table {
-  width:100%;
-  border-collapse:collapse;
-  margin-top:1rem;
+  width: 100%;
+  border-collapse: collapse;
+  margin-top: 1rem;
 }
-th, td {
-  border:1px solid #ccc;
-  padding:0.5rem;
-  text-align:left;
+
+th,
+td {
+  border: 1px solid #ccc;
+  padding: 0.5rem;
+  text-align: left;
 }
+
 th {
-  background:#f0f0f0;
+  background: #f0f0f0;
 }
+
 .pagination {
-  display:flex;
-  justify-content:center;
-  align-items:center;
-  margin-top:1rem;
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  margin-top: 1rem;
 }
+
 .pagination button {
   margin: 0 0.5rem;
   padding: 0.5rem 1rem;
-  border:none;
-  background:#8DBAED;
-  color:#2c3e50;
-  border-radius:4px;
-  cursor:pointer;
+  border: none;
+  background: #8DBAED;
+  color: #2c3e50;
+  border-radius: 4px;
+  cursor: pointer;
 }
+
 .pagination button:disabled {
-  background:#ccc;
-  cursor:not-allowed;
+  background: #ccc;
+  cursor: not-allowed;
 }
+
 .pagination span {
   margin: 0 0.5rem;
 }

@@ -91,9 +91,6 @@
         </button>
         <p v-if="submitMessage" class="success">{{ submitMessage }}</p>
       </div>
-      <div v-else class="mt-4 text-red-600">
-        Product Order not found.
-      </div>
     </div>
   </div>
 </template>
@@ -245,7 +242,6 @@ input {
   border: 1px solid #ccc;
   border-radius: 4px;
 }
-.lookup-button { margin-bottom:1rem } 
 .btn-action {
   padding: 0.5rem 1rem;
   border: none;

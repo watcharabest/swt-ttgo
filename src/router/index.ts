@@ -3,12 +3,16 @@ import UpdateStep from '../components/UpdateStep.vue'
 import TableView from '../components/TableEdit.vue'
 import ProductTableViewer from '../components/TableView.vue'
 import TrayInfo from '@/components/EditTray.vue'
+import ClearPO from '../components/ClearPO.vue'
+import Dashboard from '../components/menu.vue'
 
 const routes = [
+  { path: '/', component: Dashboard },
   { path: '/update', component: UpdateStep },
   { path: '/table', component: TableView },
   { path: '/showtable', component: ProductTableViewer },
-  { path: '/tray', component: TrayInfo }
+  { path: '/tray', component: TrayInfo },
+  { path: '/clear', component: ClearPO }
 ]
 
 const router = createRouter({

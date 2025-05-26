@@ -352,6 +352,7 @@ button:disabled {
   cursor: pointer;
   color: #2c3e50;
   font-weight: bold;
+  width: 100%;
 }
 
 .btn-delete:hover {

@@ -1,108 +1,86 @@
+
 <template>
-  <div id="app">
-    <nav class="nav" :class="{ scrolled: isScrolled }">
-      <div class="nav-container">
-        <div class="logo" @click="goHome">
-          <span class="logo-icon">●</span>
-          <span class="logo-text">Product Order</span>
+  <div class="dashboard">
+    <div class="dashboard-header">
+        <div class="dashboard-grid">
+        <div 
+            class="dashboard-card"
+            @click="navigateTo('/update')"
+        >
+            <div class="card-icon update">
+            <i class="fas fa-sync-alt"></i>
+            </div>
+            <h3 class="card-title">Update Display</h3>
+            <p class="card-description">Mapping Mac Address (TTGO) To Product Order</p>
+            <div class="card-arrow">
+            <i class="fas fa-arrow-right"></i>
+            </div>
         </div>
         
-        <button 
-          class="menu-toggle"
-          @click="toggleMobileMenu"
-          :class="{ active: mobileMenuOpen }"
+        <div 
+            class="dashboard-card"
+            @click="navigateTo('/tray')"
         >
-          <span></span>
-          <span></span>
-          <span></span>
-        </button>
-
-        <div class="nav-links" :class="{ active: mobileMenuOpen }">
-          <router-link to="/" class="nav-link" @click="closeMobileMenu">
-            <i class="fas fa-home"></i>
-            Home
-          </router-link>
-          <router-link to="/update" class="nav-link" @click="closeMobileMenu">
-            <i class="fas fa-sync-alt"></i>
-            Update Display
-          </router-link>
-          <router-link to="/tray" class="nav-link" @click="closeMobileMenu">
+            <div class="card-icon tray">
             <i class="fas fa-utensils"></i>
-            Update Tray
-          </router-link>
-          <router-link to="/table" class="nav-link" @click="closeMobileMenu">
-            <i class="fas fa-edit"></i>
-            Edit Database
-          </router-link>
-
-          <router-link to="/showtable" class="nav-link" @click="closeMobileMenu">
-            <i class="fas fa-table"></i>
-            Show Table
-          </router-link>
-
-            <router-link to="/clear" class="nav-link" @click="closeMobileMenu">
-              <i class="fas fa-table"></i>
-              Clear
-            </router-link>
+            </div>
+            <h3 class="card-title">Update Tray</h3>
+            <p class="card-description">Insert / Delete Product Order</p>
+            <div class="card-arrow">
+            <i class="fas fa-arrow-right"></i>
+            </div>
         </div>
-      </div>
-    </nav>
 
-    <main class="main">
-      <router-view v-slot="{ Component }">
-        <transition name="page" mode="out-in" appear>
-          <component :is="Component" />
-        </transition>
-      </router-view>
-    </main>
+        <div 
+            class="dashboard-card"
+            @click="navigateTo('/table')"
+        >
+            <div class="card-icon edit">
+            <i class="fas fa-edit"></i>
+            </div>
+            <h3 class="card-title">Edit Database</h3>
+            <p class="card-description">Add / Delete TrayID</p>
+            <div class="card-arrow">
+            <i class="fas fa-arrow-right"></i>
+            </div>
+        </div>
+
+        <div 
+            class="dashboard-card"
+            @click="navigateTo('/showtable')"
+        >
+            <div class="card-icon table">
+            <i class="fas fa-table"></i>
+            </div>
+            <h3 class="card-title">Show Table</h3>
+            <p class="card-description">View and display Product Order and Track</p>
+            <div class="card-arrow">
+            <i class="fas fa-arrow-right"></i>
+            </div>
+        </div>
+
+        <div 
+            class="dashboard-card"
+            @click="navigateTo('/clear')"
+        >
+            <div class="card-icon clear">
+            <i class="fas fa-table"></i>
+            </div>
+            <h3 class="card-title">Clear</h3>
+            <p class="card-description">Clear Product Order On Display (TTGO)</p>
+            <div class="card-arrow">
+            <i class="fas fa-arrow-right"></i>
+            </div>
+        </div>
+        </div>
+  </div>
   </div>
 </template>
 
 <script setup>
-import { ref, onMounted, onUnmounted } from 'vue'
 import { useRouter } from 'vue-router'
-
 const router = useRouter()
-const mobileMenuOpen = ref(false)
-const isScrolled = ref(false)
-
-const toggleMobileMenu = () => {
-  mobileMenuOpen.value = !mobileMenuOpen.value
-}
-
-const closeMobileMenu = () => {
-  mobileMenuOpen.value = false
-}
-
-const goHome = () => {
-  router.push('/')
-  closeMobileMenu()
-}
-
-const navigateTo = (path) => {
-  router.push(path)
-  closeMobileMenu()
-}
-
-const handleScroll = () => {
-  isScrolled.value = window.scrollY > 10
-}
-
-const handleResize = () => {
-  if (window.innerWidth > 768) {
-    mobileMenuOpen.value = false
-  }
-}
-
-onMounted(() => {
-  window.addEventListener('resize', handleResize)
-  window.addEventListener('scroll', handleScroll)
-})
-
-onUnmounted(() => {
-  window.removeEventListener('resize', handleResize)
-  window.removeEventListener('scroll', handleScroll)
-})
+const navigateTo = (path) => router.push(path)
 </script>
 
 <style scoped>
