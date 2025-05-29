@@ -9,23 +9,63 @@
       </select>
     </div>
 
+    <!-- Add search input -->
+    <div class="search-box">
+      <input 
+        type="text" 
+        v-model="searchQuery" 
+        placeholder="Search..." 
+        class="search-input"
+      />
+    </div>
+
     <div class="view-box">
       <table v-if="pagedRows.length">
         <!-- Header สำหรับ table01 มีคอลัมน์ Image -->
         <thead v-if="viewTable === 'table01'">
           <tr>
-            <th>Product Order</th>
-            <th>Material</th>
-            <th>Name Product</th>
+            <th @click="sortBy('product_order')" class="sortable">
+              Product Order
+              <span v-if="sortKey === 'product_order'" class="sort-icon">
+                {{ sortOrder === 'asc' ? '↑' : '↓' }}
+              </span>
+            </th>
+            <th @click="sortBy('material')" class="sortable">
+              Material
+              <span v-if="sortKey === 'material'" class="sort-icon">
+                {{ sortOrder === 'asc' ? '↑' : '↓' }}
+              </span>
+            </th>
+            <th @click="sortBy('name_product')" class="sortable">
+              Name Product
+              <span v-if="sortKey === 'name_product'" class="sort-icon">
+                {{ sortOrder === 'asc' ? '↑' : '↓' }}
+              </span>
+            </th>
             <th>Image</th>
           </tr>
         </thead>
         <!-- Header สำหรับ table02 ไม่มีคอลัมน์ Image -->
         <thead v-else>
           <tr>
-            <th>Tray ID</th>
-            <th>MAC Address</th>
-            <th>Product Order</th>
+            <th @click="sortBy('tray_id')" class="sortable">
+              Tray ID
+              <span v-if="sortKey === 'tray_id'" class="sort-icon">
+                {{ sortOrder === 'asc' ? '↑' : '↓' }}
+              </span>
+            </th>
+            <th @click="sortBy('mac_address')" class="sortable">
+              MAC Address
+              <span v-if="sortKey === 'mac_address'" class="sort-icon">
+                {{ sortOrder === 'asc' ? '↑' : '↓' }}
+              </span>
+            </th>
+            <th @click="sortBy('product_order')" class="sortable">
+              Product Order
+              <span v-if="sortKey === 'product_order'" class="sort-icon">
+                {{ sortOrder === 'asc' ? '↑' : '↓' }}
+              </span>
+            </th>
           </tr>
         </thead>
 
@@ -70,16 +110,50 @@ const viewTable = ref('table01')
 const rows = ref([])
 const currentPage = ref(1)
 const pageSize = 10
+const searchQuery = ref('')
+const sortKey = ref('')
+const sortOrder = ref('asc')
 
 const tableTitle = computed(() =>
   viewTable.value === 'table01' ? 'Product Table' : 'Track Product Order'
 )
 
+// Filter and sort the rows
+const filteredAndSortedRows = computed(() => {
+  let result = [...rows.value]
+  
+  // Apply search filter
+  if (searchQuery.value) {
+    const query = searchQuery.value.toLowerCase()
+    result = result.filter(row => 
+      Object.values(row).some(value => 
+        String(value).toLowerCase().includes(query)
+      )
+    )
+  }
+  
+  // Apply sorting
+  if (sortKey.value) {
+    result.sort((a, b) => {
+      const aValue = a[sortKey.value]
+      const bValue = b[sortKey.value]
+      
+      if (sortOrder.value === 'asc') {
+        return aValue > bValue ? 1 : -1
+      } else {
+        return aValue < bValue ? 1 : -1
+      }
+    })
+  }
+  
+  return result
+})
+
 // คำนวณหน้าทั้งหมด และข้อมูลที่จะแสดง
-const totalPages = computed(() => Math.ceil(rows.value.length / pageSize))
+const totalPages = computed(() => Math.ceil(filteredAndSortedRows.value.length / pageSize))
 const pagedRows = computed(() => {
   const start = (currentPage.value - 1) * pageSize
-  return rows.value.slice(start, start + pageSize)
+  return filteredAndSortedRows.value.slice(start, start + pageSize)
 })
 
 async function loadTable() {
@@ -108,88 +182,273 @@ function prevPage() {
 function nextPage() {
   if (currentPage.value < totalPages.value) currentPage.value++
 }
+
+// Sort function
+function sortBy(key) {
+  if (sortKey.value === key) {
+    sortOrder.value = sortOrder.value === 'asc' ? 'desc' : 'asc'
+  } else {
+    sortKey.value = key
+    sortOrder.value = 'asc'
+  }
+}
 </script>
 
 <style scoped>
 .view-box {
   grid-area: view;
-  border: 1px solid #ccc;
-  border-radius: 8px;
-  padding: 1rem;
-  background: rgba(255, 255, 255, 0.85);
-  box-shadow: 0 2px 4px rgba(0, 0, 0, 0.1);
-  margin: 3%;
+  border: none;
+  border-radius: 12px;
+  padding: 1.5rem;
+  background: rgba(255, 255, 255, 0.95);
+  box-shadow: 0 8px 32px rgba(0, 0, 0, 0.1);
+  margin: 1.5rem;
+}
+
+h2 {
+  color: #2c3e50;
+  margin-bottom: 1.25rem;
+  font-size: 1.5rem;
+  font-weight: 600;
+}
+
+.form-group {
+  margin-bottom: 1rem;
+}
+
+label {
+  display: block;
+  margin-bottom: 0.35rem;
+  color: #2c3e50;
+  font-weight: 600;
+  font-size: 0.9rem;
 }
 
 .table-select {
-  max-width: 150px;
-  padding: 5px;
-  margin-left: 1rem;
-  border-radius: 4px;
-}
-
-.btn-load {
-  padding: .5rem 1rem;
-  cursor: pointer;
-  border: none;
-  border-radius: 4px;
-  margin-top: 1rem;
-  background: #8DBAED;
+  width: 180px;
+  padding: 0.6rem 0.75rem;
+  border: 2px solid #e2e8f0;
+  border-radius: 8px;
+  background: #f8fafc;
   color: #2c3e50;
-  font-weight: bold;
+  font-size: 0.95rem;
+  transition: all 0.3s ease;
+  cursor: pointer;
 }
 
-.btn-load:hover {
-  color: #fff;
+.table-select:focus {
+  outline: none;
+  border-color: #8DBAED;
+  box-shadow: 0 0 0 3px rgba(141, 186, 237, 0.2);
 }
 
-.image-cell img {
-  width: 80px;
-  height: 80px;
-  object-fit: cover;
-  border-radius: 4px;
+.search-box {
+  margin-bottom: 1rem;
+  width: 100%;
+  max-width: 100%;
+}
+
+.search-input {
+  width: 100%;
+  max-width: 100%;
+  padding: 0.6rem 0.75rem;
+  border: 2px solid #e2e8f0;
+  border-radius: 8px;
+  background: #f8fafc;
+  font-size: 0.95rem;
+  transition: all 0.3s ease;
+  box-sizing: border-box;
+}
+
+.search-input:focus {
+  outline: none;
+  border-color: #8DBAED;
+  box-shadow: 0 0 0 3px rgba(141, 186, 237, 0.2);
 }
 
 table {
   width: 100%;
-  border-collapse: collapse;
+  border-collapse: separate;
+  border-spacing: 0;
   margin-top: 1rem;
-}
-
-th,
-td {
-  border: 1px solid #ccc;
-  padding: 0.5rem;
-  text-align: left;
+  background: white;
+  border-radius: 8px;
+  overflow: hidden;
+  box-shadow: 0 4px 6px rgba(0, 0, 0, 0.05);
 }
 
 th {
-  background: #f0f0f0;
+  background: #f8fafc;
+  color: #2c3e50;
+  font-weight: 600;
+  padding: 0.75rem;
+  text-align: left;
+  border-bottom: 2px solid #e2e8f0;
+  font-size: 0.9rem;
+}
+
+th.sortable {
+  cursor: pointer;
+  user-select: none;
+}
+
+th.sortable:hover {
+  background: #edf2f7;
+}
+
+.sort-icon {
+  margin-left: 0.5rem;
+  color: #8DBAED;
+}
+
+td {
+  padding: 0.75rem;
+  border-bottom: 1px solid #e2e8f0;
+  color: #4a5568;
+  font-size: 0.9rem;
+}
+
+tr:last-child td {
+  border-bottom: none;
+}
+
+tr:hover td {
+  background: #f8fafc;
+}
+
+.image-cell {
+  text-align: center;
+}
+
+.image-cell img {
+  width: 60px;
+  height: 60px;
+  object-fit: cover;
+  border-radius: 6px;
+  box-shadow: 0 2px 4px rgba(0, 0, 0, 0.1);
+  transition: transform 0.3s ease;
+}
+
+.image-cell img:hover {
+  transform: scale(1.05);
 }
 
 .pagination {
   display: flex;
   justify-content: center;
   align-items: center;
-  margin-top: 1rem;
+  gap: 0.75rem;
+  margin-top: 1.5rem;
+  padding: 0.75rem;
+  background: #f8fafc;
+  border-radius: 8px;
 }
 
 .pagination button {
-  margin: 0 0.5rem;
-  padding: 0.5rem 1rem;
+  padding: 0.6rem 1.25rem;
   border: none;
+  border-radius: 8px;
   background: #8DBAED;
   color: #2c3e50;
-  border-radius: 4px;
+  font-weight: 600;
+  font-size: 0.9rem;
   cursor: pointer;
+  transition: all 0.3s ease;
+}
+
+.pagination button:hover:not(:disabled) {
+  background: #6ba8e0;
+  color: white;
+  transform: translateY(-1px);
+  box-shadow: 0 4px 6px rgba(141, 186, 237, 0.2);
 }
 
 .pagination button:disabled {
-  background: #ccc;
+  opacity: 0.5;
   cursor: not-allowed;
+  transform: none;
+  box-shadow: none;
 }
 
 .pagination span {
-  margin: 0 0.5rem;
+  color: #4a5568;
+  font-weight: 500;
+  font-size: 0.9rem;
+}
+
+@media (max-width: 768px) {
+  .view-box {
+    margin: 1rem;
+    padding: 1rem;
+    width: calc(100% - 2rem);
+    box-sizing: border-box;
+  }
+
+  .search-box {
+    padding: 0 0.5rem;
+    box-sizing: border-box;
+  }
+
+  .search-input {
+    width: 100%;
+    max-width: 100%;
+    box-sizing: border-box;
+  }
+
+  .table-select {
+    width: 100%;
+  }
+
+  .pagination {
+    flex-direction: column;
+    gap: 0.5rem;
+  }
+
+  .pagination button {
+    width: 100%;
+  }
+
+  /* Add responsive table styles */
+  table {
+    display: block;
+    overflow-x: auto;
+    white-space: nowrap;
+    -webkit-overflow-scrolling: touch;
+  }
+
+  th, td {
+    min-width: 120px; /* Ensure columns have minimum width */
+    padding: 0.5rem;
+  }
+
+  .image-cell {
+    min-width: 100px;
+  }
+
+  .image-cell img {
+    width: 40px;
+    height: 40px;
+  }
+
+  /* Improve text readability on mobile */
+  th, td {
+    font-size: 0.85rem;
+  }
+
+  /* Add horizontal scroll indicator */
+  .view-box {
+    position: relative;
+  }
+
+  .view-box::after {
+    content: '';
+    position: absolute;
+    right: 0;
+    top: 0;
+    bottom: 0;
+    width: 20px;
+    background: linear-gradient(to right, transparent, rgba(255, 255, 255, 0.95));
+    pointer-events: none;
+  }
 }
 </style>

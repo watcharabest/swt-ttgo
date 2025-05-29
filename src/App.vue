@@ -28,7 +28,7 @@
           </router-link>
           <router-link to="/tray" class="nav-link" @click="closeMobileMenu">
             <i class="fas fa-utensils"></i>
-            Update Tray
+            Tray List
           </router-link>
           <router-link to="/table" class="nav-link" @click="closeMobileMenu">
             <i class="fas fa-edit"></i>
@@ -134,11 +134,12 @@ onUnmounted(() => {
   font-family: 'Century', 'Century Gothic', 'Georgia', serif;
   color: var(--text);
   background: 
-    linear-gradient(rgba(255, 255, 255, 0.4), rgba(255, 255, 255, 0.4)),
-    url('C:\Users\wiroj\OneDrive\Desktop\swt\project_IoT_TTGOdisplay\frontend\image\bg.jpg');
+    linear-gradient(rgba(255, 255, 255, 0.3), rgba(255, 255, 255, 0.3)),
+    url('C:\Users\wiroj\OneDrive\Desktop\swt\project_IoT_TTGOdisplay\frontend\image\swarovski-swan-jewelry.webp');
   background-repeat: no-repeat;
   background-size: cover;
-  background-position: center;  
+  background-position: center;
+  background-attachment: fixed;
 }
 
 /* Clean Navigation */

@@ -38,10 +38,24 @@
           </thead>
           <tbody>
             <tr class="main-row">
-              <td>Main Tray</td>
-              <td>{{ trayMain }}</td>
-              <td v-if="editMode"></td>
-              <td v-if="editMode"></td>
+              <td style="color: red;">Main Tray</td>
+              <td style="color: red;">{{ trayMain }}</td>
+              <td v-if="editMode">
+                <input
+                  v-model="newTrayInputs[0]"
+                  type="text"
+                  placeholder="Enter Main Tray ID"
+                  class="input-new"
+                  @keyup.enter="acceptTray(0)"
+                />
+              </td>
+              <td v-if="editMode">
+                <button
+                  class="btn-accept-row"
+                  @click="acceptTray(0)"
+                  :disabled="!newTrayInputs[0]"
+                >Accept</button>
+              </td>
             </tr>
             <tr v-for="(id, i) in childTrayIds.slice(0, 11)" :key="i">
               <td>{{ i + 2 }}</td>
@@ -56,17 +70,25 @@
                 />
               </td>
               <td v-if="editMode">
-                <button
-                  v-if="id"
-                  class="btn-delete-row"
-                  @click="deleteTray(i + 1)"
-                >Delete</button>
-                <button
-                  v-else
-                  class="btn-accept-row"
-                  @click="acceptTray(i + 1)"
-                  :disabled="!newTrayInputs[i + 1]"
-                >Accept</button>
+                <div class="button-group">
+                  <button
+                    v-if="id"
+                    class="btn-delete-row"
+                    @click="deleteTray(i + 1)"
+                  >Delete</button>
+                  <button
+                    v-if="id"
+                    class="btn-replace-row"
+                    @click="replaceTray(i + 1)"
+                    :disabled="!newTrayInputs[i + 1]"
+                  >Replace</button>
+                  <button
+                    v-if="!id"
+                    class="btn-accept-row"
+                    @click="acceptTray(i + 1)"
+                    :disabled="!newTrayInputs[i + 1]"
+                  >Accept</button>
+                </div>
               </td>
             </tr>
           </tbody>
@@ -90,6 +112,9 @@
           {{ submitting ? 'Submitting…' : 'Submit to Get Tray Info' }}
         </button>
         <p v-if="submitMessage" class="success">{{ submitMessage }}</p>
+      </div>
+      <div v-else class="not-found-section">
+        <button @click="resetSearch" class="btn-try-again">Try Again</button>
       </div>
     </div>
   </div>
@@ -143,7 +168,7 @@ const lookupTray = async () => {
     found.value = true
   } catch (err) {
     found.value = false
-    errorMessage.value = err.response?.data?.detail || 'Error fetching data'
+    errorMessage.value = 'Product order not found'
   } finally {
     loading.value = false
     searched.value = true
@@ -154,15 +179,36 @@ const lookupTray = async () => {
 const acceptTray = async (index) => {
   const newId = newTrayInputs.value[index]
   if (!newId || !editMode.value) return
-  if (!confirm(`Add new tray ID "${newId}" at slot #${index + 1}?`)) return
-  try {
-    await axios.post(
-      'https://10.100.67.37:8000/add-tray',
-      { tray_id_main: trayMain.value, tray_id: newId }
-    )
-    await lookupTray()
-  } catch {
-    alert('Failed to add tray')
+  
+  if (index === 0) {
+    // Handle main tray ID update
+    if (!confirm(`Update main tray ID to "${newId}"?`)) return
+    try {
+      await axios.post(
+        'https://10.100.67.37:8000/update-main-tray-id',
+        { 
+          old_tray_id: trayMain.value,
+          new_tray_id: newId 
+        }
+      )
+      await lookupTray()
+    } catch (err) {
+      console.error('Error updating main tray:', err)
+      alert('Failed to update main tray ID: ' + (err.response?.data?.detail || 'Unknown error'))
+    }
+  } else {
+    // Only handle new tray additions
+    if (!confirm(`Add new tray ID "${newId}" at slot #${index + 1}?`)) return
+    try {
+      await axios.post(
+        'https://10.100.67.37:8000/add-tray',
+        { tray_id_main: trayMain.value, tray_id: newId }
+      )
+      await lookupTray()
+    } catch (err) {
+      console.error('Error adding tray:', err)
+      alert('Failed to add tray: ' + (err.response?.data?.detail || 'Unknown error'))
+    }
   }
 }
 
@@ -215,139 +261,368 @@ const submitTrayInfo = async () => {
     submitting.value = false
   }
 }
+
+const resetSearch = async () => {
+  searched.value = false
+  found.value = false
+  errorMessage.value = ''
+  productOrderError.value = false
+  await lookupTray()
+}
+
+const replaceTray = async (index) => {
+  const newId = newTrayInputs.value[index]
+  const existingId = childTrayIds.value[index - 1]
+  if (!newId || !editMode.value || !existingId) return
+
+  if (!confirm(`Replace tray ID "${existingId}" with "${newId}"?`)) return
+  try {
+    await axios.post(
+      'https://10.100.67.37:8000/update-tray-id',
+      { 
+        old_tray_id: existingId,
+        new_tray_id: newId 
+      }
+    )
+    await lookupTray()
+  } catch (err) {
+    console.error('Error replacing tray:', err)
+    alert('Failed to replace tray ID: ' + (err.response?.data?.detail || 'Unknown error'))
+  }
+}
 </script>
 
 <style scoped>
 .form-page {   
-  max-width: 500px;
+  max-width: 600px;
   margin: 2rem auto;
-  padding: 1rem;
-  border: 1px solid #ccc;
-  border-radius: 8px;
-  background: rgba(255, 255, 255, 0.85);
+  padding: 2rem;
+  border: none;
+  border-radius: 16px;
+  background: rgba(255, 255, 255, 0.95);
+  box-shadow: 0 8px 32px rgba(0, 0, 0, 0.1);
+}
+
+h1 {
+  color: #2c3e50;
+  text-align: center;
+  margin-bottom: 2rem;
+  font-size: 2rem;
+  font-weight: 600;
+}
+
+h2 {
+  color: #2c3e50;
+  margin: 2rem 0;
+  font-size: 1.5rem;
+  font-weight: 600;
 }
 
 .input-section {   
-  display :flex;
+  display: flex;
+  flex-direction: column;
   gap: 0.5rem;
-  align-items: center; 
+  margin-bottom: 1.5rem;
 }
 
-
-label { display:block; font-weight:bold; margin-bottom:0.5rem }
-input {
-  flex: 1;
-  padding: 0.5rem;
-  box-sizing: border-box;
-  border: 1px solid #ccc;
-  border-radius: 4px;
-}
-.btn-action {
-  padding: 0.5rem 1rem;
-  border: none;
-  border-radius: 4px;
-  cursor: pointer;
-  font-weight: bold;
-  background: #8DBAED;
+label { 
+  display: block; 
+  font-weight: 600; 
+  margin-bottom: 0.5rem;
   color: #2c3e50;
+  font-size: 0.95rem;
+}
+
+input {
+  width: 100%;
+  padding: 0.75rem 1rem;
+  box-sizing: border-box;
+  border: 2px solid #e2e8f0;
+  border-radius: 8px;
+  font-size: 1rem;
+  background: #f8fafc;
+  transition: all 0.3s ease;
+}
+
+input:focus {
+  outline: none;
+  border-color: #8DBAED;
+  box-shadow: 0 0 0 3px rgba(141, 186, 237, 0.2);
+}
+
+input.invalid {
+  border-color: #ef4444;
+  background: #fef2f2;
+}
+
+.table-container {
+  margin: 2rem 0;
+  background: white;
+  border-radius: 12px;
+  box-shadow: 0 4px 6px rgba(0, 0, 0, 0.05);
+  overflow: hidden;
+}
+
+table {
+  width: 100%;
+  border-collapse: separate;
+  border-spacing: 0;
+}
+
+th {
+  background: #f8fafc;
+  color: #2c3e50;
+  font-weight: 600;
+  padding: 1rem;
+  text-align: left;
+  border-bottom: 2px solid #e2e8f0;
+}
+
+td {
+  padding: 1rem;
+  border-bottom: 1px solid #e2e8f0;
+  color: #4a5568;
+}
+
+tr:last-child td {
+  border-bottom: none;
+}
+
+tr:hover td {
+  background: #f8fafc;
+}
+
+.main-row {
+  background: #f1f5f9;
+  font-weight: 600;
+}
+
+.input-new {
+  width: 100%;
+  padding: 0.5rem;
+  border: 2px solid #e2e8f0;
+  border-radius: 6px;
+  font-size: 0.95rem;
+}
+
+.btn-action,
+.btn-lookup,
+.btn-edit,
+.btn-clear,
+.btn-submit-final {
+  padding: 0.75rem 1.5rem;
+  border: none;
+  border-radius: 8px;
+  font-weight: 600;
+  cursor: pointer;
+  transition: all 0.3s ease;
+}
+
+.btn-action {
+  background: #8DBAED;
+  color: white;
+  width: 100%;
+  margin-top: 1rem;
+  box-shadow: 0 2px 4px rgba(141, 186, 237, 0.2);
+}
+
+.btn-action:hover:not(:disabled) {
+  background: #6ba8e0;
+  transform: translateY(-1px);
+  box-shadow: 0 4px 6px rgba(141, 186, 237, 0.3);
+}
+
+.btn-lookup {
+  background: #8DBAED;
+  color: white;
+}
+
+.btn-edit {
+  background: #FFE495;
+  color: #2c3e50;
+  transition: all 0.3s ease;
+}
+
+/* Make the edit button hover style more specific */
+button.btn-action.btn-edit:hover {
+  background: #FCCF61;
+  transform: translateY(-1px);
+  box-shadow: 0 4px 6px rgba(252, 207, 97, 0.3);
+}
+
+.btn-clear {
+  background: #FFE495;
+  color: white;
   margin-top: 1rem;
   width: 100%;
 }
 
-.btn-action:hover {
-  color : #fff;
-}
-/* Specific styling when inside .table-action */
-.btn-edit {
-  background: #FCCF61;    /* green */
-}
-
-.btn-edit:hover {
-  color : #fff
-}
-
-/* “Lookup” mode button */
-.btn-lookup {
-  background: #8DBAED;    /* blue */
-}
-
-.btn-lookup:hover {
-  color : #fff
+.btn-clear:hover {
+  background: #FCCF61;
 }
 
 
-.table-action { text-align:right; margin:0.5rem 0 }
-.btn-clear {
-  padding: 0.5rem 1rem;
-  border: none;
-  border-radius: 4px;
-  cursor: pointer;
-  font-weight: bold;
-  background: #FCCF61 ;
-  color: #2c3e50;
+.btn-submit-final {
+  background: #C7E299;
+  color: white;
   width: 100%;
-}
-.btn-clear:hover { color : #fff }
-.btn-accept-row { 
-  background-color: #C7E299;
-  border: none;
-  padding: 0.5rem 1rem;
-  border-radius: 4px;
-  cursor: pointer;
-  color: #2c3e50;
-  font-weight: bold;
- }
- .btn-accept-row:hover {
-  color: #fff
- }
-.btn-delete-row { 
-  background-color: #F8AAB6;
-  border: none;
-  padding: 0.5rem 1rem;
-  border-radius: 4px;
-  cursor: pointer;
-  color: #2c3e50;
-  font-weight: bold;
- }
-.btn-delete-row:hover {
-  color: #fff;
+  margin-top: 1.5rem;
+  padding: 1rem;
+  font-size: 1rem;
+  box-shadow: 0 2px 4px rgba(5, 150, 105, 0.2);
 }
 
-.btn-submit-final { 
-  background-color: #77BB78;
-  border: none;
-  padding: 0.5rem 1rem;
-  border-radius: 4px;
-  cursor: pointer;
-  color: #2c3e50;
-  font-weight: bold;
-  margin-top : 1rem;
-  width: 100%;
- }
-.table-container {
-  max-width: 100%;
-  overflow-x: auto;
+.btn-submit-final:hover:not(:disabled) {
+  background: #b3d486;
+  transform: translateY(-1px);
+  box-shadow: 0 4px 6px rgba(5, 150, 105, 0.3);
 }
-.btn-submit-final:hover { color: #fff;}
-.main-row td:nth-child(1), .main-row td:nth-child(2) { color:#c00; font-weight:bold }
-table {   width: 100%;
-  border-collapse: collapse;
-  margin-top: 1rem;}
-th, td { border:1px solid #ccc; padding:0.5rem; text-align:left ;}
-th:nth-child(1), td:nth-child(1) {
-  width: 40%;
-}
-th:nth-child(2), td:nth-child(2) {
-  width: 40%;
-}
-th:nth-child(3), td:nth-child(3) {
-  width: 60%;
-}
-th:nth-child(4), td:nth-child(4) {
-  width: 60%;
-}
-.error { margin-top:1rem; color:#c00 }
-.success { margin-top:1rem; color:#080 }
 
-.error-text { color:#c00 }
+.btn-delete-row,
+.btn-accept-row {
+  padding: 0.5rem 1rem;
+  border: none;
+  border-radius: 6px;
+  font-weight: 600;
+  cursor: pointer;
+  transition: all 0.3s ease;
+}
+
+.btn-delete-row {
+  background: #ef4444;
+  color: white;
+}
+
+.btn-accept-row {
+  background: #C7E299;
+  color: white;
+}
+
+.btn-delete-row:hover:not(:disabled) {
+  background: #dc2626;  /* Darker red */
+  transform: translateY(-1px);
+}
+
+.btn-accept-row:hover:not(:disabled) {
+  transform: translateY(-1px);
+  filter: brightness(1.1);
+  background: #b3d486;
+}
+
+button:disabled {
+  opacity: 0.6;
+  cursor: not-allowed;
+  transform: none;
+  box-shadow: none;
+}
+
+.error-text {
+  color: #ef4444;
+  font-size: 0.85rem;
+  margin-top: 0.5rem;
+}
+
+.error {
+  color: #ef4444;
+  padding: 0.75rem;
+  background: #fef2f2;
+  border-radius: 8px;
+  text-align: center;
+  margin-top: 1rem;
+}
+
+.success {
+  color: #059669;
+  padding: 0.75rem;
+  background: #ecfdf5;
+  border-radius: 8px;
+  text-align: center;
+  margin-top: 1rem;
+}
+
+.table-action {
+  display: flex;
+  justify-content: flex-end;
+  margin-top: 1rem;
+}
+
+.action-controls {
+  display: flex;
+  justify-content: flex-end;
+  margin-top: 1rem;
+}
+
+.not-found-section {
+  text-align: center;;
+}
+
+.btn-try-again {
+  background: #FCCF61;
+  color: white;
+  padding: 0.75rem 1.5rem;
+  border: none;
+  border-radius: 8px;
+  font-weight: 600;
+  cursor: pointer;
+  transition: all 0.3s ease;
+  margin-top: 1rem;
+}
+
+.btn-try-again:hover {
+  background: #6ba8e0;
+  transform: translateY(-1px);
+  box-shadow: 0 4px 6px rgba(141, 186, 237, 0.3);
+}
+
+.button-group {
+  display: flex;
+  gap: 0.5rem;
+}
+
+.btn-replace-row {
+  background: #8DBAED;
+  color: white;
+  padding: 0.5rem 1rem;
+  border: none;
+  border-radius: 6px;
+  font-weight: 600;
+  cursor: pointer;
+  transition: all 0.3s ease;
+}
+
+.btn-replace-row:hover:not(:disabled) {
+  background: #6ba8e0;
+  transform: translateY(-1px);
+  filter: brightness(1.1);
+}
+
+@media (max-width: 768px) {
+  .form-page {
+    margin: 1rem;
+    padding: 1.5rem;
+  }
+
+  .table-container {
+    margin: 1rem 0;
+    overflow-x: auto;
+  }
+
+  table {
+    min-width: 600px;
+  }
+
+  .btn-action,
+  .btn-lookup,
+  .btn-edit,
+  .btn-clear,
+  .btn-submit-final {
+    width: 100%;
+  }
+
+  .table-action,
+  .action-controls {
+    flex-direction: column;
+    gap: 0.5rem;
+  }
+}
 </style>

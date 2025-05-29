@@ -1,6 +1,6 @@
-
 <template>
   <div class="dashboard">
+
     <div class="dashboard-header">
         <div class="dashboard-grid">
         <div 
@@ -25,7 +25,7 @@
             <i class="fas fa-utensils"></i>
             </div>
             <h3 class="card-title">Update Tray</h3>
-            <p class="card-description">Insert / Delete Product Order</p>
+            <p class="card-description">Add / Delete Tray List</p>
             <div class="card-arrow">
             <i class="fas fa-arrow-right"></i>
             </div>
@@ -39,7 +39,7 @@
             <i class="fas fa-edit"></i>
             </div>
             <h3 class="card-title">Edit Database</h3>
-            <p class="card-description">Add / Delete TrayID</p>
+            <p class="card-description">Insert / Delete Product Order</p>
             <div class="card-arrow">
             <i class="fas fa-arrow-right"></i>
             </div>
@@ -52,8 +52,8 @@
             <div class="card-icon table">
             <i class="fas fa-table"></i>
             </div>
-            <h3 class="card-title">Show Table</h3>
-            <p class="card-description">View and display Product Order and Track</p>
+            <h3 class="card-title">Table</h3>
+            <p class="card-description">Display Table of Product Order and Track</p>
             <div class="card-arrow">
             <i class="fas fa-arrow-right"></i>
             </div>
@@ -67,7 +67,7 @@
             <i class="fas fa-table"></i>
             </div>
             <h3 class="card-title">Clear</h3>
-            <p class="card-description">Clear Product Order On Display (TTGO)</p>
+            <p class="card-description">Clear Product Order On Display</p>
             <div class="card-arrow">
             <i class="fas fa-arrow-right"></i>
             </div>
@@ -119,119 +119,6 @@ const navigateTo = (path) => router.push(path)
   background-position: center;  
 }
 
-/* Clean Navigation */
-.nav {
-  position: fixed;
-  top: 0;
-  left: 0;
-  right: 0;
-  z-index: 100;
-  background: rgba(255, 255, 255, 0.8);
-  backdrop-filter: blur(12px);
-  border-bottom: 1px solid var(--border);
-  transition: var(--transition);
-}
-
-.nav.scrolled {
-  background: rgba(255, 255, 255, 0.95);
-  box-shadow: var(--shadow);
-}
-
-.nav-container {
-  max-width: 1200px;
-  margin: 0 auto;
-  padding: 0 1.5rem;
-  height: 64px;
-  display: flex;
-  align-items: center;
-  justify-content: space-between;
-}
-
-/* Simple Logo */
-.logo {
-  display: flex;
-  align-items: center;
-  gap: 0.5rem;
-  font-weight: 700;
-  font-size: 1.25rem;
-  color: var(--text);
-  transition: var(--transition);
-  cursor: pointer;
-}
-
-.logo:hover {
-  transform: translateY(-1px);
-}
-
-.logo-icon {
-  color: var(--primary);
-  font-size: 1.5rem;
-  animation: pulse 2s infinite;
-}
-
-@keyframes pulse {
-  0%, 100% { opacity: 1; }
-  50% { opacity: 0.7; }
-}
-
-.logo-text {
-  letter-spacing: -0.025em;
-}
-
-/* Clean Navigation Links */
-.nav-links {
-  display: flex;
-  gap: 0.5rem;
-}
-
-.nav-link {
-  display: flex;
-  align-items: center;
-  gap: 0.5rem;
-  padding: 0.5rem 1rem;
-  color: var(--text-muted);
-  text-decoration: none;
-  border-radius: var(--radius);
-  font-weight: 500;
-  font-size: 0.875rem;
-  transition: var(--transition);
-  position: relative;
-}
-
-.nav-link i {
-  font-size: 0.875rem;
-}
-
-.nav-link::after {
-  content: '';
-  position: absolute;
-  bottom: 0;
-  left: 50%;
-  width: 0;
-  height: 2px;
-  background: var(--primary);
-  transition: var(--transition);
-  transform: translateX(-50%);
-}
-
-.nav-link:hover {
-  color: var(--text);
-  background: var(--bg-secondary);
-}
-
-.nav-link:hover::after {
-  width: 80%;
-}
-
-.nav-link.router-link-active {
-  color: var(--primary);
-  background: rgba(37, 99, 235, 0.1);
-}
-
-.nav-link.router-link-active::after {
-  width: 80%;
-}
-
 /* Dashboard Styles */
 .dashboard {
   padding: 2rem 0;
@@ -248,7 +135,6 @@ const navigateTo = (path) => router.push(path)
     transform: translateY(0);
   }
 } 
-
 
 .dashboard-grid {
   display: grid;
@@ -337,7 +223,6 @@ const navigateTo = (path) => router.push(path)
   background: linear-gradient(135deg, #ec1b03, #822011);
 }
 
-
 .dashboard-card:hover .card-icon {
   transform: scale(1.1) rotate(5deg);
 }
@@ -377,137 +262,10 @@ const navigateTo = (path) => router.push(path)
   transform: translateX(4px);
 }
 
-/* Simple Mobile Menu */
-.menu-toggle {
-  display: none;
-  flex-direction: column;
-  background: none;
-  border: none;
-  cursor: pointer;
-  padding: 0.5rem;
-  border-radius: var(--radius);
-  transition: var(--transition);
-}
-
-.menu-toggle:hover {
-  background: var(--bg-secondary);
-}
-
-.menu-toggle span {
-  width: 20px;
-  height: 2px;
-  background: var(--text);
-  margin: 2px 0;
-  border-radius: 1px;
-  transition: var(--transition);
-}
-
-.menu-toggle.active span:nth-child(1) {
-  transform: rotate(45deg) translate(4px, 4px);
-}
-
-.menu-toggle.active span:nth-child(2) {
-  opacity: 0;
-}
-
-.menu-toggle.active span:nth-child(3) {
-  transform: rotate(-45deg) translate(4px, -4px);
-}
-
-/* Clean Main Content */
-.main {
-  padding-top: 64px;
-  max-width: 1200px;
-  margin: 0 auto;
-  padding-left: 1.5rem;
-  padding-right: 1.5rem;
-  min-height: calc(100vh - 64px);
-}
-
-/* Smooth Page Transitions */
-.page-enter-active,
-.page-leave-active {
-  transition: all 0.2s ease;
-}
-
-.page-enter-from {
-  opacity: 0;
-  transform: translateY(10px);
-}
-
-.page-leave-to {
-  opacity: 0;
-  transform: translateY(-10px);
-}
-
 /* Responsive Design */
 @media (max-width: 768px) {
-  .nav-container {
-    padding: 0 1rem;
-  }
-
-  .menu-toggle {
-    display: flex;
-  }
-
-  .nav-links {
-    position: absolute;
-    top: 100%;
-    left: 0;
-    right: 0;
-    flex-direction: column;
-    background: rgba(255, 255, 255, 0.95);
-    backdrop-filter: blur(12px);
-    border-bottom: 1px solid var(--border);
-    box-shadow: var(--shadow-lg);
-    gap: 0;
-    opacity: 0;
-    visibility: hidden;
-    transform: translateY(-10px);
-    transition: var(--transition);
-  }
-
-  .nav-links.active {
-    opacity: 1;
-    visibility: visible;
-    transform: translateY(0);
-  }
-
-  .nav-link {
-    padding: 1rem 1.5rem;
-    border-radius: 0;
-    border-bottom: 1px solid var(--border);
-  }
-
-  .nav-link:last-child {
-    border-bottom: none;
-  }
-
-  .nav-link::after {
-    display: none;
-  }
-
-  .main {
-    padding-left: 0.75rem;
-    padding-right: 0.75rem;
-  }
-
   .dashboard {
     padding: 1rem 0;
-  }
-
-  .dashboard-header {
-    margin-bottom: 2rem;
-    padding: 0 0.5rem;
-  }
-
-  .dashboard-title {
-    font-size: 1.75rem;
-    line-height: 1.2;
-  }
-
-  .dashboard-subtitle {
-    font-size: 1rem;
   }
 
   .dashboard-grid {
@@ -545,31 +303,12 @@ const navigateTo = (path) => router.push(path)
     right: 1.25rem;
   }
 
-  /* Ensure cards don't extend beyond viewport */
   .dashboard-card:hover {
     transform: translateY(-4px);
   }
 }
 
-/* Extra small screens */
 @media (max-width: 480px) {
-  .main {
-    padding-left: 0.5rem;
-    padding-right: 0.5rem;
-  }
-
-  .dashboard-header {
-    margin-bottom: 1.5rem;
-  }
-
-  .dashboard-title {
-    font-size: 1.5rem;
-  }
-
-  .dashboard-subtitle {
-    font-size: 0.9rem;
-  }
-
   .dashboard-card {
     padding: 1rem;
     margin: 0;
@@ -598,8 +337,6 @@ const navigateTo = (path) => router.push(path)
 }
 
 /* Clean Focus States */
-.nav-link:focus-visible,
-.menu-toggle:focus-visible,
 .dashboard-card:focus-visible {
   outline: 2px solid var(--primary);
   outline-offset: 2px;

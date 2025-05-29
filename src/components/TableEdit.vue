@@ -98,7 +98,7 @@
           <div class="preview" v-if="previewUrl">
             <img :src="previewUrl" alt="Preview" />
           </div>
-          <p v-else>No image selected</p>
+          <p v-else class="error">No image selected</p>
         </div>
         <button type="submit" :disabled="loading" class="btn-submit">{{ loading ? 'Processing…' : 'Submit' }}</button>
         <p v-if="error" class="error">{{ error }}</p>
@@ -248,125 +248,221 @@ async function onDelete() {
 <style scoped>
 .box-wrapper {
   max-width: 500px;
-  margin: auto;
-  padding: 2rem;
-  background: rgba(255, 255, 255, 0.85);
-  border-radius: 8px;
-  box-shadow: 0 2px 4px rgba(0, 0, 0, 0.1);
+  margin: 1.5rem auto;
+  padding: 1.5rem;
+  background: rgba(255, 255, 255, 0.95);
+  border-radius: 12px;
+  box-shadow: 0 8px 32px rgba(0, 0, 0, 0.1);
 }
+
+h1 {
+  color: #2c3e50;
+  text-align: center;
+  margin-bottom: 1.5rem;
+  font-size: 1.75rem;
+  font-weight: 600;
+}
+
+h2 {
+  color: #2c3e50;
+  margin-bottom: 1.25rem;
+  font-size: 1.25rem;
+  font-weight: 600;
+}
+
 .toggle-buttons {
   display: flex;
-  justify-content: center;
-  margin-bottom: 1rem;
+  gap: 0.75rem;
+  margin-bottom: 1.5rem;
+  background: #f8fafc;
+  padding: 0.35rem;
+  border-radius: 10px;
 }
+
 .toggle-buttons button {
-  padding: 0.5rem 1rem;
-  margin: 0 0.5rem;
+  flex: 1;
+  padding: 0.6rem 1.25rem;
   border: none;
-  border-radius: 6px;
+  border-radius: 8px;
+  background: transparent;
+  color: #64748b;
+  font-weight: 600;
+  font-size: 0.9rem;
   cursor: pointer;
-  background: #ADCFF1;
+  transition: all 0.3s ease;
+}
+
+.toggle-buttons button.active {
+  background: #8DBAED;
+  color: white;
+  box-shadow: 0 2px 4px rgba(141, 186, 237, 0.2);
+}
+
+.toggle-buttons button:hover:not(.active) {
+  background: #e2e8f0;
   color: #2c3e50;
-  font-weight: bold;
-  transition: background 0.3s;
-  cursor: pointer;
 }
-.toggle-buttons .active {
-  background-color: #8DBAED;
-  color: #fff;
-}
+
 .box {
-  margin-top: 1rem;
+  background: white;
+  border-radius: 10px;
+  padding: 1.5rem;
+  box-shadow: 0 4px 6px rgba(0, 0, 0, 0.05);
 }
+
 .form-group {
   margin-bottom: 1rem;
 }
-input, select {
-  width: 100%;
-  padding: 0.5rem;
-  border: 1px solid #ccc;
-  border-radius: 4px;
-}
-input.invalid, select.invalid {
-  border-color: #c00;
-}
-.error-text {
-  color: #c00;
-  font-size: 0.85rem;
-}
-button:disabled {
-  opacity: 0.6;
-  cursor: not-allowed;
-}
-.preview img {
-  width: 100%;
-  border-radius: 4px;
+
+label {
+  display: block;
+  margin-bottom: 0.35rem;
+  color: #2c3e50;
+  font-weight: 600;
+  font-size: 0.9rem;
 }
 
-.btn-insert {
-  background-color: #C7E299;
-  border: none;
-  padding: 0.5rem 1rem;
-  border-radius: 4px;
+input[type="text"],
+select {
+  width: 100%;
+  padding: 0.6rem 0.75rem;
+  border: 2px solid #e2e8f0;
+  border-radius: 8px;
+  font-size: 0.95rem;
+  background: #f8fafc;
+  transition: all 0.3s ease;
+}
+
+input[type="text"]:focus,
+select:focus {
+  outline: none;
+  border-color: #8DBAED;
+  box-shadow: 0 0 0 3px rgba(141, 186, 237, 0.2);
+}
+
+input[type="text"].invalid,
+select.invalid {
+  border-color: #ef4444;
+  background: #fef2f2;
+}
+
+input[type="file"] {
+  width: 100%;
+  padding: 0.6rem;
+  border: 2px dashed #e2e8f0;
+  border-radius: 8px;
+  background: #f8fafc;
   cursor: pointer;
-  color: #2c3e50;
-  font-weight: bold;
+  transition: all 0.3s ease;
+  font-size: 0.9rem;
+}
+
+input[type="file"]:hover {
+  border-color: #8DBAED;
+  background: #f1f5f9;
+}
+
+.error-text {
+  color: #ef4444;
+  font-size: 0.85rem;
+  margin-top: 0.5rem;
+  display: block;
+}
+
+.preview {
+  margin: 1rem 0;
+  text-align: center;
+}
+
+.preview img {
+  max-width: 150px;
+  max-height: 150px;
+  border-radius: 8px;
+  box-shadow: 0 2px 4px rgba(0, 0, 0, 0.1);
+}
+
+.btn-submit,
+.btn-delete {
+  width: 100%;
+  padding: 0.75rem;
+  border: none;
+  border-radius: 8px;
+  font-weight: 600;
+  font-size: 0.95rem;
+  cursor: pointer;
+  transition: all 0.3s ease;
+  margin-top: 1.25rem;
 }
 
 .btn-submit {
-  background-color: #C7E299;
-  border: none;
-  padding: 0.5rem 1rem;
-  border-radius: 4px;
-  cursor: pointer;
-  color: #2c3e50;
-  font-weight: bold;
-  width : 100%;
-  margin-top: 1rem;
+  background: #C7E299;
+  color: white;
+  box-shadow: 0 2px 4px rgba(141, 186, 237, 0.2);
 }
 
-.btn-submit:hover {
-  color: #fff;
+.btn-submit:hover:not(:disabled) {
+  background: #b3d486;
+  transform: translateY(-1px);
+  box-shadow: 0 4px 6px rgba(141, 186, 237, 0.3);
 }
-
-.btn-upload {
-  background-color: #C7E299;
-  border: none;
-  padding: 0.5rem 1rem;
-  border-radius: 4px;
-  cursor: pointer;
-  color: #2c3e50;
-  font-weight: bold;
-}
-
-.btn-upload:hover {
-  color: #fff;
-}
-
 
 .btn-delete {
-  background-color: #F8AAB6;
-  border: none;
-  padding: 0.5rem 1rem;
-  border-radius: 4px;
-  cursor: pointer;
-  color: #2c3e50;
-  font-weight: bold;
-  width: 100%;
+  background: #ef4444;
+  color: white;
+  box-shadow: 0 2px 4px rgba(239, 68, 68, 0.2);
 }
 
-.btn-delete:hover {
-  color: #fff;
+.btn-delete:hover:not(:disabled) {
+  background: #dc2626;
+  transform: translateY(-1px);
+  box-shadow: 0 4px 6px rgba(239, 68, 68, 0.3);
+}
+
+.btn-submit:disabled,
+.btn-delete:disabled {
+  opacity: 0.6;
+  cursor: not-allowed;
+  transform: none;
+  box-shadow: none;
 }
 
 .success {
-  color: #080;
-  margin-top: 0.5rem;
+  color: #059669;
+  padding: 0.6rem;
+  background: #ecfdf5;
+  border-radius: 8px;
+  text-align: center;
+  margin-top: 0.75rem;
+  font-size: 0.9rem;
 }
+
 .error {
-  color: #c00;
-  margin-top: 0.5rem;
+  color: #ef4444;
+  padding: 0.6rem;
+  background: #fef2f2;
+  border-radius: 8px;
+  text-align: center;
+  margin-top: 0.75rem;
+  font-size: 0.9rem;
 }
 
+@media (max-width: 640px) {
+  .box-wrapper {
+    margin: 1rem;
+    padding: 1.25rem;
+  }
 
+  .box {
+    padding: 1.25rem;
+  }
+
+  .toggle-buttons {
+    flex-direction: column;
+    gap: 0.35rem;
+  }
+
+  .toggle-buttons button {
+    width: 100%;
+  }
+}
 </style>
