@@ -371,7 +371,7 @@ input.invalid {
   background-color: #6ba8e0;
   color: #fff;
   transform: translateY(-1px);
-  box-s2c3e50ow: 0 4px 6px rgba(141, 186, 237, 0.3);
+  box-shadow: 0 4px 6px rgba(141, 186, 237, 0.3);
 }
 
 .scan-btn:disabled {
