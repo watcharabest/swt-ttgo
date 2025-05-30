@@ -74,16 +74,26 @@
         </div>
         </div>
     </div>
-    <CameraSwitch />
+    <div class="camera-switch">
+      <button class="switch-button" @click="toggleCamera">
+        <i class="fas" :class="isCameraOn ? 'fa-video' : 'fa-video-slash'"></i>
+        {{ isCameraOn ? 'Camera On' : 'Camera Off' }}
+      </button>
+    </div>
   </div>
 </template>
 
 <script setup>
 import { useRouter } from 'vue-router'
-import CameraSwitch from './CameraSwitch.vue'
+import { ref } from 'vue'
 
 const router = useRouter()
 const navigateTo = (path) => router.push(path)
+
+const isCameraOn = ref(false)
+const toggleCamera = () => {
+  isCameraOn.value = !isCameraOn.value
+}
 </script>
 
 <style scoped>
@@ -361,5 +371,38 @@ const navigateTo = (path) => router.push(path)
 
 ::-webkit-scrollbar-thumb:hover {
   background: var(--text-muted);
+}
+
+/* Camera Switch Styles */
+.camera-switch {
+  position: fixed;
+  bottom: 20px;
+  right: 20px;
+  z-index: 1000;
+}
+
+.switch-button {
+  background: rgba(255, 255, 255, 0.9);
+  border: none;
+  border-radius: 8px;
+  padding: 10px 20px;
+  cursor: pointer;
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  font-size: 14px;
+  color: #333;
+  box-shadow: 0 2px 8px rgba(0, 0, 0, 0.1);
+  transition: all 0.3s ease;
+}
+
+.switch-button:hover {
+  background: rgba(255, 255, 255, 1);
+  transform: translateY(-2px);
+  box-shadow: 0 4px 12px rgba(0, 0, 0, 0.15);
+}
+
+.switch-button i {
+  font-size: 16px;
 }
 </style>
