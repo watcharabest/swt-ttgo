@@ -740,7 +740,7 @@ input.invalid {
   }
   
   .scanner-video {
-    height: 280px;
+    height: 240px;
   }
   
   .scanner-frame {
