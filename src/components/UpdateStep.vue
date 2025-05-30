@@ -752,7 +752,7 @@ input.invalid {
   }
   
   .floating-camera-btn {
-    width: 5rem;
+    width: 3rem;
     height: 3rem;
     font-size: 1.5rem;
     top: 0.75rem;
