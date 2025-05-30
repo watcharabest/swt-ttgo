@@ -77,7 +77,7 @@
     <div class="camera-switch">
       <button class="switch-button" @click="toggleCamera">
         <i class="fas" :class="isCameraOn ? 'fa-video' : 'fa-video-slash'"></i>
-        {{ isCameraOn ? 'Camera On' : 'Camera Off' }}
+        <span class="button-text">{{ isCameraOn ? 'Camera On' : 'Camera Off' }}</span>
       </button>
     </div>
   </div>
@@ -85,15 +85,46 @@
 
 <script setup>
 import { useRouter } from 'vue-router'
-import { ref } from 'vue'
+import { ref, onMounted } from 'vue'
 
 const router = useRouter()
 const navigateTo = (path) => router.push(path)
 
 const isCameraOn = ref(false)
-const toggleCamera = () => {
-  isCameraOn.value = !isCameraOn.value
+const stream = ref(null)
+
+const toggleCamera = async () => {
+  try {
+    if (!isCameraOn.value) {
+      stream.value = await navigator.mediaDevices.getUserMedia({ 
+        video: { 
+          width: { ideal: 640 },
+          height: { ideal: 480 },
+          facingMode: 'environment' // Use back camera by default
+        } 
+      })
+      isCameraOn.value = true
+    } else {
+      if (stream.value) {
+        stream.value.getTracks().forEach(track => track.stop())
+        stream.value = null
+      }
+      isCameraOn.value = false
+    }
+  } catch (error) {
+    console.error('Error accessing camera:', error)
+    isCameraOn.value = false
+  }
 }
+
+onMounted(() => {
+  // Clean up camera stream when component is unmounted
+  return () => {
+    if (stream.value) {
+      stream.value.getTracks().forEach(track => track.stop())
+    }
+  }
+})
 </script>
 
 <style scoped>
@@ -385,11 +416,11 @@ const toggleCamera = () => {
   background: rgba(255, 255, 255, 0.9);
   border: none;
   border-radius: 8px;
-  padding: 10px 20px;
+  padding: 8px 16px;
   cursor: pointer;
   display: flex;
   align-items: center;
-  gap: 8px;
+  gap: 6px;
   font-size: 14px;
   color: #333;
   box-shadow: 0 2px 8px rgba(0, 0, 0, 0.1);
@@ -404,5 +435,45 @@ const toggleCamera = () => {
 
 .switch-button i {
   font-size: 16px;
+}
+
+.button-text {
+  display: none;
+}
+
+@media (max-width: 768px) {
+  .camera-switch {
+    bottom: 16px;
+    right: 16px;
+  }
+
+  .switch-button {
+    padding: 8px;
+    border-radius: 50%;
+    width: 40px;
+    height: 40px;
+    justify-content: center;
+  }
+
+  .switch-button i {
+    font-size: 18px;
+    margin: 0;
+  }
+}
+
+@media (max-width: 480px) {
+  .camera-switch {
+    bottom: 12px;
+    right: 12px;
+  }
+
+  .switch-button {
+    width: 36px;
+    height: 36px;
+  }
+
+  .switch-button i {
+    font-size: 16px;
+  }
 }
 </style>
