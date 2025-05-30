@@ -37,8 +37,8 @@ L<template>
           <div class="scanner-content">
             <QrcodeStream @detect="onDetect" @error="onError" class="scanner-video" :constraints="{
               facingMode: currentCamera,
-              width: { ideal: isMicroMode ? 1280 : 640 },
-              height: { ideal: isMicroMode ? 720 : 480 },
+              width: { ideal: isMicroMode ? 640 : 480 },
+              height: { ideal: isMicroMode ? 480 : 360 },
               zoom: isMicroMode ? 4 : 1,
               focusMode: 'continuous',
               pointsOfInterest: [{ x: 0.5, y: 0.5 }],
@@ -519,6 +519,9 @@ input.invalid {
 
 .scanner-video.micro-mode {
   filter: contrast(1.5) brightness(1.3) saturate(1.2);
+  transform: scale(0.8);
+  /* Add this line */
+  transform-origin: center;
 }
 
 .scanner-overlay {
@@ -678,6 +681,7 @@ input.invalid {
 .floating-camera-btn:active {
   transform: scale(0.95);
 }
+
 .change-mode-btn {
   background-color: #8DBAED;
   color: #fff;
@@ -697,6 +701,7 @@ input.invalid {
   transform: translateY(-1px);
   box-shadow: 0 4px 6px rgba(141, 186, 237, 0.3);
 }
+
 /* Responsive Design */
 @media (max-width: 480px) {
   .form-page {
