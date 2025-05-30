@@ -738,17 +738,17 @@ input.invalid {
     margin: 0.5rem;
     padding: 0.75rem;
     width: 100%;
-    max-width: 320px;
+    max-width: 150px;
   }
   
   .scanner-video {
-    height: 160px;
+    height: 140px;
     width: 100%;
   }
   
   .scanner-frame {
-    width: 120px;
-    height: 120px;
+    width: 100px;
+    height: 100px;
   }
   
   .floating-camera-btn {
