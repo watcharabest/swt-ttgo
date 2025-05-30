@@ -64,8 +64,8 @@ L<template>
               class="scanner-video"
               :constraints="{
                 facingMode: currentCamera,
-                width: { ideal: isMicroMode ? 3840 : 1920 },
-                height: { ideal: isMicroMode ? 2160 : 1080 },
+                width: { ideal: isMicroMode ? 1280 : 640 },
+                height: { ideal: isMicroMode ? 720 : 480 },
                 zoom: isMicroMode ? 4 : 1,
                 focusMode: 'continuous',
                 pointsOfInterest: [{ x: 0.5, y: 0.5 }],
@@ -140,7 +140,7 @@ const showScanner = ref(false)
 const showOrderScanner = ref(false)
 const scannerError = ref('')
 const hasMultipleCameras = ref(false)
-const currentCamera = ref('user') // Changed from 'environment' to 'user' for front camera
+const currentCamera = ref('environment') // Changed from 'environment' to 'user' for front camera
 const isMicroMode = ref(false)
 
 // Check if device has multiple cameras
@@ -740,12 +740,12 @@ input.invalid {
   }
   
   .scanner-video {
-    height: 200px;
+    height: 280px;
   }
   
   .scanner-frame {
-    width: 150px;
-    height: 150px;
+    width: 180px;
+    height: 180px;
   }
   
   .floating-camera-btn {
