@@ -737,15 +737,18 @@ input.invalid {
   .scanner-container {
     margin: 0.5rem;
     padding: 0.75rem;
+    width: 100%;
+    max-width: 320px;
   }
   
   .scanner-video {
-    height: 280px;
+    height: 160px;
+    width: 100%;
   }
   
   .scanner-frame {
-    width: 180px;
-    height: 180px;
+    width: 120px;
+    height: 120px;
   }
   
   .floating-camera-btn {
@@ -754,6 +757,22 @@ input.invalid {
     font-size: 1.25rem;
     top: 0.75rem;
     right: 0.75rem;
+  }
+}
+
+/* Add styles for larger screens */
+@media (min-width: 481px) {
+  .scanner-container {
+    width: 450px;
+  }
+  
+  .scanner-video {
+    height: 350px;
+  }
+  
+  .scanner-frame {
+    width: 250px;
+    height: 250px;
   }
 }
 </style>
