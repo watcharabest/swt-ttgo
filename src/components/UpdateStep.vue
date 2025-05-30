@@ -737,18 +737,15 @@ input.invalid {
   .scanner-container {
     margin: 0.5rem;
     padding: 0.75rem;
-    width: 100%;
-    max-width: 280px;
   }
   
   .scanner-video {
-    height: 140px;
-    width: 100%;
+    height: 200px;
   }
   
   .scanner-frame {
-    width: 100px;
-    height: 100px;
+    width: 150px;
+    height: 150px;
   }
   
   .floating-camera-btn {
@@ -757,29 +754,6 @@ input.invalid {
     font-size: 1.25rem;
     top: 0.75rem;
     right: 0.75rem;
-    background: rgba(255, 255, 255, 0.95);
-    box-shadow: 0 2px 6px rgba(0, 0, 0, 0.3);
-  }
-  
-  .floating-camera-btn:active {
-    transform: scale(0.9);
-    background: rgba(255, 255, 255, 1);
-  }
-}
-
-/* Add styles for larger screens */
-@media (min-width: 481px) {
-  .scanner-container {
-    width: 450px;
-  }
-  
-  .scanner-video {
-    height: 350px;
-  }
-  
-  .scanner-frame {
-    width: 250px;
-    height: 250px;
   }
 }
 </style>
