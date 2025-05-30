@@ -92,9 +92,6 @@ L<template>
           
           <div class="scanner-footer">
             <p v-if="scannerError" class="scanner-error">{{ scannerError }}</p>
-            <div class="scanner-tips">
-              <p class="scanner-help">📱 Point your camera at the QR code</p>
-            </div>
             <div class="scanner-buttons">
               <button 
                 type="button" 
