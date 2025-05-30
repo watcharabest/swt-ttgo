@@ -4,23 +4,12 @@ L<template>
     <form @submit.prevent="onSubmit" novalidate>
       <div class="form-group">
         <label for="order">Product Order</label>
-        <div class = "input-with-scanner">
-        <input
-          id="order"
-          v-model="order"
-          type="text"
-          required
-          placeholder="Enter Product Order"
-          :class="{ invalid: orderError }"
-        />
-        <button 
-          type="button" 
-          @click="toggleOrderScanner"
-          :disabled="loading"
-          class="scan-btn"
-        >
-          📱 Scan QR
-        </button>
+        <div class="input-with-scanner">
+          <input id="order" v-model="order" type="text" required placeholder="Enter Product Order"
+            :class="{ invalid: orderError }" />
+          <button type="button" @click="toggleOrderScanner" :disabled="loading" class="scan-btn">
+            📱 Scan QR
+          </button>
         </div>
         <span v-if="orderError" class="error-text">Please fill this field</span>
       </div>
@@ -28,21 +17,9 @@ L<template>
       <div class="form-group">
         <label for="mac" autocomplete="on">MAC Address</label>
         <div class="input-with-scanner">
-          <input
-            id="mac" 
-            name="serial-number"
-            v-model="mac"
-            type="text"
-            required
-            placeholder="Enter MAC Address"
-            :class="{ invalid: macError }"
-          />
-          <button 
-            type="button" 
-            @click="toggleScanner"
-            :disabled="loading"
-            class="scan-btn"
-          >
+          <input id="mac" name="serial-number" v-model="mac" type="text" required placeholder="Enter MAC Address"
+            :class="{ invalid: macError }" />
+          <button type="button" @click="toggleScanner" :disabled="loading" class="scan-btn">
             📱 Scan QR
           </button>
         </div>
@@ -56,50 +33,34 @@ L<template>
             <h3>Scan QR Code</h3>
             <button type="button" @click="closeScanner" class="close-btn">✕</button>
           </div>
-          
+
           <div class="scanner-content">
-            <QrcodeStream 
-              @detect="onDetect"
-              @error="onError"
-              class="scanner-video"
-              :constraints="{
-                facingMode: currentCamera,
-                width: { ideal: isMicroMode ? 1280 : 640 },
-                height: { ideal: isMicroMode ? 720 : 480 },
-                zoom: isMicroMode ? 4 : 1,
-                focusMode: 'continuous',
-                pointsOfInterest: [{ x: 0.5, y: 0.5 }],
-                advanced: isMicroMode ? [
-                  { contrast: 100 },
-                  { brightness: 0 },
-                  { sharpness: 100 }
-                ] : []
-              }"
-              :track="paintBoundingBox"
-            />
+            <QrcodeStream @detect="onDetect" @error="onError" class="scanner-video" :constraints="{
+              facingMode: currentCamera,
+              width: { ideal: isMicroMode ? 1280 : 640 },
+              height: { ideal: isMicroMode ? 720 : 480 },
+              zoom: isMicroMode ? 4 : 1,
+              focusMode: 'continuous',
+              pointsOfInterest: [{ x: 0.5, y: 0.5 }],
+              advanced: isMicroMode ? [
+                { contrast: 100 },
+                { brightness: 0 },
+                { sharpness: 100 }
+              ] : []
+            }" :track="paintBoundingBox" />
             <div class="scanner-overlay">
               <div class="scanner-frame" :class="{ 'micro-mode': isMicroMode }"></div>
-              <button 
-                v-if="hasMultipleCameras"
-                @click="switchCamera" 
-                class="floating-camera-btn"
-                :title="currentCamera === 'user' ? 'Switch to Back Camera' : 'Switch to Front Camera'"
-              >
+              <button v-if="hasMultipleCameras" @click="switchCamera" class="floating-camera-btn"
+                :title="currentCamera === 'user' ? 'Switch to Back Camera' : 'Switch to Front Camera'">
                 {{ currentCamera === 'user' ? '📷' : '📱' }}
               </button>
             </div>
           </div>
-          
           <div class="scanner-footer">
             <p v-if="scannerError" class="scanner-error">{{ scannerError }}</p>
-            <div class="scanner-buttons">
-              <button 
-                type="button" 
-                @click="toggleMicroMode" 
-                class="micro-mode-btn"
-                :class="{ active: isMicroMode }"
-              >
-                🔍 {{ isMicroMode ? 'Normal Mode' : 'Micro Mode' }}
+            <div class="scanner-tips">
+              <button type="button" @click="toggleMicroMode" class="change-mode-btn">
+                📱 Change Mode
               </button>
             </div>
           </div>
@@ -180,13 +141,13 @@ const onDetect = (detectedCodes) => {
   if (detectedCodes.length > 0) {
     const qrData = detectedCodes[0].rawValue
     console.log('QR Code detected:', qrData)
-    
+
     if (showOrderScanner.value) {
       // For product order, accept any non-empty string
       if (qrData && qrData.trim()) {
         order.value = qrData.trim()
         closeScanner()
-        
+
         // Show success notification
         success.value = true
         setTimeout(() => {
@@ -204,7 +165,7 @@ const onDetect = (detectedCodes) => {
       if (qrData && macRegex.test(qrData)) {
         mac.value = qrData
         closeScanner()
-        
+
         // Show success notification
         success.value = true
         setTimeout(() => {
@@ -223,12 +184,12 @@ const onDetect = (detectedCodes) => {
 const paintBoundingBox = (detectedCodes, ctx) => {
   for (const detectedCode of detectedCodes) {
     const { boundingBox: { x, y, width, height } } = detectedCode
-    
+
     // Draw enhanced bounding box
     ctx.lineWidth = 4
     ctx.strokeStyle = isMicroMode.value ? '#8DBAED' : '#00ff00'
     ctx.strokeRect(x, y, width, height)
-    
+
     // Add corner markers for better visual feedback
     const cornerSize = 20
     ctx.beginPath()
@@ -249,7 +210,7 @@ const paintBoundingBox = (detectedCodes, ctx) => {
     ctx.lineTo(x, y + height)
     ctx.lineTo(x, y + height - cornerSize)
     ctx.stroke()
-    
+
     // Add status text
     ctx.font = 'bold 18px Arial'
     ctx.fillStyle = isMicroMode.value ? '#8DBAED' : '#00ff00'
@@ -322,9 +283,9 @@ const onSubmit = async () => {
       mac_address: mac.value,
       product_order: order.value
     })
-    
+
     // Simulate API call for demo
-    
+
     success.value = true
     // Clear form
     mac.value = ''
@@ -594,9 +555,11 @@ input.invalid {
   0% {
     box-shadow: 0 0 0 0 rgba(0, 255, 0, 0.4);
   }
+
   70% {
     box-shadow: 0 0 0 10px rgba(0, 255, 0, 0);
   }
+
   100% {
     box-shadow: 0 0 0 0 rgba(0, 255, 0, 0);
   }
@@ -610,9 +573,11 @@ input.invalid {
   0% {
     box-shadow: 0 0 0 0 rgba(141, 186, 237, 0.4), 0 0 0 9999px rgba(0, 0, 0, 0.7);
   }
+
   70% {
     box-shadow: 0 0 0 10px rgba(141, 186, 237, 0), 0 0 0 9999px rgba(0, 0, 0, 0.7);
   }
+
   100% {
     box-shadow: 0 0 0 0 rgba(141, 186, 237, 0), 0 0 0 9999px rgba(0, 0, 0, 0.7);
   }
@@ -713,38 +678,56 @@ input.invalid {
 .floating-camera-btn:active {
   transform: scale(0.95);
 }
+.change-mode-btn {
+  background-color: #8DBAED;
+  color: #fff;
+  border: none;
+  padding: 0.75rem 1.25rem;
+  border-radius: 8px;
+  cursor: pointer;
+  font-size: 1rem;
+  font-weight: 600;
+  transition: all 0.3s ease;
+  box-shadow: 0 2px 4px rgba(141, 186, 237, 0.2);
+  width: 100%;
+}
 
+.change-mode-btn:hover {
+  background-color: #6ba8e0;
+  transform: translateY(-1px);
+  box-shadow: 0 4px 6px rgba(141, 186, 237, 0.3);
+}
 /* Responsive Design */
 @media (max-width: 480px) {
   .form-page {
     margin: 1rem;
     padding: 1.5rem;
   }
-  
+
   .input-with-scanner {
     flex-direction: column;
     align-items: stretch;
   }
-  
+
   .scan-btn {
     padding: 0.75rem;
     font-size: 1rem;
   }
-  
+
   .scanner-container {
     margin: 0.5rem;
     padding: 0.75rem;
   }
-  
+
   .scanner-video {
     height: 240px;
   }
-  
+
   .scanner-frame {
     width: 180px;
     height: 180px;
   }
-  
+
   .floating-camera-btn {
     width: 2.5rem;
     height: 2.5rem;
