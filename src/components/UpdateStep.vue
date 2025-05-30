@@ -738,7 +738,7 @@ input.invalid {
     margin: 0.5rem;
     padding: 0.75rem;
     width: 100%;
-    max-width: 150px;
+    max-width: 280px;
   }
   
   .scanner-video {
@@ -757,6 +757,13 @@ input.invalid {
     font-size: 1.25rem;
     top: 0.75rem;
     right: 0.75rem;
+    background: rgba(255, 255, 255, 0.95);
+    box-shadow: 0 2px 6px rgba(0, 0, 0, 0.3);
+  }
+  
+  .floating-camera-btn:active {
+    transform: scale(0.9);
+    background: rgba(255, 255, 255, 1);
   }
 }
 
