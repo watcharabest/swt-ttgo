@@ -73,12 +73,15 @@
             </div>
         </div>
         </div>
-  </div>
+    </div>
+    <CameraSwitch />
   </div>
 </template>
 
 <script setup>
 import { useRouter } from 'vue-router'
+import CameraSwitch from './CameraSwitch.vue'
+
 const router = useRouter()
 const navigateTo = (path) => router.push(path)
 </script>

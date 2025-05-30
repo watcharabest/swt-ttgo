@@ -13,6 +13,14 @@ L<template>
           placeholder="Enter Product Order"
           :class="{ invalid: orderError }"
         />
+        <button 
+          type="button" 
+          @click="toggleOrderScanner"
+          :disabled="loading"
+          class="scan-btn"
+        >
+          📱 Scan QR
+        </button>
         </div>
         <span v-if="orderError" class="error-text">Please fill this field</span>
       </div>
@@ -42,7 +50,7 @@ L<template>
       </div>
 
       <!-- QR Scanner Modal -->
-      <div v-if="showScanner" class="scanner-modal" @click="closeScanner">
+      <div v-if="showScanner || showOrderScanner" class="scanner-modal" @click="closeScanner">
         <div class="scanner-container" @click.stop>
           <div class="scanner-header">
             <h3>Scan QR Code</h3>
@@ -71,6 +79,14 @@ L<template>
             />
             <div class="scanner-overlay">
               <div class="scanner-frame" :class="{ 'micro-mode': isMicroMode }"></div>
+              <button 
+                v-if="hasMultipleCameras"
+                @click="switchCamera" 
+                class="floating-camera-btn"
+                :title="currentCamera === 'user' ? 'Switch to Back Camera' : 'Switch to Front Camera'"
+              >
+                {{ currentCamera === 'user' ? '📷' : '📱' }}
+              </button>
             </div>
           </div>
           
@@ -80,14 +96,6 @@ L<template>
               <p class="scanner-help">📱 Point your camera at the QR code</p>
             </div>
             <div class="scanner-buttons">
-              <button 
-                type="button" 
-                @click="switchCamera" 
-                v-if="hasMultipleCameras" 
-                class="switch-camera-btn"
-              >
-                🔄 Switch Camera
-              </button>
               <button 
                 type="button" 
                 @click="toggleMicroMode" 
@@ -129,6 +137,7 @@ const orderError = ref(false)
 
 // QR Scanner related
 const showScanner = ref(false)
+const showOrderScanner = ref(false)
 const scannerError = ref('')
 const hasMultipleCameras = ref(false)
 const currentCamera = ref('user') // Changed from 'environment' to 'user' for front camera
@@ -175,23 +184,41 @@ const onDetect = (detectedCodes) => {
     const qrData = detectedCodes[0].rawValue
     console.log('QR Code detected:', qrData)
     
-    // Validate MAC address format (XX:XX:XX:XX:XX:XX)
-    const macRegex = /^([0-9A-Fa-f]{2}[:-]){5}([0-9A-Fa-f]{2})$/
-    if (qrData && macRegex.test(qrData)) {
-      mac.value = qrData
-      closeScanner()
-      
-      // Show success notification
-      success.value = true
-      setTimeout(() => {
-        success.value = false
-      }, 2000)
+    if (showOrderScanner.value) {
+      // For product order, accept any non-empty string
+      if (qrData && qrData.trim()) {
+        order.value = qrData.trim()
+        closeScanner()
+        
+        // Show success notification
+        success.value = true
+        setTimeout(() => {
+          success.value = false
+        }, 2000)
+      } else {
+        scannerError.value = 'Invalid product order. Please scan again.'
+        setTimeout(() => {
+          scannerError.value = ''
+        }, 3000)
+      }
     } else {
-      // Show error for invalid MAC format
-      scannerError.value = 'Invalid MAC address format. Please scan again.'
-      setTimeout(() => {
-        scannerError.value = ''
-      }, 3000)
+      // Existing MAC address validation
+      const macRegex = /^([0-9A-Fa-f]{2}[:-]){5}([0-9A-Fa-f]{2})$/
+      if (qrData && macRegex.test(qrData)) {
+        mac.value = qrData
+        closeScanner()
+        
+        // Show success notification
+        success.value = true
+        setTimeout(() => {
+          success.value = false
+        }, 2000)
+      } else {
+        scannerError.value = 'Invalid MAC address format. Please scan again.'
+        setTimeout(() => {
+          scannerError.value = ''
+        }, 3000)
+      }
     }
   }
 }
@@ -240,6 +267,7 @@ const onError = (err) => {
 
 const closeScanner = () => {
   showScanner.value = false
+  showOrderScanner.value = false
   scannerError.value = ''
 }
 
@@ -251,6 +279,29 @@ const switchCamera = () => {
 
 const toggleMicroMode = () => {
   isMicroMode.value = !isMicroMode.value
+}
+
+const toggleOrderScanner = async () => {
+  if (!showOrderScanner.value) {
+    const hasCamera = await checkCameraSupport()
+    if (!hasCamera) {
+      scannerError.value = 'No camera found on this device'
+      return
+    }
+    startOrderScanner()
+  } else {
+    closeScanner()
+  }
+}
+
+const startOrderScanner = async () => {
+  try {
+    showOrderScanner.value = true
+    scannerError.value = ''
+  } catch (err) {
+    console.error('Scanner start failed:', err)
+    scannerError.value = `Camera error: ${err.message}`
+  }
 }
 
 const onSubmit = async () => {
@@ -604,26 +655,11 @@ input.invalid {
   gap: 1rem;
   justify-content: center;
   margin-top: 1rem;
+  flex-wrap: wrap;
 }
 
 .switch-camera-btn {
-  background-color: #8DBAED;
-  color: #2c3e50;
-  border: none;
-  padding: 0.75rem 1.25rem;
-  border-radius: 8px;
-  cursor: pointer;
-  font-size: 0.9rem;
-  font-weight: 600;
-  transition: all 0.3s ease;
-  box-shadow: 0 2px 4px rgba(141, 186, 237, 0.2);
-}
-
-.switch-camera-btn:hover {
-  background-color: #6ba8e0;
-  color: #fff;
-  transform: translateY(-1px);
-  box-shadow: 0 4px 6px rgba(141, 186, 237, 0.3);
+  display: none;
 }
 
 .micro-mode-btn {
@@ -651,6 +687,36 @@ input.invalid {
   color: #fff;
 }
 
+/* Add floating camera button styles */
+.floating-camera-btn {
+  position: absolute;
+  top: 1rem;
+  right: 1rem;
+  width: 3rem;
+  height: 3rem;
+  border-radius: 50%;
+  background: rgba(255, 255, 255, 0.9);
+  border: none;
+  font-size: 1.5rem;
+  cursor: pointer;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  box-shadow: 0 2px 8px rgba(0, 0, 0, 0.2);
+  transition: all 0.3s ease;
+  z-index: 10;
+}
+
+.floating-camera-btn:hover {
+  transform: scale(1.1);
+  background: rgba(255, 255, 255, 1);
+  box-shadow: 0 4px 12px rgba(0, 0, 0, 0.3);
+}
+
+.floating-camera-btn:active {
+  transform: scale(0.95);
+}
+
 /* Responsive Design */
 @media (max-width: 480px) {
   .form-page {
@@ -669,17 +735,25 @@ input.invalid {
   }
   
   .scanner-container {
-    margin: 1rem;
-    padding: 1rem;
+    margin: 0.5rem;
+    padding: 0.75rem;
   }
   
   .scanner-video {
-    height: 300px;
+    height: 280px;
   }
   
   .scanner-frame {
-    width: 200px;
-    height: 200px;
+    width: 180px;
+    height: 180px;
+  }
+  
+  .floating-camera-btn {
+    width: 2.5rem;
+    height: 2.5rem;
+    font-size: 1.25rem;
+    top: 0.75rem;
+    right: 0.75rem;
   }
 }
 </style>
