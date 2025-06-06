@@ -96,9 +96,9 @@
         <div v-if="editTable === 'table01'">
           <h2>Image Preview & Upload</h2>
           <div class="preview" v-if="previewUrl">
-            <img :src="previewUrl" alt="Preview" />
+            <img :src="previewUrl" alt="Preview" />F
           </div>
-          <p v-else class="error">No image selected</p>
+          <p v-else class="error-img">No image selected</p>
         </div>
         <button type="submit" :disabled="loading" class="btn-submit">{{ loading ? 'Processing…' : 'Submit' }}</button>
         <p v-if="error" class="error">{{ error }}</p>
@@ -202,7 +202,7 @@ const submit = async () => {
 
   try {
     // เรียก endpoint เดียว
-    await axios.post('https://10.100.67.37:8000/submit-product-info', data)
+    await axios.post('https://10.100.86.16:8000/submit-product-info', data)
     success.value = true
     imageSuccess.value = !!selectedFile.value
     // เคลียร์ฟอร์ม
@@ -234,7 +234,7 @@ async function onDelete() {
   }
   loading.value = true
   try {
-    await axios.delete(`https://10.100.67.37:8000/delete-product/${deletePo.value}`)
+    await axios.delete(`https://10.100.86.16:8000/delete-product/${deletePo.value}`)
     deleteSuccess.value = true
     deletePo.value = ''
   } catch (err) {
@@ -248,18 +248,18 @@ async function onDelete() {
 <style scoped>
 .box-wrapper {
   max-width: 500px;
-  margin: 1.5rem auto;
-  padding: 1.5rem;
+  margin: 2rem auto;
+  padding: 2rem;
   background: rgba(255, 255, 255, 0.95);
-  border-radius: 12px;
+  border-radius: 16px;
   box-shadow: 0 8px 32px rgba(0, 0, 0, 0.1);
 }
 
 h1 {
   color: #2c3e50;
   text-align: center;
-  margin-bottom: 1.5rem;
-  font-size: 1.75rem;
+  margin-bottom: 2rem;
+  font-size: 2rem;
   font-weight: 600;
 }
 
@@ -311,24 +311,24 @@ h2 {
 }
 
 .form-group {
-  margin-bottom: 1rem;
+  margin-bottom: 1.5rem;
 }
 
 label {
   display: block;
-  margin-bottom: 0.35rem;
+  margin-bottom: 0.5rem;
   color: #2c3e50;
   font-weight: 600;
-  font-size: 0.9rem;
+  font-size: 0.95rem;
 }
 
 input[type="text"],
 select {
   width: 100%;
-  padding: 0.6rem 0.75rem;
+  padding: 0.75rem 1rem;
   border: 2px solid #e2e8f0;
   border-radius: 8px;
-  font-size: 0.95rem;
+  font-size: 1rem;
   background: #f8fafc;
   transition: all 0.3s ease;
 }
@@ -384,26 +384,26 @@ input[type="file"]:hover {
 .btn-submit,
 .btn-delete {
   width: 100%;
-  padding: 0.75rem;
+  padding: 1rem;
   border: none;
   border-radius: 8px;
   font-weight: 600;
-  font-size: 0.95rem;
+  font-size: 1rem;
   cursor: pointer;
   transition: all 0.3s ease;
-  margin-top: 1.25rem;
+  margin-top: 1rem;
 }
 
 .btn-submit {
   background: #C7E299;
   color: white;
-  box-shadow: 0 2px 4px rgba(141, 186, 237, 0.2);
+  box-shadow: 0 2px 4px rgba(199, 226, 153, 0.2);
 }
 
 .btn-submit:hover:not(:disabled) {
   background: #b3d486;
   transform: translateY(-1px);
-  box-shadow: 0 4px 6px rgba(141, 186, 237, 0.3);
+  box-shadow: 0 4px 6px rgba(199, 226, 153, 0.3);
 }
 
 .btn-delete {
@@ -446,23 +446,25 @@ input[type="file"]:hover {
   font-size: 0.9rem;
 }
 
-@media (max-width: 640px) {
+@media (max-width: 480px) {
   .box-wrapper {
     margin: 1rem;
-    padding: 1.25rem;
+    padding: 1.5rem;
   }
 
   .box {
-    padding: 1.25rem;
+    padding: 1.5rem;
   }
 
-  .toggle-buttons {
-    flex-direction: column;
-    gap: 0.35rem;
+  input[type="text"],
+  select,
+  input[type="file"] {
+    font-size: 16px; /* Prevent zoom on mobile */
   }
 
-  .toggle-buttons button {
-    width: 100%;
+  .btn-submit,
+  .btn-delete {
+    padding: 0.875rem;
   }
 }
 </style>

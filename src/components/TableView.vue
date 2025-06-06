@@ -158,7 +158,7 @@ const pagedRows = computed(() => {
 
 async function loadTable() {
   try {
-    const res = await axios.get(`https://10.100.67.37:8000/${viewTable.value}`)
+    const res = await axios.get(`https://10.100.86.16:8000/${viewTable.value}`)
     rows.value = Array.isArray(res.data) ? res.data : []
     currentPage.value = 1
   } catch (err) {
@@ -198,40 +198,41 @@ function sortBy(key) {
 .view-box {
   grid-area: view;
   border: none;
-  border-radius: 12px;
-  padding: 1.5rem;
+  border-radius: 16px;
+  padding: 2rem;
   background: rgba(255, 255, 255, 0.95);
   box-shadow: 0 8px 32px rgba(0, 0, 0, 0.1);
-  margin: 1.5rem;
+  margin: 2rem;
 }
 
 h2 {
   color: #2c3e50;
-  margin-bottom: 1.25rem;
-  font-size: 1.5rem;
+  margin-bottom: 2rem;
+  font-size: 2rem;
   font-weight: 600;
+  text-align: center;
 }
 
 .form-group {
-  margin-bottom: 1rem;
+  margin-bottom: 1.5rem;
 }
 
 label {
   display: block;
-  margin-bottom: 0.35rem;
+  margin-bottom: 0.5rem;
   color: #2c3e50;
   font-weight: 600;
-  font-size: 0.9rem;
+  font-size: 0.95rem;
 }
 
 .table-select {
-  width: 180px;
-  padding: 0.6rem 0.75rem;
+  width: 100%;
+  padding: 0.75rem 1rem;
   border: 2px solid #e2e8f0;
   border-radius: 8px;
   background: #f8fafc;
   color: #2c3e50;
-  font-size: 0.95rem;
+  font-size: 1rem;
   transition: all 0.3s ease;
   cursor: pointer;
 }
@@ -243,7 +244,7 @@ label {
 }
 
 .search-box {
-  margin-bottom: 1rem;
+  margin-bottom: 1.5rem;
   width: 100%;
   max-width: 100%;
 }
@@ -251,11 +252,11 @@ label {
 .search-input {
   width: 100%;
   max-width: 100%;
-  padding: 0.6rem 0.75rem;
+  padding: 0.75rem 1rem;
   border: 2px solid #e2e8f0;
   border-radius: 8px;
   background: #f8fafc;
-  font-size: 0.95rem;
+  font-size: 1rem;
   transition: all 0.3s ease;
   box-sizing: border-box;
 }
@@ -270,7 +271,7 @@ table {
   width: 100%;
   border-collapse: separate;
   border-spacing: 0;
-  margin-top: 1rem;
+  margin-top: 1.5rem;
   background: white;
   border-radius: 8px;
   overflow: hidden;
@@ -281,10 +282,10 @@ th {
   background: #f8fafc;
   color: #2c3e50;
   font-weight: 600;
-  padding: 0.75rem;
+  padding: 1rem;
   text-align: left;
   border-bottom: 2px solid #e2e8f0;
-  font-size: 0.9rem;
+  font-size: 0.95rem;
 }
 
 th.sortable {
@@ -337,75 +338,71 @@ tr:hover td {
   display: flex;
   justify-content: center;
   align-items: center;
-  gap: 0.75rem;
-  margin-top: 1.5rem;
-  padding: 0.75rem;
+  gap: 1rem;
+  margin-top: 2rem;
+  padding: 1rem;
   background: #f8fafc;
   border-radius: 8px;
 }
 
 .pagination button {
-  padding: 0.6rem 1.25rem;
+  padding: 0.75rem 1.5rem;
   border: none;
   border-radius: 8px;
-  background: #8DBAED;
-  color: #2c3e50;
+  background: #C7E299;
+  color: white;
   font-weight: 600;
-  font-size: 0.9rem;
+  font-size: 1rem;
   cursor: pointer;
   transition: all 0.3s ease;
+  box-shadow: 0 2px 4px rgba(199, 226, 153, 0.2);
 }
 
 .pagination button:hover:not(:disabled) {
-  background: #6ba8e0;
-  color: white;
+  background: #b3d486;
   transform: translateY(-1px);
-  box-shadow: 0 4px 6px rgba(141, 186, 237, 0.2);
+  box-shadow: 0 4px 6px rgba(199, 226, 153, 0.3);
 }
 
 .pagination button:disabled {
-  opacity: 0.5;
+  opacity: 0.6;
   cursor: not-allowed;
   transform: none;
   box-shadow: none;
 }
 
 .pagination span {
-  color: #4a5568;
-  font-weight: 500;
-  font-size: 0.9rem;
+  color: #2c3e50;
+  font-weight: 600;
+  font-size: 1rem;
 }
 
-@media (max-width: 768px) {
+@media (max-width: 480px) {
   .view-box {
     margin: 1rem;
-    padding: 1rem;
+    padding: 1.5rem;
     width: calc(100% - 2rem);
     box-sizing: border-box;
   }
 
   .search-box {
-    padding: 0 0.5rem;
-    box-sizing: border-box;
+    padding: 0;
   }
 
-  .search-input {
-    width: 100%;
-    max-width: 100%;
-    box-sizing: border-box;
-  }
-
+  .search-input,
   .table-select {
-    width: 100%;
+    font-size: 16px; /* Prevent zoom on mobile */
   }
 
   .pagination {
     flex-direction: column;
-    gap: 0.5rem;
+    gap: 0.75rem;
+    padding: 0.75rem;
   }
 
   .pagination button {
     width: 100%;
+    padding: 0.875rem;
   }
 
   /* Add responsive table styles */
@@ -417,8 +414,8 @@ tr:hover td {
   }
 
   th, td {
-    min-width: 120px; /* Ensure columns have minimum width */
-    padding: 0.5rem;
+    min-width: 120px;
+    padding: 0.75rem;
   }
 
   .image-cell {
@@ -432,7 +429,7 @@ tr:hover td {
 
   /* Improve text readability on mobile */
   th, td {
-    font-size: 0.85rem;
+    font-size: 0.9rem;
   }
 
   /* Add horizontal scroll indicator */

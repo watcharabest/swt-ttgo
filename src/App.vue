@@ -22,9 +22,13 @@
             <i class="fas fa-home"></i>
             Home
           </router-link>
+          <router-link to="/update-tray" class="nav-link" @click="closeMobileMenu">
+            <i class="fas fa-sync-alt"></i>
+            Map Display
+          </router-link>
           <router-link to="/update" class="nav-link" @click="closeMobileMenu">
             <i class="fas fa-sync-alt"></i>
-            Update Display
+            Map PO
           </router-link>
           <router-link to="/tray" class="nav-link" @click="closeMobileMenu">
             <i class="fas fa-utensils"></i>

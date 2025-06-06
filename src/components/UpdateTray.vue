@@ -1,11 +1,11 @@
 L<template>
   <div class="form-page">
-    <h1>Send Product Info</h1>
+    <h1>Map Display</h1>
     <form @submit.prevent="onSubmit" novalidate>
       <div class="form-group">
-        <label for="order">Product Order</label>
+        <label for="order">Tray ID</label>
         <div class="input-with-scanner">
-          <input id="order" v-model="order" type="text" required placeholder="Enter Product Order"
+          <input id="tray" v-model="order" type="text" required placeholder="Enter Tray ID"
             :class="{ invalid: orderError }" />
           <button type="button" @click="toggleOrderScanner" :disabled="loading" class="scan-btn">
             📱 Scan QR
@@ -15,7 +15,7 @@ L<template>
       </div>
 
       <div class="form-group">
-        <label for="mac" autocomplete="on">MAC Address</label>
+        <label for="mac" autocomplete="on">Display Mac Address</label>
         <div class="input-with-scanner">
           <input id="mac" name="serial-number" v-model="mac" type="text" required placeholder="Enter MAC Address"
             :class="{ invalid: macError }" />
@@ -279,9 +279,9 @@ const onSubmit = async () => {
 
   loading.value = true
   try {
-    await axios.post('https://10.100.86.16:8000/get-product-info', {
+    await axios.post('https://10.100.86.16:8000/update_tray_first', {
       mac_address: mac.value,
-      product_order: order.value
+      tray_id: order.value
     })
 
     // Simulate API call for demo

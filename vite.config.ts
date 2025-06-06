@@ -29,7 +29,7 @@ export default defineConfig({
     cors: true,
     proxy: {
       '/images': {
-        target: 'https://10.100.67.37:8000',
+        target: 'https://10.100.86.16:8000',
         changeOrigin: true,
         secure: false,
       }
