@@ -37,7 +37,7 @@ const onDelete = async () => {
   deleteError.value = ''
 
   try {
-    await axios.post('https://10.100.86.16:8000/clear-display', { product_order: deletePo.value })
+    await axios.post('https://10.100.113.33:8000/clear-display', { product_order: deletePo.value })
     deleteSuccess.value = true
     deletePo.value = ''
   } catch (error) {

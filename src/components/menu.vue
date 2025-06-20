@@ -1,15 +1,13 @@
 <template>
   <div class="dashboard">
-
     <div class="dashboard-header">
       <div class="dashboard-grid">
         <div class="dashboard-card" @click="navigateTo('/update-tray')">
           <div class="card-icon updatetray">
             <i class="fas fa-sync-alt"></i>
           </div>
-          <h3 class="card-title">Update Tray</h3>
+          <h3 class="card-title">Map Tray</h3>
           <p class="card-description">Mapping Tray ID To Mac Address (TTGO)</p>
-          <p style="color: red;">Use When Don't Have Product Order </p>
           <div class="card-arrow">
             <i class="fas fa-arrow-right"></i>
           </div>
@@ -19,7 +17,7 @@
           <div class="card-icon update">
             <i class="fas fa-sync-alt"></i>
           </div>
-          <h3 class="card-title">Update Product Order</h3>
+          <h3 class="card-title">Map Product Order</h3>
           <p class="card-description">Mapping Product Order To Mac Address (TTGO)</p>
           <div class="card-arrow">
             <i class="fas fa-arrow-right"></i>
@@ -32,7 +30,6 @@
           </div>
           <h3 class="card-title">Update Tray</h3>
           <p class="card-description">Add / Delete Tray List When Have Product Order</p>
-          <p style="color: red;">Use When Have Product Order </p>
           <div class="card-arrow">
             <i class="fas fa-arrow-right"></i>
           </div>
@@ -66,21 +63,27 @@
           </div>
           <h3 class="card-title">Clear</h3>
           <p class="card-description">Clear Tray Data</p>
-          <p style="color: red;">Use When Finish All Process</p>
           <div class="card-arrow">
             <i class="fas fa-arrow-right"></i>
           </div>
         </div>
 
         <div class="dashboard-card no-hover">
-          <h2 class="card-title" style="text-align: center;">Update</h2>
+          <h3 class="card-title" style="text-align: center">Update</h3>
           <div class="scan-container">
-            <button type="button" @click="toggleScanner" :disabled="loading" class="scan-btn">
+            <button type="button" @click="toggleScanner('update')" :disabled="loading" class="scan-btn">
               📱 Scan QR Code
             </button>
           </div>
+        </div>
 
-
+        <div class="dashboard-card no-hover">
+          <h3 class="card-title" style="text-align: center">Lookup</h3>
+          <div class="scan-container">
+            <button type="button" @click="toggleScanner('lookup')" :disabled="loading" class="scan-btn">
+              📱 Scan QR Code
+            </button>
+          </div>
         </div>
       </div>
     </div>
@@ -100,30 +103,99 @@
             zoom: isMicroMode ? 4 : 1,
             focusMode: 'continuous',
             pointsOfInterest: [{ x: 0.5, y: 0.5 }],
-            advanced: isMicroMode ? [
-              { contrast: 100 },
-              { brightness: 0 },
-              { sharpness: 100 }
-            ] : []
+            advanced: isMicroMode
+              ? [{ contrast: 100 }, { brightness: 0 }, { sharpness: 100 }]
+              : [],
           }" :track="paintBoundingBox" />
           <div class="scanner-overlay">
             <div class="scanner-frame" :class="{ 'micro-mode': isMicroMode }"></div>
-            <button v-if="hasMultipleCameras" @click="switchCamera" class="floating-camera-btn"
-              :title="currentCamera === 'user' ? 'Switch to Back Camera' : 'Switch to Front Camera'">
-              {{ currentCamera === 'user' ? '📷' : '📱' }}
+            <button v-if="hasMultipleCameras" @click="switchCamera" class="floating-camera-btn" :title="currentCamera === 'user'
+              ? 'Switch to Back Camera'
+              : 'Switch to Front Camera'
+              ">
+              {{ currentCamera === "user" ? "📷" : "📱" }}
             </button>
           </div>
         </div>
         <div class="scanner-footer">
           <p v-if="scannerError" class="scanner-error">{{ scannerError }}</p>
           <p v-if="scannerSuccess" class="scanner-success">{{ scannerSuccess }}</p>
-          <div class="scanner-tips">
+          <div v-if="scanMode === 'update'" class="scanner-tips">
             <button type="button" @click="toggleMicroMode" class="change-mode-btn">
-              📱 Change Mode
+              {{ isMicroMode ? "Normal Mode" : "Micro Mode" }}
             </button>
             <button type="button" @click="resetScanState" class="reset-btn">
-              🔄 Reset Scanner
+              Reset Scanner
             </button>
+            <div v-if="operationLog" class="operation-log">
+              <h2>{{ operationLog }}</h2>
+            </div>
+            <div class="mode-switcher">
+              <button @click="prevMode" class="tray-btn">◀</button>
+              <h2>
+                You are using
+                <span :class="['tray-mode', trayOperation]">{{ trayOperation }}</span>
+                Mode
+              </h2>
+              <button @click="nextMode" class="tray-btn">▶</button>
+            </div>
+          </div>
+          <div v-if="scanMode === 'lookup' && lookupResult" class="scanner-tips-lookup">
+            <div v-if="lookupResult">
+              <p>
+                Product Order:
+                <span class="highlight-product">{{ lookupResult[0].product_order }}</span>
+              </p>
+              <p>
+                Material:
+                <span class="highlight-material">{{ lookupResult[0].material }}</span>
+              </p>
+              <p>
+                Name:
+                <span class="highlight-name">{{ lookupResult[0].name_product }}</span>
+              </p>
+              <div class="lookup-bottom-section">
+                <!-- รูป -->
+                <img :src="`/images/${lookupResult[0].material}.jpg`" :alt="lookupResult[0].material"
+                  class="lookup-image" />
+
+                <div class="table-container">
+                  <table>
+                    <thead>
+                      <tr>
+                        <th @click="sortBy('id')" class="sortable">
+                          Tray ID
+                          <span v-if="sortKey === 'id'">{{ sortAsc ? "▲" : "▼" }}</span>
+                        </th>
+                        <th @click="sortBy('location')" class="sortable">
+                          Location
+                          <span v-if="sortKey === 'location'">{{
+                            sortAsc ? "▲" : "▼"
+                            }}</span>
+                        </th>
+                      </tr>
+                    </thead>
+                    <tbody>
+                      <tr>
+                        <td
+                          :style="{ color: scannedTrayIds.includes(trayMain) ? '#0066cc' : 'red', paddingRight: '1rem' }">
+                          {{ trayMain }}
+                        </td>
+                        <td>
+                          {{ trayMainLocation ?? "❌" }}
+                        </td>
+                      </tr>
+                      <tr v-for="(tray, i) in sortedTrayDetails" :key="i">
+                        <td :style="{ color: scannedTrayIds.includes(tray.id) ? '#0066cc' : 'inherit' }">
+                          {{ tray.id || "-" }}
+                        </td>
+                        <td>{{ tray.location ?? "❌" }}</td>
+                      </tr>
+                    </tbody>
+                  </table>
+                </div>
+              </div>
+            </div>
           </div>
           <div class="type-reference" v-if="scannedData.length > 0">
             <div class="type-list">
@@ -131,474 +203,848 @@
                 :class="['type-item', scan.type.toLowerCase().replace(' ', '-')]">
                 <span class="type-label">{{ scan.type }}:</span>
                 <span class="type-format">{{ scan.value }}</span>
+                <div v-if="scan.type === 'Shelf Location'" class="shelf-location-controls">
+                  <label class="checkbox-container">
+                    <input type="checkbox" v-model="StatusForRemember" class="shelf-checkbox" />
+                    <span class="checkmark">✓</span>
+                    <span class="checkbox-label">Skip re-scan</span>
+                  </label>
+                </div>
               </div>
             </div>
             <div v-if="waitingForMac" class="scan-instruction">
               Please scan MAC Address
             </div>
-            <div v-if="scannedData.length === 2 && 
-                      scannedData[0].type === 'Tray ID' && 
-                      scannedData[1].type === 'Tray ID'" 
-                 class="tray-buttons">
-              <button @click="handleTrayOperation('add')" class="tray-btn add">
-                <i class="fas fa-plus"></i> Add Tray
-              </button>
-              <button @click="handleTrayOperation('change')" class="tray-btn change">
-                <i class="fas fa-exchange-alt"></i> Change Tray
-              </button>
-              <button @click="handleTrayOperation('delete')" class="tray-btn delete">
-                <i class="fas fa-trash"></i> Delete Tray
-              </button>
-            </div>
           </div>
-          
         </div>
       </div>
     </div>
-
   </div>
 </template>
 
 <script setup>
-import { useRouter } from 'vue-router'
-import { ref, onMounted } from 'vue'
-import { QrcodeStream } from 'vue-qrcode-reader'
-import axios from 'axios'
+import { useRouter } from "vue-router";
+import { ref, onMounted, computed, watch } from "vue";
+import { QrcodeStream } from "vue-qrcode-reader";
+import axios from "axios";
 
-const router = useRouter()
-const navigateTo = (path) => router.push(path)
+const router = useRouter();
+const navigateTo = (path) => router.push(path);
 
-const productOrder = ref('')
-const loading = ref(false)
-const error = ref(null)
-const success = ref(false)
-const qrData = ref('')
-
+const productOrder = ref("");
+const loading = ref(false);
+const error = ref(null);
+const success = ref(false);
+const qrData = ref("");
+const lookupResult = ref(null);
+const trayMain = ref("");
+const trayMainLocation = ref("");
+const childTrayIds = ref(Array(12).fill(""));
+const trayIds = ref(Array(12).fill(""));
+const childLocations = ref(Array(12).fill(null));
+const operationLog = ref("");
+const rememberShelfLocation = ref(false);
 // Error states
-const macError = ref(false)
-const orderError = ref(false)
+const macError = ref(false);
+const orderError = ref(false);
 
 // New state variables for tracking scans
-const scanCount = ref(0)
-const scannedData = ref([])
-const waitingForMac = ref(false)
+const scanCount = ref(0);
+const scannedData = ref([]);
+const waitingForMac = ref(false);
 
 // QR Scanner related
-const showScanner = ref(false)
-const scannerError = ref('')
-const scannerSuccess = ref('')
-const hasMultipleCameras = ref(false)
-const currentCamera = ref('environment')
-const isMicroMode = ref(false)
+const showScanner = ref(false);
+const scannerError = ref("");
+const scannerSuccess = ref("");
+const hasMultipleCameras = ref(false);
+const currentCamera = ref("environment");
+const isMicroMode = ref(false);
+const scanMode = ref(null);
+const trayModes = ["change", "delete", "add"];
+const currentModeIndex = ref(0);
+const sortKey = ref("id");
+const sortAsc = ref(true);
 
+const StatusForRemember = ref(false);
 // Add these refs for data classification
-const dataType = ref('')
-const isValidData = ref(true)
+const dataType = ref("");
 
 // Add new refs for tray management
-const showTrayOptions = ref(false)
-const trayOperation = ref('') // 'add', 'change', or 'delete'
-const scannedTrayIds = ref([]) // Store scanned tray IDs
+const trayOperation = ref("Change"); // 'add', 'change', or 'delete'
+const scannedTrayIds = ref([]); // Store scanned tray IDs
 
 const resetScanState = () => {
-  scanCount.value = 0
-  scannedData.value = []
-  productOrder.value = ''
-  qrData.value = ''
-  dataType.value = ''
-  error.value = null
-  macError.value = false
-  orderError.value = false
-  waitingForMac.value = false
-  scannerSuccess.value = ''
-}
+  scanCount.value = 0;
+  scannedData.value = [];
+  productOrder.value = "";
+  qrData.value = "";
+  dataType.value = "";
+  error.value = null;
+  macError.value = false;
+  orderError.value = false;
+  waitingForMac.value = false;
+  scannerSuccess.value = "";
+  console.log("Scan state reset");
+};
 
 const handleApiCall = async (data) => {
   // Reset error states
-  error.value = null
-  macError.value = false
-  orderError.value = false
+  error.value = null;
+  macError.value = false;
+  orderError.value = false;
 
   try {
-    loading.value = true
-    let endpoint = '/get-product-info'
-    let requestData = {}
+    loading.value = true;
+    let endpoint = data.endpoint;
+    let requestData = {};
 
-    // Determine endpoint and request data based on the scan sequence
-    if (data.endpoint) {
-      // If endpoint is explicitly provided (for MAC first scenarios)
-      endpoint = data.endpoint
-      if (endpoint === '/get-product-info') {
-        requestData = {
-          mac_address: data.macAddress,
-          product_order: data.productOrder
-        }
-      } else if (endpoint === '/update_tray_first') {
-        requestData = {
-          mac_address: data.macAddress,
-          tray_id: data.trayId
-        }
-      }
-    } else {
-      // Handle original scan sequences
-      if (data.trayId) {
-        endpoint = '/get-product-info-tray'
-        requestData = {
-          product_order: data.productOrder,
-          mac_address: data.macAddress,
-          tray_id: data.trayId
-        }
-      } else {
-        requestData = {
-          product_order: data.productOrder,
-          mac_address: data.macAddress
-        }
-      }
+    // Determine request data based on the endpoint
+    if (endpoint === "/update_mac_product") {
+      requestData = {
+        mac_address: data.macAddress,
+        product_order: data.productOrder,
+      };
+    } else if (endpoint === "/update_mac_tray") {
+      requestData = {
+        mac_address: data.macAddress,
+        tray_id: data.trayId,
+      };
+    } else if (endpoint === "/update_mac_product-tray") {
+      requestData = {
+        product_order: data.productOrder,
+        tray_id: data.trayId,
+        mac_address: data.macAddress,
+      };
+    } else if (endpoint === "/change-tray-scan") {
+      requestData = {
+        first_tray_id: data.first_tray_id,
+        second_tray_id: data.second_tray_id,
+      };
+    } else if (endpoint === "/add-tray-scan") {
+      requestData = {
+        first_tray_id: data.first_tray_id,
+        second_tray_id: data.second_tray_id,
+      };
+    } else if (endpoint === "/delete-tray-scan") {
+      requestData = {
+        tray_id: data.tray_id,
+      };
+    } else if (endpoint === "/update-location") {
+      requestData = {
+        tray_id: data.trayId,
+        shelf_location: data.shelf_location,
+      };
+    } else if (endpoint === "/update-rack-location") {
+      requestData = {
+        rack: data.rack,
+        location: data.location,
+      };
     }
-
-    const response = await axios.post(`https://10.100.86.16:8000${endpoint}`, requestData)
-    success.value = true
-    console.log('API Response:', response.data)
-    resetScanState()
-    return response.data
+    console.log("Request Data:", requestData);
+    const response = await axios.post(
+      `https://10.100.113.33:8000${endpoint}`,
+      requestData
+    );
+    success.value = true;
+    console.log("API Response:", response.data);
+    resetScanState();
+    return response.data;
   } catch (err) {
-    console.error(err)
-    error.value = err.response?.data?.detail || 'Error sending request'
-    throw err
+    console.error(err);
+    error.value = err.response?.data?.detail || "Error sending request";
+    throw err;
   } finally {
-    loading.value = false
+    loading.value = false;
   }
-}
+};
 
-const toggleScanner = async () => {
+const toggleScanner = async (mode) => {
   if (!showScanner.value) {
-    const hasCamera = await checkCameraSupport()
+    scanMode.value = mode;
+
+    const hasCamera = await checkCameraSupport();
     if (!hasCamera) {
-      scannerError.value = 'No camera found on this device'
-      return
+      scannerError.value = "No camera found on this device";
+      return;
     }
-    startScanner()
+    startScanner();
   } else {
-    closeScanner()
+    closeScanner();
   }
-}
+};
 
 const startScanner = async () => {
   try {
-    showScanner.value = true
-    scannerError.value = ''
+    showScanner.value = true;
+    scannerError.value = "";
   } catch (err) {
-    console.error('Scanner start failed:', err)
-    scannerError.value = `Camera error: ${err.message}`
+    console.error("Scanner start failed:", err);
+    scannerError.value = `Camera error: ${err.message}`;
   }
-}
+};
 
 // Add function to classify data
 const classifyData = (data) => {
-  // Product Order pattern (starts with 92 and has 9 digits)
   if (/^92\d{7}$/.test(data)) {
-    return 'Product Order'
+    return "Product Order";
+  } else if (/^RK\d{5}$/.test(data)) {
+    return "Rack";
+  } else if (/^RT\d{5}$/.test(data)) {
+    return "Location";
+  } else if (/^HR\d{5}$/.test(data)) {
+    return "Location";
+  } else if (/^PLA\d{4}$/.test(data)) {
+    return "Location";
   }
   // Tray ID pattern (starts with T and follows T##-######)
-  else if (/^T\d{2}-\d{6}$/.test(data)) {
-    return 'Tray ID'
+  else if (/^TW\d{5}$/.test(data)) {
+    return "TrayWhite ID";
+  } else if (/^TS\d{5}$/.test(data)) {
+    return "TrayRed ID";
+  } else if (/^TB\d{5}$/.test(data)) {
+    return "TrayBlack ID";
+  } else if (/^SH[4-6][1-9]\d{4}$/.test(data)) {
+    return "Shelf Location";
   }
+
+
   // MAC Address pattern (6 pairs of hex digits)
   else if (/^([0-9A-Fa-f]{2}[:-]){5}([0-9A-Fa-f]{2})$/.test(data)) {
-    return 'MAC Address'
+    return "MAC Address";
   }
-  return 'Unknown'
-}
+  return "Unknown";
+};
 
 // Add these helper functions before onDetect
-const handleFirstScan = (currentDataType, trimmedData) => {
-  // Allow any type for first scan now
-  scanCount.value++
-  return true
-}
+const handleFirstScan = async (currentDataType, trimmedData) => {
+  scannedTrayIds.value = [trimmedData];
+  if (trayOperation.value.toLocaleLowerCase() === "delete") {
+    if (!confirm(`You want to Delete Tray ID : "${scannedTrayIds.value}"?`)) return;
+    handleTrayOperation("delete");
+    resetScanState();
+    scannerSuccess.value = "✅ Tray deleted successfully! Ready for next scan.";
+    scannerError.value = "";
+    setTimeout(() => {
+      scannerSuccess.value = "";
+    }, 2000);
+    return false;
+  } else if (StatusForRemember.value && ["TrayBlack ID", "TrayRed ID", "TrayWhite ID"].includes(currentDataType)) {
+    try {
+      await new Promise((resolve) => setTimeout(resolve, 2000));
+      await handleApiCall({
+        shelf_location: rememberShelfLocation.value,
+        trayId: trimmedData,
+        endpoint: "/update-location",
+      });
+      scannedData.value.push({
+        type: "Shelf Location",
+        value: rememberShelfLocation.value,
+      });
+      scannerSuccess.value = "✅ Scan successful! Ready for next scan.";
+      scannerError.value = "";
+      setTimeout(() => {
+        scannerSuccess.value = "";
+      }, 2000);
+      return true;
+    } catch (err) {
+      scannerError.value = "❌ API call failed. Please try again.";
+      scannerSuccess.value = "";
+      return false;
+    }
+  }
+  scanCount.value++;
+  return true;
+};
 
 const handleSecondScan = async (currentDataType, trimmedData) => {
-  const firstScanType = scannedData.value[0].type
-
-  if (firstScanType === 'Tray ID') {
-    if (currentDataType === 'Product Order') {
-      waitingForMac.value = true
-      scanCount.value++
-    } else if (currentDataType === 'Tray ID') {
-      // Store both tray IDs
-      scannedTrayIds.value = [scannedData.value[0].value, trimmedData]
-      showTrayOptions.value = true
-      return false
-    } else if (currentDataType === 'MAC Address') {
+  const firstScanType = scannedData.value[0].type;
+  if (["TrayBlack ID", "TrayRed ID", "TrayWhite ID"].includes(firstScanType)) {
+    if (currentDataType === "Product Order") {
+      waitingForMac.value = true;
+      scanCount.value++;
+      return true;
+    } else if (["TrayBlack ID", "TrayRed ID", "TrayWhite ID"].includes(currentDataType)) {
+      scannedTrayIds.value = [scannedData.value[0].value, trimmedData];
+      handleTrayOperation(trayOperation.value.toLowerCase());
+      resetScanState();
+      scannerSuccess.value = "✅ Scan successful! Ready for next scan.";
+      scannerError.value = "";
+      setTimeout(() => {
+        scannerSuccess.value = "";
+      }, 2000);
+      return false;
+    } else if (currentDataType === "MAC Address") {
       try {
-        await new Promise(resolve => setTimeout(resolve, 2000))
+        await new Promise((resolve) => setTimeout(resolve, 2000));
         await handleApiCall({
           trayId: scannedData.value[0].value,
           macAddress: trimmedData,
-          endpoint: '/update_tray_first'
-        })
-        resetScanState()
-        scannerSuccess.value = '✅ Scan successful! Ready for next scan.'
-        scannerError.value = ''
+          endpoint: "/update_mac_tray",
+        });
+        resetScanState();
+        scannerSuccess.value = "✅ Scan successful! Ready for next scan.";
+        scannerError.value = "";
         setTimeout(() => {
-          scannerSuccess.value = ''
-        }, 2000)
+          scannerSuccess.value = "";
+        }, 2000);
+        return true;
       } catch (err) {
-        scannerError.value = '❌ API call failed. Please try again.'
-        scannerSuccess.value = ''
+        scannerError.value = "❌ API call failed. Please try again.";
+        scannerSuccess.value = "";
+        setTimeout(() => {
+          scannerError.value = "";
+        }, 2000);
+        resetScanState();
+        return false;
+      }
+    } else if (currentDataType === "Shelf Location") {
+      try {
+        await new Promise((resolve) => setTimeout(resolve, 2000));
+        await handleApiCall({
+          trayId: scannedData.value[0].value,
+          shelf_location: trimmedData,
+          endpoint: "/update-location",
+        });
+        resetScanState();
+        scannerSuccess.value = "✅ Scan successful! Ready for next scan.";
+        scannerError.value = "";
+        setTimeout(() => {
+          scannerSuccess.value = "";
+        }, 2000);
+        return true;
+      } catch (err) {
+        scannerError.value = "❌ API call failed. Please try again.";
+        scannerSuccess.value = "";
+        setTimeout(() => {
+          scannerError.value = "";
+        }, 2000);
+        resetScanState();
+        return false;
       }
     }
-  } else if (firstScanType === 'Product Order') {
-    // Original Product Order first flow
-    if (currentDataType === 'Product Order') {
-      scannerError.value = 'Cannot scan Product Order twice!'
-      scannedData.value.pop()
-      return false
-    } else if (currentDataType === 'MAC Address') {
+  } else if (firstScanType === "Rack") {
+    if (currentDataType === "Location") {
       try {
-        await new Promise(resolve => setTimeout(resolve, 2000))
+        await new Promise((resolve) => setTimeout(resolve, 2000));
+        await handleApiCall({
+          rack: scannedData.value[0].value,
+          location: trimmedData,
+          endpoint: "/update-rack-location",
+        });
+        resetScanState();
+        scannerSuccess.value = "✅ Scan successful! Ready for next scan.";
+        scannerError.value = "";
+        setTimeout(() => {
+          scannerSuccess.value = "";
+        }, 2000);
+        return true;
+      } catch (err) {
+        scannerError.value = "❌ API call failed. Please try again.";
+        scannerSuccess.value = "";
+        setTimeout(() => {
+          scannerError.value = "";
+        }, 2000);
+        resetScanState();
+        return false;
+      }
+    } else if (currentDataType === "Rack") {
+      scannedData.value.pop();
+      resetScanState();
+      scannerError.value = "Cannot scan Rack twice!";
+      setTimeout(() => {
+        scannerError.value = "";
+      }, 2000);
+      return false;
+    }
+  } else if (firstScanType === "Location") {
+    if (currentDataType === "Rack") {
+      try {
+        await new Promise((resolve) => setTimeout(resolve, 2000));
+        await handleApiCall({
+          location: scannedData.value[0].value,
+          rack: trimmedData,
+          endpoint: "/update-rack-location",
+        });
+        resetScanState();
+        scannerSuccess.value = "✅ Scan successful! Ready for next scan.";
+        scannerError.value = "";
+        setTimeout(() => {
+          scannerSuccess.value = "";
+        }, 2000);
+        return true;
+      } catch (err) {
+        scannerError.value = "❌ API call failed. Please try again.";
+        scannerSuccess.value = "";
+        setTimeout(() => {
+          scannerError.value = "";
+        }, 2000);
+        resetScanState();
+        return false;
+      }
+    } else if (currentDataType === "Location") {
+      scannedData.value.pop();
+      resetScanState();
+      scannerError.value = "Cannot scan Location twice!";
+      setTimeout(() => {
+        scannerError.value = "";
+      }, 2000);
+      return false;
+    }
+  } else if (firstScanType === "Product Order") {
+    // Original Product Order first flow
+    if (currentDataType === "Product Order") {
+      scannedData.value.pop();
+      resetScanState();
+      scannerError.value = "Cannot scan Product Order twice!";
+      setTimeout(() => {
+        scannerError.value = "";
+      }, 2000);
+      return false;
+    } else if (currentDataType === "MAC Address") {
+      try {
+        await new Promise((resolve) => setTimeout(resolve, 2000));
         await handleApiCall({
           productOrder: scannedData.value[0].value,
-          macAddress: trimmedData
-        })
-        resetScanState()
-        scannerSuccess.value = '✅ Scan successful! Ready for next scan.'
-        scannerError.value = ''
+          macAddress: trimmedData,
+          endpoint: "/update_mac_product",
+        });
+        resetScanState();
+        scannerSuccess.value = "✅ Scan successful! Ready for next scan.";
+        scannerError.value = "";
         setTimeout(() => {
-          scannerSuccess.value = ''
-        }, 2000)
+          scannerSuccess.value = "";
+        }, 2000);
+        return true;
       } catch (err) {
-        scannerError.value = '❌ API call failed. Please try again.'
-        scannerSuccess.value = ''
+        resetScanState();
+        scannerError.value = "❌ Product Order Have TTGO Already.";
+        scannerSuccess.value = "";
+        setTimeout(() => {
+          scannerError.value = "";
+        }, 2000);
+        return false;
       }
-    } else if (currentDataType === 'Tray ID') {
-      waitingForMac.value = true
-      scanCount.value++
+    } else if (["TrayBlack ID", "TrayRed ID", "TrayWhite ID"].includes(currentDataType)) {
+      waitingForMac.value = true;
+      scanCount.value++;
+      return true;
     }
-  } else if (firstScanType === 'MAC Address') {
+  } else if (firstScanType === "MAC Address") {
     // MAC Address first flow
-    if (currentDataType === 'Product Order') {
+    if (currentDataType === "Product Order") {
       try {
-        await new Promise(resolve => setTimeout(resolve, 2000))
+        await new Promise((resolve) => setTimeout(resolve, 2000));
         await handleApiCall({
           macAddress: scannedData.value[0].value,
           productOrder: trimmedData,
-          endpoint: '/get-product-info'
-        })
-        resetScanState()
-        scannerSuccess.value = '✅ Scan successful! Ready for next scan.'
-        scannerError.value = ''
+          endpoint: "/update_mac_product",
+        });
+        resetScanState();
+        scannerSuccess.value = "✅ Scan successful! Ready for next scan.";
+        scannerError.value = "";
         setTimeout(() => {
-          scannerSuccess.value = ''
-        }, 2000)
+          scannerSuccess.value = "";
+        }, 2000);
+        return true;
       } catch (err) {
-        scannerError.value = '❌ API call failed. Please try again.'
-        scannerSuccess.value = ''
+        resetScanState();
+        scannerError.value = "❌ Product Order Have TTGO Already.";
+        scannerSuccess.value = "";
+        setTimeout(() => {
+          scannerError.value = "";
+        }, 2000);
+        return false;
       }
-    } else if (currentDataType === 'Tray ID') {
+    } else if (["TrayBlack ID", "TrayRed ID", "TrayWhite ID"].includes(currentDataType)) {
       try {
-        await new Promise(resolve => setTimeout(resolve, 2000))
+        await new Promise((resolve) => setTimeout(resolve, 2000));
         await handleApiCall({
           macAddress: scannedData.value[0].value,
           trayId: trimmedData,
-          endpoint: '/update_tray_first'
-        })
-        resetScanState()
-        scannerSuccess.value = '✅ Scan successful! Ready for next scan.'
-        scannerError.value = ''
+          endpoint: "/update_mac_tray",
+        });
+        resetScanState();
+        scannerSuccess.value = "✅ Scan successful! Ready for next scan.";
+        scannerError.value = "";
         setTimeout(() => {
-          scannerSuccess.value = ''
-        }, 2000)
+          scannerSuccess.value = "";
+        }, 2000);
+        return true;
       } catch (err) {
-        scannerError.value = '❌ API call failed. Please try again.'
-        scannerSuccess.value = ''
+        scannerError.value = "❌ API call failed. Please try again.";
+        scannerSuccess.value = "";
+        return false;
       }
-    } else if (currentDataType === 'MAC Address') {
-      scannerError.value = 'Cannot scan MAC Address twice!'
-      scannedData.value.pop()
-      return false
+    } else if (currentDataType === "MAC Address") {
+      scannedData.value.pop();
+      resetScanState();
+      scannerError.value = "Cannot scan MAC Address twice!";
+      setTimeout(() => {
+        scannerError.value = "";
+      }, 2000);
+      return false;
+    }
+  } else if (firstScanType === "Shelf Location") {
+    if (StatusForRemember.value) {
+      rememberShelfLocation.value = scannedData.value[0].value;
+      try {
+        await new Promise((resolve) => setTimeout(resolve, 2000));
+        await handleApiCall({
+          shelf_location: scannedData.value[0].value,
+          trayId: trimmedData,
+          endpoint: "/update-location",
+        });
+        scannedData.value.push({
+          type: "Shelf Location",
+          value: rememberShelfLocation.value,
+        });
+        scannerSuccess.value = "✅ Scan successful! Ready for next scan.";
+        scannerError.value = "";
+        setTimeout(() => {
+          scannerSuccess.value = "";
+        }, 2000);
+        return true;
+      } catch (err) {
+        scannerError.value = "❌ API call failed. Please try again.";
+        scannerSuccess.value = "";
+        return false;
+      }
+    }
+    // Original logic for when checkbox is not checked or first scan
+    if (["TrayBlack ID", "TrayRed ID", "TrayWhite ID"].includes(currentDataType)) {
+      try {
+        await new Promise((resolve) => setTimeout(resolve, 2000));
+        await handleApiCall({
+          shelf_location: scannedData.value[0].value,
+          trayId: trimmedData,
+          endpoint: "/update-location",
+        });
+        scannerSuccess.value = "✅ Scan successful! Ready for next scan.";
+        scannerError.value = "";
+        setTimeout(() => {
+          scannerSuccess.value = "";
+        }, 2000);
+        return true;
+      } catch (err) {
+        scannerError.value = "❌ API call failed. Please try again.";
+        scannerSuccess.value = "";
+        return false;
+      }
     }
   }
-  return true
-}
+  return false; // Default return if no conditions match
+};
 
 const handleThirdScan = async (currentDataType, trimmedData) => {
   if (scanCount.value === 2 && waitingForMac.value) {
-    if (currentDataType === 'MAC Address') {
+    if (currentDataType === "MAC Address") {
       try {
-        await new Promise(resolve => setTimeout(resolve, 2000))
+        await new Promise((resolve) => setTimeout(resolve, 2000));
+        // Find the product order and tray ID from scanned data
+        const productOrder = scannedData.value.find(
+          (item) => item.type === "Product Order"
+        )?.value;
+        const trayId = scannedData.value.find((item) =>
+          ["TrayBlack ID", "TrayRed ID", "TrayWhite ID"].includes(item.type)
+        )?.value;
+
         await handleApiCall({
-          productOrder: scannedData.value[1].value,
-          trayId: scannedData.value[0].value,
+          productOrder: productOrder,
+          trayId: trayId,
           macAddress: trimmedData,
-          endpoint: '/get-product-info-tray'
-        })
-        resetScanState()
-        scannerSuccess.value = '✅ Scan successful! Ready for next scan.'
-        scannerError.value = ''
+          endpoint: "/update_mac_product-tray",
+        });
+        resetScanState();
+        scannerSuccess.value = "✅ Scan successful! Ready for next scan.";
+        scannerError.value = "";
         setTimeout(() => {
-          scannerSuccess.value = ''
-        }, 2000)
+          scannerSuccess.value = "";
+        }, 2000);
       } catch (err) {
-        scannerError.value = '❌ API call failed. Please try again.'
-        scannerSuccess.value = ''
+        scannerError.value = "❌ API call failed. Please try again.";
+        scannerSuccess.value = "";
       }
     } else {
-      scannerError.value = 'Please scan a MAC Address'
-      scannedData.value.pop()
-      return false
+      scannerError.value = "Please scan a MAC Address";
+      scannedData.value.pop();
+      return false;
     }
   }
-  return true
-}
+  return true;
+};
 
 const updateScanDisplay = (currentDataType, trimmedData) => {
-  qrData.value = trimmedData
-  dataType.value = currentDataType
-  productOrder.value = trimmedData
+  qrData.value = trimmedData;
+  dataType.value = currentDataType;
+  productOrder.value = trimmedData;
   scannedData.value.push({
     type: currentDataType,
-    value: trimmedData
-  })
-}
+    value: trimmedData,
+  });
+};
 
 // Main onDetect function
 const onDetect = async (detectedCodes) => {
   if (detectedCodes.length > 0) {
-    const detectedData = detectedCodes[0].rawValue
-    console.log('QR Code detected:', detectedData)
+    const detectedData = detectedCodes[0].rawValue;
+    console.log("QR Code detected:", detectedData);
 
     if (detectedData && detectedData.trim()) {
-      const trimmedData = detectedData.trim()
-      const currentDataType = classifyData(trimmedData)
-
+      const trimmedData = detectedData.trim();
+      const currentDataType = classifyData(trimmedData);
+      console.log("QR Code detected:", currentDataType);
+      if (scanMode.value === "lookup") {
+        try {
+          loading.value = true;
+          await handleLookup(trimmedData); // ฟังก์ชันค้นหาข้อมูล
+          scannerSuccess.value = "Lookup successful! Data found.";
+          setTimeout(() => {
+            scannerSuccess.value = "";
+          }, 2000);
+        } catch (err) {
+          scannerError.value = "Lookup failed: " + err.message;
+        } finally {
+          loading.value = false;
+        }
+        return; // 🛑 หยุดตรงนี้ ไม่ให้ไป logic ข้างล่าง
+      }
       // Update display for current scan
-      updateScanDisplay(currentDataType, trimmedData)
+      updateScanDisplay(currentDataType, trimmedData);
 
+      watch(StatusForRemember, (newVal, oldVal) => {
+         if (oldVal && !newVal) {
+          resetScanState();
+        }
+      });
       // Handle different scan sequences
       if (scanCount.value === 0) {
-        if (!handleFirstScan(currentDataType, trimmedData)) return
+        if (!handleFirstScan(currentDataType, trimmedData)) return;
       } else if (scanCount.value === 1) {
-        if (!await handleSecondScan(currentDataType, trimmedData)) return
+        if (!(await handleSecondScan(currentDataType, trimmedData))) return;
       } else if (scanCount.value === 2) {
-        if (!await handleThirdScan(currentDataType, trimmedData)) return
+        if (!(await handleThirdScan(currentDataType, trimmedData))) return;
       }
 
-      success.value = true
+      success.value = true;
       setTimeout(() => {
-        success.value = false
-      }, 2000)
+        success.value = false;
+      }, 2000);
     } else {
-      scannerError.value = 'Invalid data format. Please scan again.'
+      scannerError.value = "Invalid data format. Please scan again.";
       setTimeout(() => {
-        scannerError.value = ''
-      }, 3000)
+        scannerError.value = "";
+      }, 3000);
     }
   }
+};
+
+const handleLookup = async (qrCode) => {
+  console.log("[LOOKUP MODE] scanning:", qrCode);
+  scannedTrayIds.value = [qrCode];
+
+  try {
+    const res = await axios.get(`https://10.100.113.33:8000/table01-lookup`, {
+      params: { qr: qrCode },
+    });
+
+    const data = res.data;
+
+    lookupResult.value = data;
+    console.log("Lookup result:", lookupResult.value);
+    const tray = await axios.post("https://10.100.113.33:8000/lookup-product-order", {
+      product_order: lookupResult.value[0].product_order,
+    });
+    trayMain.value = tray.data.tray_id_main;
+    trayMainLocation.value = tray.data.tray_main_location;
+    childLocations.value = tray.data.tray_locations;
+    childTrayIds.value = tray.data.tray_ids; // exactly what comes back
+    trayIds.value = [trayMain.value, ...childTrayIds.value];
+  } catch (err) {
+    scannerError.value = "Lookup failed: " + (err.response?.data?.detail || err.message);
+    setTimeout(() => {
+      scannerError.value = "";
+    }, 2000);
+    throw err;
+  }
+};
+
+const trayDetails = computed(() =>
+  childTrayIds.value
+    .map((id, i) => ({
+      id,
+      location: childLocations.value[i] ?? null,
+    }))
+    .filter((tray) => tray.id && tray.id.trim() !== "")
+);
+
+function sortBy(key) {
+  if (sortKey.value === key) {
+    sortAsc.value = !sortAsc.value;
+  } else {
+    sortKey.value = key;
+    sortAsc.value = true;
+  }
 }
+
+const sortedTrayDetails = computed(() => {
+  return [...trayDetails.value].sort((a, b) => {
+    const valA = a[sortKey.value] ?? "";
+    const valB = b[sortKey.value] ?? "";
+
+    if (typeof valA === "string") {
+      return sortAsc.value ? valA.localeCompare(valB) : valB.localeCompare(valA);
+    }
+    return sortAsc.value ? valA - valB : valB - valA;
+  });
+});
 
 const paintBoundingBox = (detectedCodes, ctx) => {
   for (const detectedCode of detectedCodes) {
-    const { boundingBox: { x, y, width, height } } = detectedCode
+    const {
+      boundingBox: { x, y, width, height },
+    } = detectedCode;
 
     // Draw enhanced bounding box
-    ctx.lineWidth = 4
-    ctx.strokeStyle = isMicroMode.value ? '#8DBAED' : '#00ff00'
-    ctx.strokeRect(x, y, width, height)
+    ctx.lineWidth = 4;
+    ctx.strokeStyle = isMicroMode.value ? "#8DBAED" : "#00ff00";
+    ctx.strokeRect(x, y, width, height);
 
     // Add corner markers
-    const cornerSize = 20
-    ctx.beginPath()
+    const cornerSize = 20;
+    ctx.beginPath();
     // Top-left corner
-    ctx.moveTo(x, y + cornerSize)
-    ctx.lineTo(x, y)
-    ctx.lineTo(x + cornerSize, y)
+    ctx.moveTo(x, y + cornerSize);
+    ctx.lineTo(x, y);
+    ctx.lineTo(x + cornerSize, y);
     // Top-right corner
-    ctx.moveTo(x + width - cornerSize, y)
-    ctx.lineTo(x + width, y)
-    ctx.lineTo(x + width, y + cornerSize)
+    ctx.moveTo(x + width - cornerSize, y);
+    ctx.lineTo(x + width, y);
+    ctx.lineTo(x + width, y + cornerSize);
     // Bottom-right corner
-    ctx.moveTo(x + width, y + height - cornerSize)
-    ctx.lineTo(x + width, y + height)
-    ctx.lineTo(x + width - cornerSize, y + height)
+    ctx.moveTo(x + width, y + height - cornerSize);
+    ctx.lineTo(x + width, y + height);
+    ctx.lineTo(x + width - cornerSize, y + height);
     // Bottom-left corner
-    ctx.moveTo(x + cornerSize, y + height)
-    ctx.lineTo(x, y + height)
-    ctx.lineTo(x, y + height - cornerSize)
-    ctx.stroke()
+    ctx.moveTo(x + cornerSize, y + height);
+    ctx.lineTo(x, y + height);
+    ctx.lineTo(x, y + height - cornerSize);
+    ctx.stroke();
 
     // Add status text
-    ctx.font = 'bold 18px Arial'
-    ctx.fillStyle = isMicroMode.value ? '#8DBAED' : '#00ff00'
-    ctx.fillText('QR Code Found!', x, y > 20 ? y - 10 : y + height + 25)
+    ctx.font = "bold 18px Arial";
+    ctx.fillStyle = isMicroMode.value ? "#8DBAED" : "#00ff00";
+    ctx.fillText("QR Code Found!", x, y > 20 ? y - 10 : y + height + 25);
   }
-}
+};
 
 const onError = (err) => {
-  console.error('QR Scanner error:', err)
-  scannerError.value = `Scanner error: ${err.message || 'Camera access denied'}`
-}
+  console.error("QR Scanner error:", err);
+  scannerError.value = `Scanner error: ${err.message || "Camera access denied"}`;
+};
 
 const closeScanner = () => {
-  showScanner.value = false
-  scannerError.value = ''
-}
+  showScanner.value = false;
+  scannerError.value = "";
+};
 
 const switchCamera = () => {
   if (hasMultipleCameras.value) {
-    currentCamera.value = currentCamera.value === 'environment' ? 'user' : 'environment'
+    currentCamera.value = currentCamera.value === "environment" ? "user" : "environment";
   }
-}
+};
 
 const toggleMicroMode = () => {
-  isMicroMode.value = !isMicroMode.value
-}
+  isMicroMode.value = !isMicroMode.value;
+};
 
 // Initialize camera check on mount
 onMounted(() => {
-  checkCameraSupport()
-})
+  checkCameraSupport();
+});
 
 // Add handleSubmit function if it doesn't exist
 
 // Check if device has multiple cameras
 const checkCameraSupport = async () => {
   try {
-    const devices = await navigator.mediaDevices.enumerateDevices()
-    const videoDevices = devices.filter(device => device.kind === 'videoinput')
-    hasMultipleCameras.value = videoDevices.length > 1
-    return videoDevices.length > 0
+    const devices = await navigator.mediaDevices.enumerateDevices();
+    const videoDevices = devices.filter((device) => device.kind === "videoinput");
+    hasMultipleCameras.value = videoDevices.length > 1;
+    return videoDevices.length > 0;
   } catch (err) {
-    console.error('Camera check failed:', err)
-    return false
+    console.error("Camera check failed:", err);
+    return false;
   }
-}
+};
 
 // Add new function to handle tray operations
-const handleTrayOperation = async (operation) => {
+const handleTrayOperation = async (mode) => {
   try {
-    const endpoint = operation === 'add' ? '/add-tray-scan' :
-                    operation === 'change' ? '/change-tray-scan' :
-                    '/delete-tray-scan'
-    
+    const endpoint =
+      mode === "add"
+        ? "/add-tray-scan"
+        : mode === "change"
+          ? "/change-tray-scan"
+          : "/delete-tray-scan";
+
+    const payload =
+      mode === "delete"
+        ? { tray_id: scannedTrayIds.value[0] } // delete needs only one tray_id
+        : {
+          first_tray_id: scannedTrayIds.value[0], // update needs both
+          second_tray_id: scannedTrayIds.value[1],
+        };
+    if (mode === "add") {
+      operationLog.value = `🟢 Added Tray = ${scannedTrayIds.value[1]} → Tray = ${scannedTrayIds.value[0]}`;
+    } else if (mode === "change") {
+      operationLog.value = `🟡 Changed tray: ${scannedTrayIds.value[0]} → ${scannedTrayIds.value[1]}`;
+    } else if (mode === "delete") {
+      operationLog.value = `🔴 Deleted tray: ${scannedTrayIds.value[0]}`;
+    }
+    console.log("Payload for tray operation:", payload);
     await handleApiCall({
-      trayId: scannedTrayIds.value[0], // First tray ID
-      newTrayId: scannedTrayIds.value[1], // Second tray ID
-      endpoint: endpoint
-    })
-    
-    resetScanState()
-    showTrayOptions.value = false
-    scannedTrayIds.value = []
-    scannerSuccess.value = '✅ Tray operation successful! Ready for next scan.'
-    scannerError.value = ''
+      endpoint: endpoint,
+      ...payload,
+    });
+    resetScanState();
+    scannedTrayIds.value = [];
+    scannerSuccess.value = "✅ Tray operation successful! Ready for next scan.";
+    scannerError.value = "";
     setTimeout(() => {
-      scannerSuccess.value = ''
-    }, 2000)
+      scannerSuccess.value = "";
+    }, 2000);
   } catch (err) {
-    scannerError.value = '❌ Tray operation failed. Please try again.'
-    scannerSuccess.value = ''
+    resetScanState();
+    scannerError.value = "❌ Tray operation failed. Please try again.";
+    scannerSuccess.value = "";
+    setTimeout(() => {
+      scannerError.value = "";
+    }, 2000);
   }
+};
+
+const handleMode = (mode) => {
+  if (mode === "add") {
+    trayOperation.value = "Add";
+  } else if (mode === "change") {
+    trayOperation.value = "Change";
+  } else if (mode === "delete") {
+    trayOperation.value = "Delete";
+  }
+};
+
+watch(currentModeIndex, (newVal) => {
+  handleMode(trayModes[newVal]);
+});
+
+function nextMode() {
+  currentModeIndex.value = (currentModeIndex.value + 1) % trayModes.length;
+}
+
+function prevMode() {
+  currentModeIndex.value =
+    (currentModeIndex.value - 1 + trayModes.length) % trayModes.length;
 }
 </script>
 
@@ -626,11 +1072,10 @@ const handleTrayOperation = async (operation) => {
 
 #app {
   min-height: 100vh;
-  font-family: 'Century', 'Century Gothic', 'Georgia', serif;
+  font-family: "Century", "Century Gothic", "Georgia", serif;
   color: var(--text);
-  background:
-    linear-gradient(rgba(255, 255, 255, 0.4), rgba(255, 255, 255, 0.4)),
-    url('C:\Users\wiroj\OneDrive\Desktop\swt\project_IoT_TTGOdisplay\frontend\image\bg.jpg');
+  background: linear-gradient(rgba(255, 255, 255, 0.4), rgba(255, 255, 255, 0.4)),
+    url("C:\Users\wiroj\OneDrive\Desktop\swt\project_IoT_TTGOdisplay\frontend\image\bg.jpg");
   background-repeat: no-repeat;
   background-size: cover;
   background-position: center;
@@ -664,13 +1109,14 @@ const handleTrayOperation = async (operation) => {
 
 /* Add styles for the Update card */
 .dashboard-grid .no-hover {
-  grid-column: 2;
+  display: grid;
+  grid-template-columns: repeat(2, minmax(1fr));
   /* Center in the grid */
-  width: 120%;
+  width: 80%;
   /* Make it wider */
   height: auto;
   /* Allow height to adjust based on content */
-  margin-left: -10%;
+  margin-left: 60%;
   /* Offset the extra width to keep it centered */
   padding: 2rem;
   /* More padding */
@@ -705,7 +1151,7 @@ const handleTrayOperation = async (operation) => {
 }
 
 .dashboard-card::before {
-  content: '';
+  content: "";
   position: absolute;
   top: 0;
   left: 0;
@@ -743,13 +1189,12 @@ const handleTrayOperation = async (operation) => {
   background: linear-gradient(135deg, #faadf8, #cb32bb);
 }
 
-
 .card-icon.update {
   background: linear-gradient(135deg, #667eea, #764ba2);
 }
 
 .card-icon.edit {
-  background: linear-gradient(135deg, #FCCF61, #FFE495);
+  background: linear-gradient(135deg, #fccf61, #ffe495);
 }
 
 .card-icon.tray {
@@ -956,7 +1401,7 @@ input {
 
 input:focus {
   outline: none;
-  border-color: #8DBAED;
+  border-color: #8dbaed;
   box-shadow: 0 0 0 3px rgba(141, 186, 237, 0.2);
 }
 
@@ -977,7 +1422,7 @@ input.invalid {
 }
 
 .scan-btn {
-  background-color: #8DBAED;
+  background-color: #8dbaed;
   color: #fff;
   border: none;
   padding: 0.75rem 0.5rem;
@@ -990,11 +1435,12 @@ input.invalid {
   display: flex;
   align-items: center;
   gap: 0.5rem;
+  box-shadow: 0px 8px 10px #1b4778, 0px 2px 2px #1b4778;
 }
 
 .scan-btn:hover {
   background-color: #7aa8db;
-  transform: translateY(-2px);
+  transform: translateY(-1px);
   box-shadow: 0 6px 12px rgba(141, 186, 237, 0.3);
 }
 
@@ -1012,6 +1458,49 @@ input.invalid {
 .error-message,
 .data-type-indicator {
   display: none;
+}
+
+.checkbox-container {
+  display: flex;
+  align-items: center;
+  cursor: pointer;
+  font-size: 14px;
+  color: #666;
+}
+
+.shelf-checkbox {
+  margin-right: 6px;
+  width: 16px;
+  height: 16px;
+  cursor: pointer;
+}
+
+.checkmark {
+  margin-left: 4px;
+  margin-right: 4px;
+  color: #4CAF50;
+  font-weight: bold;
+  opacity: 0;
+  transition: opacity 0.2s;
+}
+
+.shelf-checkbox:checked+.checkmark {
+  opacity: 1;
+}
+
+.checkbox-label {
+  font-size: 12px;
+  color: #888;
+}
+
+.type-item.shelf-location {
+  border-left: 4px solid #ff9800;
+  background-color: #fff3e0;
+}
+
+.type-item.shelf-location.skip-enabled {
+  border-left-color: #4CAF50;
+  background-color: #e8f5e8;
 }
 
 .error-text {
@@ -1041,7 +1530,7 @@ input.invalid {
 /* QR Scanner Modal Styles */
 .scanner-modal {
   position: fixed;
-  top: 0px;
+  top: 0;
   left: 0;
   width: 100%;
   height: 100%;
@@ -1049,20 +1538,18 @@ input.invalid {
   display: flex;
   justify-content: center;
   align-items: flex-start;
-  /* Changed from center to flex-start */
-  padding-top: 1rem;
-  /* Added padding at top */
   z-index: 1000;
   backdrop-filter: blur(4px);
 }
 
 .scanner-container {
-  background: white;
+  background: #fff;
   border-radius: 16px;
   padding: 1.5rem;
-  max-width: 90vw;
-  max-height: 100vh;
   width: 450px;
+  max-height: 90vh;
+  display: flex;
+  flex-direction: column;
   box-shadow: 0 20px 40px rgba(0, 0, 0, 0.2);
 }
 
@@ -1070,8 +1557,8 @@ input.invalid {
   display: flex;
   justify-content: space-between;
   align-items: center;
-  margin-bottom: 1.5rem;
-  padding-bottom: 1rem;
+  margin-bottom: 1rem;
+  padding-bottom: 0.5rem;
   border-bottom: 2px solid #f1f5f9;
 }
 
@@ -1080,6 +1567,37 @@ input.invalid {
   color: #2c3e50;
   font-size: 1.25rem;
   font-weight: 600;
+}
+
+.scanner-tips h2 {
+  margin: 0;
+  color: #2c3e50;
+  font-size: 1rem;
+  font-weight: 600;
+  width: 100%;
+  text-align: center;
+}
+
+.scanner-tips-lookup p {
+  font-size: 1.1rem;
+  margin: 0.5rem 0;
+  color: #ffffff;
+}
+
+.scanner-tips-lookup span.highlight-product {
+  font-weight: bold;
+  color: #fdfd45;
+}
+
+.scanner-tips-lookup span.highlight-material {
+  font-weight: bold;
+  color: #ffffff;
+}
+
+.scanner-tips-lookup span.highlight-name {
+  font-weight: bold;
+  font-size: medium;
+  color: #3c3cff;
 }
 
 .close-btn {
@@ -1100,14 +1618,16 @@ input.invalid {
 
 .scanner-content {
   position: relative;
-  margin-bottom: 1.5rem;
+  margin-bottom: 1rem;
   border-radius: 12px;
   overflow: hidden;
+  flex: 1;
+  min-height: 0;
 }
 
 .scanner-video {
   width: 100%;
-  height: 350px;
+  height: 300px;
   border-radius: 12px;
   background: #000;
   filter: contrast(1.2) brightness(1.1);
@@ -1133,8 +1653,8 @@ input.invalid {
 }
 
 .scanner-frame {
-  width: 250px;
-  height: 250px;
+  width: 220px;
+  height: 220px;
   border: 3px solid #00ff00;
   border-radius: 12px;
   background: transparent;
@@ -1145,9 +1665,85 @@ input.invalid {
 }
 
 .scanner-frame.micro-mode {
-  border-color: #8DBAED;
+  border-color: #8dbaed;
   box-shadow: 0 0 0 9999px rgba(0, 0, 0, 0.7), 0 0 20px rgba(141, 186, 237, 0.3);
   backdrop-filter: contrast(1.5) brightness(1.3) saturate(1.2);
+}
+
+.sortable {
+  cursor: pointer;
+  user-select: none;
+}
+
+@media (max-width: 480px) {
+  .scanner-modal {
+    padding-top: 0;
+    align-items: flex-start;
+  }
+
+  .scanner-container {
+    width: 100vw;
+    height: 100vh;
+    max-height: 100vh;
+    padding: 0.75rem;
+    border-radius: 0;
+    display: flex;
+    flex-direction: column;
+  }
+
+  .scanner-header {
+    padding: 0.5rem 0;
+    margin-bottom: 0.5rem;
+  }
+
+  .scanner-content {
+    flex: 1;
+    min-height: 0;
+    margin-bottom: 0.5rem;
+  }
+
+  .scanner-video {
+    height: 200px;
+    width: 100%;
+  }
+
+  .scanner-frame {
+    width: 180px;
+    height: 180px;
+  }
+
+  .scanner-footer {
+    padding-top: 0.5rem;
+    border-top: 1px solid #f1f5f9;
+  }
+
+  .change-mode-btn,
+  .reset-btn {
+    width: 100%;
+    padding: 0.5rem;
+    font-size: 0.85rem;
+  }
+
+  .type-reference {
+    margin-top: 0.5rem;
+    padding-top: 0.5rem;
+  }
+
+  .type-item {
+    padding: 0.5rem;
+    font-size: 0.8rem;
+  }
+
+  .tray-buttons {
+    padding: 0.5rem;
+    margin-top: 0.5rem;
+  }
+
+  .tray-btn {
+    padding: 0.4rem;
+    font-size: 0.8rem;
+    display: flex;
+  }
 }
 
 @keyframes pulse {
@@ -1184,7 +1780,7 @@ input.invalid {
 
 .scanner-footer {
   text-align: center;
-  padding-top: 1rem;
+  padding-top: 0.5rem;
   border-top: 2px solid #f1f5f9;
 }
 
@@ -1209,7 +1805,7 @@ input.invalid {
 
 .scanner-tips {
   text-align: left;
-  margin-bottom: 1.5rem;
+  margin-bottom: 1rem;
   background: #f8fafc;
   padding: 1rem;
   border-radius: 8px;
@@ -1218,9 +1814,44 @@ input.invalid {
   flex-wrap: wrap;
 }
 
+.scanner-tips-lookup {
+  text-align: left;
+  margin-bottom: 1rem;
+  background: #a8a6a6;
+  padding: 1rem;
+  border-radius: 8px;
+  display: flex;
+  gap: 1rem;
+  flex-wrap: wrap;
+  justify-content: flex-start;
+  align-items: flex-start;
+  margin-left: auto !important;
+  margin-right: auto !important;
+}
+
+.lookup-bottom-section {
+  display: flex;
+  gap: 1rem;
+  margin-top: 1rem;
+  flex-wrap: wrap;
+  align-items: flex-start;
+}
+
+.table-container {
+  padding: 0.5rem;
+  background: rgb(243, 242, 242);
+  border-radius: 6px;
+  box-shadow: 0 4px 6px rgba(0, 0, 0, 0.05);
+  overflow: hidden;
+  min-width: 190px;
+  min-height: 150px;
+  /* ประมาณ 10 แถว */
+  transition: all 0.3s ease-in-out;
+}
+
 .change-mode-btn,
 .reset-btn {
-  background-color: #8DBAED;
+  background-color: #8dbaed;
   color: #fff;
   border: none;
   padding: 0.75rem;
@@ -1234,13 +1865,7 @@ input.invalid {
 }
 
 .reset-btn {
-  background-color: #FCCF61;
-}
-
-.reset-btn:hover {
-  background-color: #ef4444;
-  transform: translateY(-1px);
-  box-shadow: 0 4px 6px rgba(239, 68, 68, 0.3);
+  background-color: #fccf61;
 }
 
 .change-mode-btn:hover {
@@ -1356,9 +1981,25 @@ input.invalid {
   background-color: #fef2f2;
 }
 
+.scanner-tips-lookup img {
+  width: 150px;
+  height: 150px;
+  object-fit: cover;
+  border-radius: 6px;
+  box-shadow: 0 2px 4px rgba(0, 0, 0, 0.1);
+  transition: transform 0.3s ease;
+
+  display: block !important;
+  margin-left: 0.5rem !important;
+}
+
+img:hover {
+  transform: scale(1.05);
+}
+
 .type-reference {
-  margin-top: 2rem;
-  padding-top: 1.5rem;
+  margin-top: 1rem;
+  padding-top: 1rem;
   border-top: 1px solid #e2e8f0;
 }
 
@@ -1385,7 +2026,7 @@ input.invalid {
 }
 
 .type-item.product-order {
-  background-color: #f0f9ff;
+  background-color: #36d4cd;
   border: 1px solid #e0f2fe;
 }
 
@@ -1399,6 +2040,51 @@ input.invalid {
   border: 1px solid #f5e6d3;
 }
 
+.type-item.rack-streel {
+  background-color: #8990f1;
+  border: 1px solid #f5e6d3;
+}
+
+.type-item.rack-pom {
+  background-color: #a16f5b;
+  border: 1px solid #f5e6d3;
+}
+
+.type-item.traywhite-id {
+  background-color: #e2ddda;
+  border: 1px solid #f5e6d3;
+}
+
+.type-item.trayred-id {
+  background-color: #f72e2e;
+  border: 1px solid #f5e6d3;
+}
+
+.type-item.trayblack-id {
+  background-color: #686463;
+  border: 1px solid #f5e6d3;
+}
+
+.type-item.shelf-location {
+  background-color: #db6547;
+  border: 1px solid #f5e6d3;
+}
+
+.type-item.location {
+  background-color: #7f9666;
+  border: 1px solid #f5e6d3;
+}
+
+.type-item.rack {
+  background-color: #ccd90c;
+  border: 1px solid #f5e6d3;
+}
+
+.type-item.unknown {
+  background-color: #ffffff;
+  border: 1px solid #ff0000;
+}
+
 .type-label {
   font-weight: 600;
   min-width: 110px;
@@ -1410,7 +2096,6 @@ input.invalid {
   background: rgba(255, 255, 255, 0.5);
   border-radius: 4px;
 }
-
 
 @media (max-width: 480px) {
   .type-item {
@@ -1509,9 +2194,42 @@ input.invalid {
   border: 1px solid #e2e8f0;
 }
 
+.mode-switcher {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 1rem;
+  /* ระยะห่างระหว่างปุ่มกับข้อความ */
+  flex-wrap: nowrap;
+  margin: 0 auto;
+}
+
+.mode-switcher h2 {
+  margin: 0;
+  font-size: 1rem;
+  font-weight: 600;
+  white-space: nowrap;
+}
+
+.tray-mode.Add {
+  color: green;
+}
+
+.tray-mode.Change {
+  color: goldenrod;
+}
+
+.tray-mode.Delete {
+  color: red;
+}
+
+.operation-log {
+  margin: 0 auto;
+}
+
 .tray-btn {
   flex: 1;
-  min-width: 100px;
+  min-width: 30px;
   padding: 0.5rem;
   border: none;
   border-radius: 6px;
@@ -1525,22 +2243,18 @@ input.invalid {
   gap: 0.25rem;
 }
 
-.tray-btn i {
-  font-size: 0.9rem;
-}
-
 .tray-btn.add {
-  background-color: #77BB78;
+  background-color: #77bb78;
   color: white;
 }
 
 .tray-btn.change {
-  background-color: #8DBAED;
+  background-color: #8dbaed;
   color: white;
 }
 
 .tray-btn.delete {
-  background-color: #F8AAB6;
+  background-color: #f8aab6;
   color: white;
 }
 
@@ -1557,7 +2271,7 @@ input.invalid {
   .tray-buttons {
     flex-direction: column;
   }
-  
+
   .tray-btn {
     width: 100%;
   }

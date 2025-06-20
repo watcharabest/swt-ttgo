@@ -135,16 +135,21 @@ onUnmounted(() => {
 
 #app {
   min-height: 100vh;
+  min-width: 100vw;
   font-family: 'Century', 'Century Gothic', 'Georgia', serif;
   color: var(--text);
-  background: 
-    linear-gradient(rgba(255, 255, 255, 0.3), rgba(255, 255, 255, 0.3)),
-    url('C:\Users\wiroj\OneDrive\Desktop\swt\project_IoT_TTGOdisplay\frontend\image\swarovski-swan-jewelry.webp');
+  background:
+    linear-gradient(rgba(255, 255, 255, 0.2), rgba(255, 255, 255, 0.2)),
+    url('/image/wallpaperflare.com_wallpaper.jpg');
   background-repeat: no-repeat;
   background-size: cover;
-  background-position: center;
+  background-position: center center;
   background-attachment: fixed;
+
+  display: flex;
+  flex-direction: column;
 }
+
 
 /* Clean Navigation */
 .nav {
@@ -294,7 +299,7 @@ onUnmounted(() => {
   cursor: pointer;
   transition: all 0.15s cubic-bezier(0.4, 0, 0.2, 1);
   position: relative;
-  overflow: hidden;
+  overflow: auto;
   animation: slideInUp 0.3s ease-out both;
 }
 
@@ -468,7 +473,50 @@ onUnmounted(() => {
 }
 
 /* Responsive Design */
-@media (max-width: 768px) {
+/* เพิ่ม media queries เหล่านี้ในส่วน responsive design */
+
+/* Tablet Portrait (768px - 1024px) */
+@media (min-width: 768px) and (max-width: 1024px) {
+  .dashboard-grid {
+    grid-template-columns: repeat(2, 1fr);
+    gap: 1.25rem;
+    max-width: 100%;
+    padding: 0 1rem;
+  }
+
+  .dashboard-card {
+    padding: 1.5rem;
+    border-radius: 14px;
+  }
+
+  .card-icon {
+    width: 55px;
+    height: 55px;
+    font-size: 1.375rem;
+    margin-bottom: 1.25rem;
+  }
+
+  .card-title {  
+    font-size: 1.175rem;
+  }
+
+  .card-description {
+    font-size: 0.85rem;
+    margin-bottom: 0.875rem;
+  }
+
+  .main {
+    padding-left: 1rem;
+    padding-right: 1rem;
+  }
+
+  .dashboard {
+    padding: 1.5rem 0;
+  }
+}
+
+/* Mobile Only (max-width: 767px) */
+@media (max-width: 767px) {
   .nav-container {
     padding: 0 1rem;
   }
@@ -523,20 +571,6 @@ onUnmounted(() => {
     padding: 1rem 0;
   }
 
-  .dashboard-header {
-    margin-bottom: 2rem;
-    padding: 0 0.5rem;
-  }
-
-  .dashboard-title {
-    font-size: 1.75rem;
-    line-height: 1.2;
-  }
-
-  .dashboard-subtitle {
-    font-size: 1rem;
-  }
-
   .dashboard-grid {
     grid-template-columns: 1fr;
     gap: 1rem;
@@ -572,81 +606,24 @@ onUnmounted(() => {
     right: 1.25rem;
   }
 
-  /* Ensure cards don't extend beyond viewport */
   .dashboard-card:hover {
     transform: translateY(-4px);
   }
 }
 
-/* Extra small screens */
-@media (max-width: 480px) {
-  .main {
-    padding-left: 0.5rem;
-    padding-right: 0.5rem;
-  }
-
-  .dashboard-header {
-    margin-bottom: 1.5rem;
-  }
-
-  .dashboard-title {
-    font-size: 1.5rem;
-  }
-
-  .dashboard-subtitle {
-    font-size: 0.9rem;
-  }
-
-  .dashboard-card {
-    padding: 1rem;
-    margin: 0;
-  }
-
-  .card-icon {
-    width: 45px;
-    height: 45px;
-    font-size: 1.125rem;
-  }
-
-  .card-title {
-    font-size: 1rem;
-  }
-
-  .card-description {
-    font-size: 0.75rem;
-  }
-
-  .card-arrow {
-    width: 24px;
-    height: 24px;
-    bottom: 1rem;
-    right: 1rem;
-  }
+/* แก้ไขการตั้งค่าเริ่มต้นของ dashboard-grid */
+.dashboard-grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(320px, 1fr));
+  gap: 1.5rem;
+  max-width: 1000px;
+  margin: 0 auto;
 }
 
-/* Clean Focus States */
-.nav-link:focus-visible,
-.menu-toggle:focus-visible,
-.dashboard-card:focus-visible {
-  outline: 2px solid var(--primary);
-  outline-offset: 2px;
-}
-
-/* Smooth Scrollbar */
-::-webkit-scrollbar {
-  width: 6px;
-}
-
-::-webkit-scrollbar-track {
-  background: var(--bg-secondary);
-}
-
-::-webkit-scrollbar-thumb {
-  background: var(--border);
-  border-radius: 3px;
-}
-
-::-webkit-scrollbar-thumb:hover {
-  background: var(--text-muted);
+/* สำหรับหน้าจอใหญ่ */
+@media (min-width: 1025px) {
+  .dashboard-grid {
+    grid-template-columns: repeat(2, minmax(280px, 1fr));
+  }
 }
 </style>

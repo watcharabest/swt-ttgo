@@ -1,13 +1,24 @@
-L<template>
+  <template>
   <div class="form-page">
     <h1>Map Display</h1>
     <form @submit.prevent="onSubmit" novalidate>
       <div class="form-group">
         <label for="order">Tray ID</label>
         <div class="input-with-scanner">
-          <input id="tray" v-model="order" type="text" required placeholder="Enter Tray ID"
-            :class="{ invalid: orderError }" />
-          <button type="button" @click="toggleOrderScanner" :disabled="loading" class="scan-btn">
+          <input
+            id="tray"
+            v-model="order"
+            type="text"
+            required
+            placeholder="Enter Tray ID"
+            :class="{ invalid: orderError }"
+          />
+          <button
+            type="button"
+            @click="toggleOrderScanner"
+            :disabled="loading"
+            class="scan-btn"
+          >
             📱 Scan QR
           </button>
         </div>
@@ -17,9 +28,21 @@ L<template>
       <div class="form-group">
         <label for="mac" autocomplete="on">Display Mac Address</label>
         <div class="input-with-scanner">
-          <input id="mac" name="serial-number" v-model="mac" type="text" required placeholder="Enter MAC Address"
-            :class="{ invalid: macError }" />
-          <button type="button" @click="toggleScanner" :disabled="loading" class="scan-btn">
+          <input
+            id="mac"
+            name="serial-number"
+            v-model="mac"
+            type="text"
+            required
+            placeholder="Enter MAC Address"
+            :class="{ invalid: macError }"
+          />
+          <button
+            type="button"
+            @click="toggleScanner"
+            :disabled="loading"
+            class="scan-btn"
+          >
             📱 Scan QR
           </button>
         </div>
@@ -27,7 +50,11 @@ L<template>
       </div>
 
       <!-- QR Scanner Modal -->
-      <div v-if="showScanner || showOrderScanner" class="scanner-modal" @click="closeScanner">
+      <div
+        v-if="showScanner || showOrderScanner"
+        class="scanner-modal"
+        @click="closeScanner"
+      >
         <div class="scanner-container" @click.stop>
           <div class="scanner-header">
             <h3>Scan QR Code</h3>
@@ -35,24 +62,36 @@ L<template>
           </div>
 
           <div class="scanner-content">
-            <QrcodeStream @detect="onDetect" @error="onError" class="scanner-video" :constraints="{
-              facingMode: currentCamera,
-              width: { ideal: isMicroMode ? 640 : 480 },
-              height: { ideal: isMicroMode ? 480 : 360 },
-              zoom: isMicroMode ? 4 : 1,
-              focusMode: 'continuous',
-              pointsOfInterest: [{ x: 0.5, y: 0.5 }],
-              advanced: isMicroMode ? [
-                { contrast: 100 },
-                { brightness: 0 },
-                { sharpness: 100 }
-              ] : []
-            }" :track="paintBoundingBox" />
+            <QrcodeStream
+              @detect="onDetect"
+              @error="onError"
+              class="scanner-video"
+              :constraints="{
+                facingMode: currentCamera,
+                width: { ideal: isMicroMode ? 640 : 480 },
+                height: { ideal: isMicroMode ? 480 : 360 },
+                zoom: isMicroMode ? 4 : 1,
+                focusMode: 'continuous',
+                pointsOfInterest: [{ x: 0.5, y: 0.5 }],
+                advanced: isMicroMode
+                  ? [{ contrast: 100 }, { brightness: 0 }, { sharpness: 100 }]
+                  : [],
+              }"
+              :track="paintBoundingBox"
+            />
             <div class="scanner-overlay">
               <div class="scanner-frame" :class="{ 'micro-mode': isMicroMode }"></div>
-              <button v-if="hasMultipleCameras" @click="switchCamera" class="floating-camera-btn"
-                :title="currentCamera === 'user' ? 'Switch to Back Camera' : 'Switch to Front Camera'">
-                {{ currentCamera === 'user' ? '📷' : '📱' }}
+              <button
+                v-if="hasMultipleCameras"
+                @click="switchCamera"
+                class="floating-camera-btn"
+                :title="
+                  currentCamera === 'user'
+                    ? 'Switch to Back Camera'
+                    : 'Switch to Front Camera'
+                "
+              >
+                {{ currentCamera === "user" ? "📷" : "📱" }}
               </button>
             </div>
           </div>
@@ -67,9 +106,8 @@ L<template>
         </div>
       </div>
 
-
       <button type="submit" :disabled="loading" class="btn-send">
-        {{ loading ? 'Sending…' : 'Send' }}
+        {{ loading ? "Sending…" : "Send" }}
       </button>
 
       <p v-if="error" class="error">{{ error }}</p>
@@ -79,229 +117,231 @@ L<template>
 </template>
 
 <script setup>
-import { ref, onMounted, onUnmounted } from 'vue'
-import { QrcodeStream } from 'vue-qrcode-reader'
-import axios from 'axios'
+import { ref, onMounted, onUnmounted } from "vue";
+import { QrcodeStream } from "vue-qrcode-reader";
+import axios from "axios";
 
-const mac = ref('')
-const order = ref('')
-const loading = ref(false)
-const error = ref(null)
-const success = ref(false)
+const mac = ref("");
+const order = ref("");
+const loading = ref(false);
+const error = ref(null);
+const success = ref(false);
 
 // Error flags for each field
-const macError = ref(false)
-const orderError = ref(false)
+const macError = ref(false);
+const orderError = ref(false);
 
 // QR Scanner related
-const showScanner = ref(false)
-const showOrderScanner = ref(false)
-const scannerError = ref('')
-const hasMultipleCameras = ref(false)
-const currentCamera = ref('environment') // Changed from 'environment' to 'user' for front camera
-const isMicroMode = ref(false)
+const showScanner = ref(false);
+const showOrderScanner = ref(false);
+const scannerError = ref("");
+const hasMultipleCameras = ref(false);
+const currentCamera = ref("environment"); // Changed from 'environment' to 'user' for front camera
+const isMicroMode = ref(false);
 
 // Check if device has multiple cameras
 const checkCameraSupport = async () => {
   try {
-    const devices = await navigator.mediaDevices.enumerateDevices()
-    const videoDevices = devices.filter(device => device.kind === 'videoinput')
-    hasMultipleCameras.value = videoDevices.length > 1
-    return videoDevices.length > 0
+    const devices = await navigator.mediaDevices.enumerateDevices();
+    const videoDevices = devices.filter((device) => device.kind === "videoinput");
+    hasMultipleCameras.value = videoDevices.length > 1;
+    return videoDevices.length > 0;
   } catch (err) {
-    console.error('Camera check failed:', err)
-    return false
+    console.error("Camera check failed:", err);
+    return false;
   }
-}
+};
 
 const toggleScanner = async () => {
   if (!showScanner.value) {
-    const hasCamera = await checkCameraSupport()
+    const hasCamera = await checkCameraSupport();
     if (!hasCamera) {
-      scannerError.value = 'No camera found on this device'
-      return
+      scannerError.value = "No camera found on this device";
+      return;
     }
-    startScanner()
+    startScanner();
   } else {
-    closeScanner()
+    closeScanner();
   }
-}
+};
 
 const startScanner = async () => {
   try {
-    showScanner.value = true
-    scannerError.value = ''
+    showScanner.value = true;
+    scannerError.value = "";
   } catch (err) {
-    console.error('Scanner start failed:', err)
-    scannerError.value = `Camera error: ${err.message}`
+    console.error("Scanner start failed:", err);
+    scannerError.value = `Camera error: ${err.message}`;
   }
-}
+};
 
 const onDetect = (detectedCodes) => {
   if (detectedCodes.length > 0) {
-    const qrData = detectedCodes[0].rawValue
-    console.log('QR Code detected:', qrData)
+    const qrData = detectedCodes[0].rawValue;
+    console.log("QR Code detected:", qrData);
 
     if (showOrderScanner.value) {
       // For product order, accept any non-empty string
       if (qrData && qrData.trim()) {
-        order.value = qrData.trim()
-        closeScanner()
+        order.value = qrData.trim();
+        closeScanner();
 
         // Show success notification
-        success.value = true
+        success.value = true;
         setTimeout(() => {
-          success.value = false
-        }, 2000)
+          success.value = false;
+        }, 2000);
       } else {
-        scannerError.value = 'Invalid product order. Please scan again.'
+        scannerError.value = "Invalid product order. Please scan again.";
         setTimeout(() => {
-          scannerError.value = ''
-        }, 3000)
+          scannerError.value = "";
+        }, 3000);
       }
     } else {
       // Existing MAC address validation
-      const macRegex = /^([0-9A-Fa-f]{2}[:-]){5}([0-9A-Fa-f]{2})$/
+      const macRegex = /^([0-9A-Fa-f]{2}[:-]){5}([0-9A-Fa-f]{2})$/;
       if (qrData && macRegex.test(qrData)) {
-        mac.value = qrData
-        closeScanner()
+        mac.value = qrData;
+        closeScanner();
 
         // Show success notification
-        success.value = true
+        success.value = true;
         setTimeout(() => {
-          success.value = false
-        }, 2000)
+          success.value = false;
+        }, 2000);
       } else {
-        scannerError.value = 'Invalid MAC address format. Please scan again.'
+        scannerError.value = "Invalid MAC address format. Please scan again.";
         setTimeout(() => {
-          scannerError.value = ''
-        }, 3000)
+          scannerError.value = "";
+        }, 3000);
       }
     }
   }
-}
+};
 
 const paintBoundingBox = (detectedCodes, ctx) => {
   for (const detectedCode of detectedCodes) {
-    const { boundingBox: { x, y, width, height } } = detectedCode
+    const {
+      boundingBox: { x, y, width, height },
+    } = detectedCode;
 
     // Draw enhanced bounding box
-    ctx.lineWidth = 4
-    ctx.strokeStyle = isMicroMode.value ? '#8DBAED' : '#00ff00'
-    ctx.strokeRect(x, y, width, height)
+    ctx.lineWidth = 4;
+    ctx.strokeStyle = isMicroMode.value ? "#8DBAED" : "#00ff00";
+    ctx.strokeRect(x, y, width, height);
 
     // Add corner markers for better visual feedback
-    const cornerSize = 20
-    ctx.beginPath()
+    const cornerSize = 20;
+    ctx.beginPath();
     // Top-left corner
-    ctx.moveTo(x, y + cornerSize)
-    ctx.lineTo(x, y)
-    ctx.lineTo(x + cornerSize, y)
+    ctx.moveTo(x, y + cornerSize);
+    ctx.lineTo(x, y);
+    ctx.lineTo(x + cornerSize, y);
     // Top-right corner
-    ctx.moveTo(x + width - cornerSize, y)
-    ctx.lineTo(x + width, y)
-    ctx.lineTo(x + width, y + cornerSize)
+    ctx.moveTo(x + width - cornerSize, y);
+    ctx.lineTo(x + width, y);
+    ctx.lineTo(x + width, y + cornerSize);
     // Bottom-right corner
-    ctx.moveTo(x + width, y + height - cornerSize)
-    ctx.lineTo(x + width, y + height)
-    ctx.lineTo(x + width - cornerSize, y + height)
+    ctx.moveTo(x + width, y + height - cornerSize);
+    ctx.lineTo(x + width, y + height);
+    ctx.lineTo(x + width - cornerSize, y + height);
     // Bottom-left corner
-    ctx.moveTo(x + cornerSize, y + height)
-    ctx.lineTo(x, y + height)
-    ctx.lineTo(x, y + height - cornerSize)
-    ctx.stroke()
+    ctx.moveTo(x + cornerSize, y + height);
+    ctx.lineTo(x, y + height);
+    ctx.lineTo(x, y + height - cornerSize);
+    ctx.stroke();
 
     // Add status text
-    ctx.font = 'bold 18px Arial'
-    ctx.fillStyle = isMicroMode.value ? '#8DBAED' : '#00ff00'
-    ctx.fillText('QR Code Found!', x, y > 20 ? y - 10 : y + height + 25)
+    ctx.font = "bold 18px Arial";
+    ctx.fillStyle = isMicroMode.value ? "#8DBAED" : "#00ff00";
+    ctx.fillText("QR Code Found!", x, y > 20 ? y - 10 : y + height + 25);
   }
-}
+};
 
 const onError = (err) => {
-  console.error('QR Scanner error:', err)
-  scannerError.value = `Scanner error: ${err.message || 'Camera access denied'}`
-}
+  console.error("QR Scanner error:", err);
+  scannerError.value = `Scanner error: ${err.message || "Camera access denied"}`;
+};
 
 const closeScanner = () => {
-  showScanner.value = false
-  showOrderScanner.value = false
-  scannerError.value = ''
-}
+  showScanner.value = false;
+  showOrderScanner.value = false;
+  scannerError.value = "";
+};
 
 const switchCamera = () => {
   if (hasMultipleCameras.value) {
-    currentCamera.value = currentCamera.value === 'environment' ? 'user' : 'environment'
+    currentCamera.value = currentCamera.value === "environment" ? "user" : "environment";
   }
-}
+};
 
 const toggleMicroMode = () => {
-  isMicroMode.value = !isMicroMode.value
-}
+  isMicroMode.value = !isMicroMode.value;
+};
 
 const toggleOrderScanner = async () => {
   if (!showOrderScanner.value) {
-    const hasCamera = await checkCameraSupport()
+    const hasCamera = await checkCameraSupport();
     if (!hasCamera) {
-      scannerError.value = 'No camera found on this device'
-      return
+      scannerError.value = "No camera found on this device";
+      return;
     }
-    startOrderScanner()
+    startOrderScanner();
   } else {
-    closeScanner()
+    closeScanner();
   }
-}
+};
 
 const startOrderScanner = async () => {
   try {
-    showOrderScanner.value = true
-    scannerError.value = ''
+    showOrderScanner.value = true;
+    scannerError.value = "";
   } catch (err) {
-    console.error('Scanner start failed:', err)
-    scannerError.value = `Camera error: ${err.message}`
+    console.error("Scanner start failed:", err);
+    scannerError.value = `Camera error: ${err.message}`;
   }
-}
+};
 
 const onSubmit = async () => {
   // Reset state
-  console.log("onSubmit fired")
-  error.value = null
-  success.value = false
-  macError.value = false
-  orderError.value = false
+  console.log("onSubmit fired");
+  error.value = null;
+  success.value = false;
+  macError.value = false;
+  orderError.value = false;
 
   // Simple validation
-  if (!mac.value) macError.value = true
-  if (!order.value) orderError.value = true
+  if (!mac.value) macError.value = true;
+  if (!order.value) orderError.value = true;
   if (macError.value || orderError.value) {
-    return
+    return;
   }
 
-  loading.value = true
+  loading.value = true;
   try {
-    await axios.post('https://10.100.86.16:8000/update_tray_first', {
+    await axios.post("https://10.100.113.33:8000/update_mac_tray", {
       mac_address: mac.value,
-      tray_id: order.value
-    })
+      tray_id: order.value,
+    });
 
     // Simulate API call for demo
 
-    success.value = true
+    success.value = true;
     // Clear form
-    mac.value = ''
-    order.value = ''
+    mac.value = "";
+    order.value = "";
   } catch (e) {
-    console.error(e)
-    error.value = e.response?.data?.detail || 'Error sending request'
+    console.error(e);
+    error.value = "Tray Already Use";
   } finally {
-    loading.value = false
+    loading.value = false;
   }
-}
+};
 
 // Initialize camera check on mount
 onMounted(() => {
-  checkCameraSupport()
-})
+  checkCameraSupport();
+});
 </script>
 
 <style scoped>
@@ -354,7 +394,7 @@ input {
 
 input:focus {
   outline: none;
-  border-color: #8DBAED;
+  border-color: #8dbaed;
   box-shadow: 0 0 0 3px rgba(141, 186, 237, 0.2);
 }
 
@@ -364,7 +404,7 @@ input.invalid {
 }
 
 .scan-btn {
-  background-color: #8DBAED;
+  background-color: #8dbaed;
   color: #fff;
   border: none;
   padding: 0.75rem 1rem;
@@ -398,7 +438,7 @@ input.invalid {
 }
 
 .btn-send {
-  background-color: #C7E299;
+  background-color: #c7e299;
   border: none;
   padding: 1rem;
   border-radius: 8px;
@@ -549,7 +589,7 @@ input.invalid {
 }
 
 .scanner-frame.micro-mode {
-  border-color: #8DBAED;
+  border-color: #8dbaed;
   box-shadow: 0 0 0 9999px rgba(0, 0, 0, 0.7), 0 0 20px rgba(141, 186, 237, 0.3);
   backdrop-filter: contrast(1.5) brightness(1.3) saturate(1.2);
 }
@@ -628,7 +668,7 @@ input.invalid {
 }
 
 .micro-mode-btn {
-  background-color: #8DBAED;
+  background-color: #8dbaed;
   color: #2c3e50;
   border: none;
   padding: 0.75rem 1.25rem;
@@ -648,7 +688,7 @@ input.invalid {
 }
 
 .micro-mode-btn.active {
-  background-color: #4CAF50;
+  background-color: #4caf50;
   color: #fff;
 }
 
@@ -683,7 +723,7 @@ input.invalid {
 }
 
 .change-mode-btn {
-  background-color: #8DBAED;
+  background-color: #8dbaed;
   color: #fff;
   border: none;
   padding: 0.75rem 1.25rem;

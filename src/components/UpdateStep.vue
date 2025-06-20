@@ -279,7 +279,7 @@ const onSubmit = async () => {
 
   loading.value = true
   try {
-    await axios.post('https://10.100.86.16:8000/get-product-info', {
+    await axios.post('https://10.100.113.33:8000/update_mac_product', {
       mac_address: mac.value,
       product_order: order.value
     })
