@@ -5,9 +5,9 @@
     <label for="productOrder">Product Order</label>
     <div class="input-section">
       <input id="productOrder" v-model="productOrder" type="text" placeholder="Enter Product Order"
-        :class="{ invalid: productOrderError }" />
+        :class="{ invalid: productOrderError }" @keyup.enter = "lookupTray"/>
       <span v-if="productOrderError" class="error-text">Required</span>
-    </div>
+    </div>    
     <!-- Initial Lookup Button -->
     <div v-if="!searched" class="lookup-button">
       <button @click="handleAction" :disabled="loading" class="btn-action">
@@ -137,7 +137,7 @@ const lookupTray = async (preserveEditMode = false) => {
   errorMessage.value = ''
   try {
     const res = await axios.post(
-      'https://10.100.113.33:8000/lookup-product-order',
+      'https://10.100.107.164:8000/lookup-product-order',
       { product_order: productOrder.value }
     )
     trayMain.value = res.data.tray_id_main
@@ -166,7 +166,7 @@ const acceptTray = async (index) => {
     if (!confirm(`Update main tray ID to "${newId}"?`)) return
     try {
       await axios.post(
-        'https://10.100.113.33:8000/update-main-tray-id',
+        'https://10.100.107.164:8000/update-main-tray-id',
         {
           old_tray_id: trayMain.value,
           new_tray_id: newId
@@ -182,12 +182,12 @@ const acceptTray = async (index) => {
     if (!confirm(`Add new tray ID "${newId}" at slot #${index + 1}?`)) return
     try {
       await axios.post(
-        'https://10.100.113.33:8000/add-tray',
+        'https://10.100.107.164:8000/add-tray',
         { tray_id_main: trayMain.value, tray_id: newId }
       )
       const firstTray = trayIds.value.find(v => v) || ''
       await axios.post(
-        'https://10.100.113.33:8000/get-tray-info',
+        'https://10.100.107.164:8000/get-tray-info',
         {
           tray_id_main: trayMain.value,  // ให้ตรงกับ Pydantic model Tray
           tray_id: firstTray             // ส่ง tray_id ที่เลือก
@@ -207,12 +207,12 @@ const deleteTray = async (index) => {
   if (!confirm(`Delete tray ID "${idToDelete}" at slot #${index + 1}?`)) return
   try {
     await axios.post(
-      'https://10.100.113.33:8000/delete-tray',
+      'https://10.100.107.164:8000/delete-tray',
       { tray_id_main: trayMain.value, tray_id: idToDelete }
     )
     const firstTray = trayIds.value.find(v => v) || ''
     await axios.post(
-      'https://10.100.113.33:8000/get-tray-info',
+      'https://10.100.107.164:8000/get-tray-info',
       {
         tray_id_main: trayMain.value,  // ให้ตรงกับ Pydantic model Tray
         tray_id: firstTray             // ส่ง tray_id ที่เลือก
@@ -229,12 +229,12 @@ const clearTray = async () => {
   if (!confirm(`Clear all trays for PO "${productOrder.value}"?`)) return
   try {
     await axios.post(
-      'https://10.100.113.33:8000/clear-tray',
+      'https://10.100.107.164:8000/clear-tray',
       { tray_id_main: trayMain.value }
     )
     const firstTray = trayIds.value.find(v => v) || ''
     await axios.post(
-      'https://10.100.113.33:8000/get-tray-info',
+      'https://10.100.107.164:8000/get-tray-info',
       {
         tray_id_main: trayMain.value,  // ให้ตรงกับ Pydantic model Tray
         tray_id: firstTray             // ส่ง tray_id ที่เลือก
@@ -253,7 +253,7 @@ const submitTrayInfo = async () => {
     // หา first non-empty tray_id
     const firstTray = trayIds.value.find(v => v) || ''
     await axios.post(
-      'https://10.100.113.33:8000/get-tray-info',
+      'https://10.100.107.164:8000/get-tray-info',
       {
         tray_id_main: trayMain.value,  // ให้ตรงกับ Pydantic model Tray
         tray_id: firstTray             // ส่ง tray_id ที่เลือก
@@ -286,7 +286,7 @@ const replaceTray = async (index) => {
   if (!confirm(`Replace tray ID "${existingId}" with "${newId}"?`)) return
   try {
     await axios.post(
-      'https://10.100.113.33:8000/update-tray-id',
+      'https://10.100.107.164:8000/update-tray-id',
       {
         old_tray_id: existingId,
         new_tray_id: newId
@@ -342,14 +342,15 @@ label {
 }
 
 input {
-  width: 100%;
-  padding: 0.75rem 1rem;
+  flex: 1;
+  padding: 15px;
   box-sizing: border-box;
-  border: 2px solid #e2e8f0;
-  border-radius: 8px;
+  border: 2px solid transparent;
+  border-radius: 12px;
+  box-shadow: 0px 2px 2px 2px rgba(0, 0, 0, 0.088);
   font-size: 1rem;
+  transition: all 0.3s ease-in-out;
   background: #f8fafc;
-  transition: all 0.3s ease;
 }
 
 input:focus {

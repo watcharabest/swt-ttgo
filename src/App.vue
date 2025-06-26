@@ -1,81 +1,203 @@
 <template>
-  <div id="app">
-    <nav class="nav" :class="{ scrolled: isScrolled }">
-      <div class="nav-container">
+  <div id="app" :class="{ 'sidebar-collapsed': isSidebarCollapsed }">
+    <!-- Sidebar Toggle Button (Moved outside) -->
+    <button class="sidebar-toggle" @click="toggleSidebar">
+      <i class="fas" :class="isSidebarCollapsed ? 'fa-chevron-right' : 'fa-chevron-left'"></i>
+      <span class="submenu-arrow"  style="margin-right: 5px;">{{ isSidebarCollapsed ? '◀' : '▶' }}</span>
+    </button>
+
+    <!-- Sidebar -->
+    <aside class="sidebar" :class="{ 'collapsed': isSidebarCollapsed, 'mobile-visible': mobileMenuOpen }">
+      <div class="sidebar-header">
         <div class="logo" @click="goHome">
           <span class="logo-icon">●</span>
           <span class="logo-text">Product Order</span>
         </div>
-        
-        <button 
-          class="menu-toggle"
-          @click="toggleMobileMenu"
-          :class="{ active: mobileMenuOpen }"
-        >
-          <span></span>
-          <span></span>
-          <span></span>
-        </button>
-
-        <div class="nav-links" :class="{ active: mobileMenuOpen }">
-          <router-link to="/" class="nav-link" @click="closeMobileMenu">
-            <i class="fas fa-home"></i>
-            Home
-          </router-link>
-          <router-link to="/update-tray" class="nav-link" @click="closeMobileMenu">
-            <i class="fas fa-sync-alt"></i>
-            Map Display
-          </router-link>
-          <router-link to="/update" class="nav-link" @click="closeMobileMenu">
-            <i class="fas fa-sync-alt"></i>
-            Map PO
-          </router-link>
-          <router-link to="/tray" class="nav-link" @click="closeMobileMenu">
-            <i class="fas fa-utensils"></i>
-            Tray List
-          </router-link>
-          <router-link to="/table" class="nav-link" @click="closeMobileMenu">
-            <i class="fas fa-edit"></i>
-            Edit Database
-          </router-link>
-
-          <router-link to="/showtable" class="nav-link" @click="closeMobileMenu">
-            <i class="fas fa-table"></i>
-            Show Table
-          </router-link>
-
-            <router-link to="/clear" class="nav-link" @click="closeMobileMenu">
-              <i class="fas fa-table"></i>
-              Clear
-            </router-link>
-        </div>
       </div>
-    </nav>
 
-    <main class="main">
-      <router-view v-slot="{ Component }">
-        <transition name="page" mode="out-in" appear>
-          <component :is="Component" />
+      <nav class="sidebar-nav">
+        <div @click="toggleSubMenu" class="nav-link-header">
+          <i class="fas fa-map-marked-alt"></i>
+          <span class="link-text">Mapping TTGO</span>
+          <span class="submenu-arrow">{{ showSubMenu ? '▲' : '▼' }}</span>
+        </div>
+
+        <transition name="submenu-slide">
+          <div v-show="showSubMenu" class="submenu-wrapper">
+            <router-link to="/" class="nav-link" @click="closeMobileMenu">
+              <i class="fas fa-home"></i>
+              <span class="link-text">Home</span>
+            </router-link>
+            <router-link to="/update-tray" class="nav-link" @click="closeMobileMenu">
+              <i class="fas fa-map-marked-alt"></i>
+              <span class="link-text">Map TTGO to Tray</span>
+            </router-link>
+            <router-link to="/update" class="nav-link" @click="closeMobileMenu">
+              <i class="fas fa-map"></i>
+              <span class="link-text">Map TTGO to Product Order</span>
+            </router-link>
+            <router-link to="/tray" class="nav-link" @click="closeMobileMenu">
+              <i class="fas fa-utensils"></i>
+              <span class="link-text">Tray List</span>
+            </router-link>
+            <router-link to="/table" class="nav-link" @click="closeMobileMenu">
+              <i class="fas fa-edit"></i>
+              <span class="link-text">Edit Database</span>
+            </router-link>
+            <router-link to="/showtable" class="nav-link" @click="closeMobileMenu">
+              <i class="fas fa-table"></i>
+              <span class="link-text">Show Table</span>
+            </router-link>
+            <router-link to="/clear" class="nav-link" @click="closeMobileMenu">
+              <i class="fas fa-broom"></i>
+              <span class="link-text">Clear</span>
+            </router-link>
+          </div>
         </transition>
-      </router-view>
-    </main>
+
+        <div @click="toggleRackMenu" class="nav-link-header">
+          <i class="fas fa-warehouse"></i>
+          <span class="link-text">Rack Tracking</span>
+          <span class="submenu-arrow">{{ showRackMenu ? '▲' : '▼' }}</span>
+        </div>
+
+        <transition name="submenu-slide">
+          <div v-show="showRackMenu" class="submenu-wrapper">
+            <router-link to="/scan-rack" class="nav-link" @click="closeMobileMenu">
+              <i class="fas fa-warehouse"></i>
+              <span class="link-text">Scan Rack</span>
+            </router-link>
+            <router-link to="/rack" class="nav-link" @click="closeMobileMenu">
+              <i class="fas fa-warehouse"></i>
+              <span class="link-text">Rack Table</span>
+            </router-link>
+          </div>
+        </transition>
+      </nav>
+
+    </aside>
+
+    <!-- Main Content -->
+    <div class="main-content">
+      <!-- Mobile Header -->
+      <header class="mobile-header" :class="{ 'scrolled': isScrolled }">
+        <button class="mobile-menu-toggle" @click="toggleMobileMenu">
+          <i class="fas fa-bars"></i>
+        </button>
+        <div class="mobile-title" @click="goHome">
+          <span class="logo-icon">●</span>
+          <span>Product Order</span>
+        </div>
+          <div @click="toggleSubMenu" class="nav-link-header">
+            <i class="fas fa-map-marked-alt"></i>
+            <span class="link-text">Mapping TTGO</span>
+            <span class="submenu-arrow">{{ showSubMenu ? '▲' : '▼' }}</span>
+          </div>
+
+          <transition name="submenu-slide">
+            <div v-show="showSubMenu" class="submenu-wrapper">
+              <router-link to="/" class="nav-link" @click="closeMobileMenu">
+                <i class="fas fa-home"></i>
+                <span class="link-text">Home</span>
+              </router-link>
+              <router-link to="/update-tray" class="nav-link" @click="closeMobileMenu">
+                <i class="fas fa-map-marked-alt"></i>
+                <span class="link-text">Map TTGO to Tray</span>
+              </router-link>
+              <router-link to="/update" class="nav-link" @click="closeMobileMenu">
+                <i class="fas fa-map"></i>
+                <span class="link-text">Map TTGO to Product Order</span>
+              </router-link>
+              <router-link to="/tray" class="nav-link" @click="closeMobileMenu">
+                <i class="fas fa-utensils"></i>
+                <span class="link-text">Tray List</span>
+              </router-link>
+              <router-link to="/table" class="nav-link" @click="closeMobileMenu">
+                <i class="fas fa-edit"></i>
+                <span class="link-text">Edit Database</span>
+              </router-link>
+              <router-link to="/showtable" class="nav-link" @click="closeMobileMenu">
+                <i class="fas fa-table"></i>
+                <span class="link-text">Show Table</span>
+              </router-link>
+              <router-link to="/clear" class="nav-link" @click="closeMobileMenu">
+                <i class="fas fa-broom"></i>
+                <span class="link-text">Clear</span>
+              </router-link>
+            </div>
+          </transition>
+          <div @click="toggleRackMenu" class="nav-link-header">
+            <i class="fas fa-warehouse"></i>
+            <span class="link-text">Rack Tracking</span>
+            <span class="submenu-arrow">{{ showRackMenu ? '▲' : '▼' }}</span>
+          </div>
+
+          <transition name="submenu-slide">
+            <div v-show="showRackMenu" class="submenu-wrapper">
+              <router-link to="/scan-rack" class="nav-link" @click="closeMobileMenu">
+                <i class="fas fa-warehouse"></i>
+                <span class="link-text">Scan Rack</span>
+              </router-link>
+              <router-link to="/rack" class="nav-link" @click="closeMobileMenu">
+                <i class="fas fa-warehouse"></i>
+                <span class="link-text">Rack Table</span>
+              </router-link>
+            </div>
+          </transition>
+
+      </header>
+
+      <!-- Page Content -->
+      <main class="main">
+        <router-view v-slot="{ Component }">
+          <transition name="page" mode="out-in" appear>
+            <component :is="Component" />
+          </transition>
+        </router-view>
+      </main>
+    </div>
   </div>
 </template>
 
 <script setup>
-import { ref, onMounted, onUnmounted } from 'vue'
-import { useRouter } from 'vue-router'
+import { ref, onMounted, onUnmounted, watch } from 'vue'
+import { useRouter, useRoute } from 'vue-router'
 
 const router = useRouter()
+const route = useRoute()
 const mobileMenuOpen = ref(false)
 const isScrolled = ref(false)
+const isSidebarCollapsed = ref(false)
+const showSubMenu = ref(false)
+const showRackMenu = ref(false)
+
+const toggleSubMenu = () => {
+  showSubMenu.value = !showSubMenu.value
+  // Close rack menu when opening this one
+  if (showRackMenu.value) showRackMenu.value = false
+}
+
+const toggleRackMenu = () => {
+  showRackMenu.value = !showRackMenu.value
+  // Close other submenu when opening this one
+  if (showSubMenu.value) showSubMenu.value = false
+}
+
+
+
+const toggleSidebar = () => {
+  isSidebarCollapsed.value = !isSidebarCollapsed.value
+  localStorage.setItem('sidebarCollapsed', isSidebarCollapsed.value)
+}
 
 const toggleMobileMenu = () => {
   mobileMenuOpen.value = !mobileMenuOpen.value
 }
 
 const closeMobileMenu = () => {
-  mobileMenuOpen.value = false
+  if (window.innerWidth <= 768) {
+    mobileMenuOpen.value = false
+  }
 }
 
 const goHome = () => {
@@ -95,8 +217,37 @@ const handleScroll = () => {
 const handleResize = () => {
   if (window.innerWidth > 768) {
     mobileMenuOpen.value = false
+  } else {
+    isSidebarCollapsed.value = true
   }
 }
+
+// Initialize sidebar state from localStorage or default to false
+onMounted(() => {
+  const savedSidebarState = localStorage.getItem('sidebarCollapsed')
+  if (savedSidebarState !== null) {
+    isSidebarCollapsed.value = savedSidebarState === 'true'
+  }
+
+  // Auto-collapse on mobile
+  if (window.innerWidth <= 768) {
+    isSidebarCollapsed.value = true
+  }
+
+  window.addEventListener('resize', handleResize)
+  window.addEventListener('scroll', handleScroll)
+
+  // Close mobile menu when route changes
+  const unwatch = router.afterEach(() => {
+    closeMobileMenu()
+  })
+
+  return () => {
+    window.removeEventListener('resize', handleResize)
+    window.removeEventListener('scroll', handleScroll)
+    unwatch()
+  }
+})
 
 onMounted(() => {
   window.addEventListener('resize', handleResize)
@@ -136,11 +287,9 @@ onUnmounted(() => {
 #app {
   min-height: 100vh;
   min-width: 100vw;
-  font-family: 'Century', 'Century Gothic', 'Georgia', serif;
+  font-family: 'Roboto', sans-serif;
   color: var(--text);
-  background:
-    linear-gradient(rgba(255, 255, 255, 0.2), rgba(255, 255, 255, 0.2)),
-    url('/image/wallpaperflare.com_wallpaper.jpg');
+  background: linear-gradient(rgba(41, 126, 175, 0.4), rgba(243, 237, 237, 0.4));
   background-repeat: no-repeat;
   background-size: cover;
   background-position: center center;
@@ -152,32 +301,39 @@ onUnmounted(() => {
 
 
 /* Clean Navigation */
-.nav {
-  position: fixed;
-  top: 0;
-  left: 0;
-  right: 0;
-  z-index: 100;
-  background: rgba(255, 255, 255, 0.8);
-  backdrop-filter: blur(12px);
-  border-bottom: 1px solid var(--border);
+
+.submenu-arrow {
+  margin-left: auto;
+  font-size: 0.85rem;
+  color: #ccc;
   transition: var(--transition);
+  
 }
 
-.nav.scrolled {
-  background: rgba(255, 255, 255, 0.95);
-  box-shadow: var(--shadow);
+.submenu-wrapper {
+  overflow: hidden;
 }
 
-.nav-container {
-  max-width: 1200px;
-  margin: 0 auto;
-  padding: 0 1.5rem;
-  height: 64px;
-  display: flex;
-  align-items: center;
-  justify-content: space-between;
+/* Transition Classes */
+.submenu-slide-enter-active,
+.submenu-slide-leave-active {
+  transition: max-height 0.3s ease, opacity 0.3s ease;
 }
+
+.submenu-slide-enter-from,
+.submenu-slide-leave-to {
+  max-height: 0;
+  opacity: 0;
+}
+
+.submenu-slide-enter-to,
+.submenu-slide-leave-from {
+  max-height: 1000px;
+  /* ควรพอเหมาะกับความสูงเมนูย่อย */
+  opacity: 1;
+}
+
+
 
 /* Simple Logo */
 .logo {
@@ -202,66 +358,263 @@ onUnmounted(() => {
 }
 
 @keyframes pulse {
-  0%, 100% { opacity: 1; }
-  50% { opacity: 0.7; }
+
+  0%,
+  100% {
+    opacity: 1;
+  }
+
+  50% {
+    opacity: 0.7;
+  }
 }
 
 .logo-text {
   letter-spacing: -0.025em;
 }
 
-/* Clean Navigation Links */
-.nav-links {
+/* Layout */
+#app {
   display: flex;
-  gap: 0.5rem;
+  min-height: 100vh;
+  transition: margin-left 0.3s ease;
+}
+
+.sidebar {
+  width: 300px;
+  height: 100vh;
+  position: fixed;
+  left: 0;
+  top: 0;
+  background: #2c3e50;
+  color: white;
+  transition: all 0.3s ease;
+  z-index: 1000;
+  display: flex;
+  flex-direction: column;
+  overflow-y: auto;
+  box-shadow: 2px 0 10px rgba(0, 0, 0, 0.1);
+  padding-top: 10px;
+}
+
+.sidebar.collapsed {
+  width: 70px;
+  overflow: hidden;
+}
+
+.sidebar-header {
+  padding: 20px 15px;
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  border-bottom: 1px solid rgba(255, 255, 255, 0.1);
+}
+
+.logo {
+  display: flex;
+  align-items: center;
+  cursor: pointer;
+  white-space: nowrap;
+  color: white;
+  text-decoration: none;
+  font-weight: bold;
+  font-size: 1.2rem;
+}
+
+.logo-icon {
+  color: #42b983;
+  margin-right: 10px;
+  font-size: 1.5rem;
+}
+
+.sidebar-toggle {
+  position: fixed;
+  left: 270px;
+  top: 300px;
+  z-index: 900;
+  width: 50px;
+  height: 50px;
+  background: #576779;
+  border: none;
+  color: white;
+  cursor: pointer;
+  font-size: 1rem;
+  border-radius: 50%;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  box-shadow: 0 2px 5px rgba(0, 0, 0, 0.2);
+  transition: all 0.3s ease;
+}
+
+#app.sidebar-collapsed .sidebar-toggle {
+  left: 40px;
+}
+
+.sidebar-toggle:hover {
+  background-color: #576779;
+  transform: scale(1.1);
+}
+
+@media (max-width: 768px) {
+  .sidebar-toggle {
+    display: none;
+  }
+}
+
+.sidebar-nav {
+  padding: 15px 0;
+  flex: 1;
+  overflow-y: auto;
+}
+
+.nav-link-header {
+  display: flex;
+  align-items: center;
+  padding: 12px;
+  padding-right: 20px;
+  color: #ecf0f1;
+  text-decoration: none;
+  transition: all 0.2s;
+  white-space: nowrap;
+  cursor: pointer;
+}
+
+.nav-link-header i {
+  margin-right: 15px;
+  width: 20px;
+  text-align: center;
+}
+
+.nav-link-header:hover,
+.nav-link-header.router-link-active {
+  color: #42b983;
 }
 
 .nav-link {
   display: flex;
   align-items: center;
-  gap: 0.5rem;
-  padding: 0.5rem 1rem;
-  color: var(--text-muted);
+  padding: 12px 20px;
+  color: #ecf0f1;
   text-decoration: none;
-  border-radius: var(--radius);
-  font-weight: 500;
-  font-size: 0.875rem;
-  transition: var(--transition);
-  position: relative;
+  transition: all 0.2s;
+  white-space: nowrap;
+  cursor: pointer;
 }
 
 .nav-link i {
-  font-size: 0.875rem;
+  margin-right: 15px;
+  width: 20px;
+  text-align: center;
 }
 
-.nav-link::after {
-  content: '';
-  position: absolute;
-  bottom: 0;
-  left: 50%;
-  width: 0;
-  height: 2px;
-  background: var(--primary);
-  transition: var(--transition);
-  transform: translateX(-50%);
-}
-
-.nav-link:hover {
-  color: var(--text);
-  background: var(--bg-secondary);
-}
-
-.nav-link:hover::after {
-  width: 80%;
-}
-
+.nav-link:hover,
 .nav-link.router-link-active {
-  color: var(--primary);
-  background: rgba(37, 99, 235, 0.1);
+  color: #42b983;
 }
 
-.nav-link.router-link-active::after {
-  width: 80%;
+.link-text {
+  transition: opacity 0.2s;
+}
+
+.collapsed .link-text {
+  opacity: 0;
+  width: 0;
+  overflow: hidden;
+  display: inline-block;
+}
+
+.main-content {
+  flex: 1;
+  margin-left: 250px;
+  transition: margin-left 0.3s ease;
+  min-height: 100vh;
+  display: flex;
+  flex-direction: column;
+}
+
+#app.sidebar-collapsed .main-content {
+  margin-left: 70px;
+}
+
+.main {
+  flex: 1;
+  padding: 20px;
+}
+
+/* Mobile Header */
+.mobile-header {
+  display: none;
+  padding: 15px 20px;
+  background: #2c3e50;
+  color: white;
+  align-items: center;
+  position: sticky;
+  top: 0;
+  z-index: 900;
+  transition: all 0.3s ease;
+}
+
+.mobile-header.scrolled {
+  box-shadow: 0 2px 10px rgba(0, 0, 0, 0.1);
+}
+
+.mobile-menu-toggle {
+  background: none;
+  border: none;
+  color: white;
+  font-size: 1.5rem;
+  margin-right: 15px;
+  cursor: pointer;
+}
+
+.mobile-title {
+  display: flex;
+  align-items: center;
+  font-weight: bold;
+  font-size: 1.1rem;
+  cursor: pointer;
+  margin-bottom: 1rem;
+}
+
+/* Responsive */
+@media (max-width: 768px) {
+  .sidebar {
+    transform: translateX(-100%);
+    width: 280px;
+  }
+
+  .sidebar.mobile-visible {
+    transform: translateX(0);
+  }
+
+  .sidebar.collapsed {
+    width: 280px;
+  }
+
+  .main-content {
+    margin-left: 0 !important;
+  }
+
+  .mobile-header {
+    display: inline-block;
+  }
+
+  .main {
+    padding: 15px;
+  }
+}
+
+/* Transitions */
+.page-enter-active,
+.page-leave-active {
+  transition: opacity 0.2s, transform 0.2s;
+}
+
+.page-enter-from,
+.page-leave-to {
+  opacity: 0;
+  transform: translateY(10px);
 }
 
 /* Dashboard Styles */
@@ -275,11 +628,12 @@ onUnmounted(() => {
     opacity: 0;
     transform: translateY(30px);
   }
+
   to {
     opacity: 1;
     transform: translateY(0);
   }
-} 
+}
 
 
 .dashboard-grid {
@@ -308,6 +662,7 @@ onUnmounted(() => {
     opacity: 0;
     transform: translateY(20px);
   }
+
   to {
     opacity: 1;
     transform: translateY(0);
@@ -336,44 +691,6 @@ onUnmounted(() => {
   border-color: rgba(37, 99, 235, 0.2);
 }
 
-.card-icon {
-  width: 60px;
-  height: 60px;
-  border-radius: 12px;
-  display: flex;
-  align-items: center;
-  justify-content: center;
-  margin-bottom: 1.5rem;
-  font-size: 1.5rem;
-  color: white;
-  transition: var(--transition);
-}
-
-.card-icon.update {
-  background: linear-gradient(135deg, #667eea, #764ba2);
-}
-
-.card-icon.edit {
-  background: linear-gradient(135deg, #FCCF61, #FFE495);
-}
-
-.card-icon.tray {
-  background: linear-gradient(135deg, #4facfe, #00f2fe);
-}
-
-.card-icon.table {
-  background: linear-gradient(135deg, #43e97b, #38f9d7);
-}
-
-.card-icon.clear {
-  background: linear-gradient(135deg, #ec1b03, #822011);
-}
-
-
-.dashboard-card:hover .card-icon {
-  transform: scale(1.1) rotate(5deg);
-}
-
 .card-title {
   font-size: 1.25rem;
   font-weight: 600;
@@ -388,26 +705,8 @@ onUnmounted(() => {
   margin-bottom: 1rem;
 }
 
-.card-arrow {
-  position: absolute;
-  bottom: 1.5rem;
-  right: 1.5rem;
-  width: 32px;
-  height: 32px;
-  border-radius: 50%;
-  background: var(--bg-secondary);
-  display: flex;
-  align-items: center;
-  justify-content: center;
-  color: var(--text-muted);
-  transition: var(--transition);
-}
 
-.dashboard-card:hover .card-arrow {
-  background: var(--primary);
-  color: white;
-  transform: translateX(4px);
-}
+
 
 /* Simple Mobile Menu */
 .menu-toggle {
@@ -448,7 +747,6 @@ onUnmounted(() => {
 
 /* Clean Main Content */
 .main {
-  padding-top: 64px;
   max-width: 1200px;
   margin: 0 auto;
   padding-left: 1.5rem;
@@ -489,14 +787,7 @@ onUnmounted(() => {
     border-radius: 14px;
   }
 
-  .card-icon {
-    width: 55px;
-    height: 55px;
-    font-size: 1.375rem;
-    margin-bottom: 1.25rem;
-  }
-
-  .card-title {  
+  .card-title {
     font-size: 1.175rem;
   }
 
@@ -531,7 +822,7 @@ onUnmounted(() => {
     left: 0;
     right: 0;
     flex-direction: column;
-    background: rgba(255, 255, 255, 0.95);
+    background: #FFE495;
     backdrop-filter: blur(12px);
     border-bottom: 1px solid var(--border);
     box-shadow: var(--shadow-lg);
@@ -583,13 +874,6 @@ onUnmounted(() => {
     border-radius: 12px;
   }
 
-  .card-icon {
-    width: 50px;
-    height: 50px;
-    font-size: 1.25rem;
-    margin-bottom: 1rem;
-  }
-
   .card-title {
     font-size: 1.125rem;
   }
@@ -599,12 +883,6 @@ onUnmounted(() => {
     margin-bottom: 0.75rem;
   }
 
-  .card-arrow {
-    width: 28px;
-    height: 28px;
-    bottom: 1.25rem;
-    right: 1.25rem;
-  }
 
   .dashboard-card:hover {
     transform: translateY(-4px);

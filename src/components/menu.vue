@@ -1,74 +1,8 @@
 <template>
   <div class="dashboard">
-    <div class="dashboard-header">
-      <div class="dashboard-grid">
-        <div class="dashboard-card" @click="navigateTo('/update-tray')">
-          <div class="card-icon updatetray">
-            <i class="fas fa-sync-alt"></i>
-          </div>
-          <h3 class="card-title">Map Tray</h3>
-          <p class="card-description">Mapping Tray ID To Mac Address (TTGO)</p>
-          <div class="card-arrow">
-            <i class="fas fa-arrow-right"></i>
-          </div>
-        </div>
-
-        <div class="dashboard-card" @click="navigateTo('/update')">
-          <div class="card-icon update">
-            <i class="fas fa-sync-alt"></i>
-          </div>
-          <h3 class="card-title">Map Product Order</h3>
-          <p class="card-description">Mapping Product Order To Mac Address (TTGO)</p>
-          <div class="card-arrow">
-            <i class="fas fa-arrow-right"></i>
-          </div>
-        </div>
-
-        <div class="dashboard-card" @click="navigateTo('/tray')">
-          <div class="card-icon tray">
-            <i class="fas fa-utensils"></i>
-          </div>
-          <h3 class="card-title">Update Tray</h3>
-          <p class="card-description">Add / Delete Tray List When Have Product Order</p>
-          <div class="card-arrow">
-            <i class="fas fa-arrow-right"></i>
-          </div>
-        </div>
-
-        <div class="dashboard-card" @click="navigateTo('/table')">
-          <div class="card-icon edit">
-            <i class="fas fa-edit"></i>
-          </div>
-          <h3 class="card-title">Edit Database</h3>
-          <p class="card-description">Insert / Delete Product Order</p>
-          <div class="card-arrow">
-            <i class="fas fa-arrow-right"></i>
-          </div>
-        </div>
-
-        <div class="dashboard-card" @click="navigateTo('/showtable')">
-          <div class="card-icon table">
-            <i class="fas fa-table"></i>
-          </div>
-          <h3 class="card-title">Table</h3>
-          <p class="card-description">Display Table of Product Order and Track</p>
-          <div class="card-arrow">
-            <i class="fas fa-arrow-right"></i>
-          </div>
-        </div>
-
-        <div class="dashboard-card" @click="navigateTo('/clear')">
-          <div class="card-icon clear">
-            <i class="fas fa-table"></i>
-          </div>
-          <h3 class="card-title">Clear</h3>
-          <p class="card-description">Clear Tray Data</p>
-          <div class="card-arrow">
-            <i class="fas fa-arrow-right"></i>
-          </div>
-        </div>
-
-        <div class="dashboard-card no-hover">
+    <div class="scanner-section">
+      <div class="scanner-cards">
+        <div class="scanner-card">
           <h3 class="card-title" style="text-align: center">Update</h3>
           <div class="scan-container">
             <button type="button" @click="toggleScanner('update')" :disabled="loading" class="scan-btn">
@@ -76,8 +10,7 @@
             </button>
           </div>
         </div>
-
-        <div class="dashboard-card no-hover">
+        <div class="scanner-card">
           <h3 class="card-title" style="text-align: center">Lookup</h3>
           <div class="scan-container">
             <button type="button" @click="toggleScanner('lookup')" :disabled="loading" class="scan-btn">
@@ -171,7 +104,7 @@
                           Location
                           <span v-if="sortKey === 'location'">{{
                             sortAsc ? "▲" : "▼"
-                            }}</span>
+                          }}</span>
                         </th>
                       </tr>
                     </thead>
@@ -206,8 +139,10 @@
                 <div v-if="scan.type === 'Shelf Location'" class="shelf-location-controls">
                   <label class="checkbox-container">
                     <input type="checkbox" v-model="StatusForRemember" class="shelf-checkbox" />
-                    <span class="checkmark">✓</span>
-                    <span class="checkbox-label">Skip re-scan</span>
+                    <div class="custom-checkbox">
+                      <span class="checkmark">✓</span>
+                    </div>
+                    <span class="checkbox-label">Remember</span>
                   </label>
                 </div>
               </div>
@@ -343,7 +278,7 @@ const handleApiCall = async (data) => {
     }
     console.log("Request Data:", requestData);
     const response = await axios.post(
-      `https://10.100.113.33:8000${endpoint}`,
+      `https://10.100.107.164:8000${endpoint}`,
       requestData
     );
     success.value = true;
@@ -388,11 +323,15 @@ const startScanner = async () => {
 const classifyData = (data) => {
   if (/^92\d{7}$/.test(data)) {
     return "Product Order";
-  } else if (/^RK\d{5}$/.test(data)) {
+  } else if (/^RK\d{7}$/.test(data)) {
     return "Rack";
-  } else if (/^RT\d{5}$/.test(data)) {
+  } else if (/^RT\d{4}-\d{2}$/.test(data)) {
     return "Location";
-  } else if (/^HR\d{5}$/.test(data)) {
+  } else if (/^HR\d{4}-\d{4}$/.test(data)) {
+    return "Location";
+  } else if (/^WO\d{4}-\d{3}$/.test(data)) {
+    return "Location";
+  } else if (/^TL\d{4}-\d{3}$พำโำได/.test(data)) {
     return "Location";
   } else if (/^PLA\d{4}$/.test(data)) {
     return "Location";
@@ -686,7 +625,7 @@ const handleSecondScan = async (currentDataType, trimmedData) => {
       return false;
     }
   } else if (firstScanType === "Shelf Location") {
-    if (StatusForRemember.value) {
+    if (StatusForRemember.value && ["TrayBlack ID", "TrayRed ID", "TrayWhite ID"].includes(currentDataType)) {
       rememberShelfLocation.value = scannedData.value[0].value;
       try {
         await new Promise((resolve) => setTimeout(resolve, 2000));
@@ -813,7 +752,7 @@ const onDetect = async (detectedCodes) => {
       updateScanDisplay(currentDataType, trimmedData);
 
       watch(StatusForRemember, (newVal, oldVal) => {
-         if (oldVal && !newVal) {
+        if (oldVal && !newVal) {
           resetScanState();
         }
       });
@@ -844,7 +783,7 @@ const handleLookup = async (qrCode) => {
   scannedTrayIds.value = [qrCode];
 
   try {
-    const res = await axios.get(`https://10.100.113.33:8000/table01-lookup`, {
+    const res = await axios.get(`https://10.100.107.164:8000/table01-lookup`, {
       params: { qr: qrCode },
     });
 
@@ -852,7 +791,7 @@ const handleLookup = async (qrCode) => {
 
     lookupResult.value = data;
     console.log("Lookup result:", lookupResult.value);
-    const tray = await axios.post("https://10.100.113.33:8000/lookup-product-order", {
+    const tray = await axios.post("https://10.100.107.164:8000/lookup-product-order", {
       product_order: lookupResult.value[0].product_order,
     });
     trayMain.value = tray.data.tray_id_main;
@@ -1074,18 +1013,12 @@ function prevMode() {
   min-height: 100vh;
   font-family: "Century", "Century Gothic", "Georgia", serif;
   color: var(--text);
-  background: linear-gradient(rgba(255, 255, 255, 0.4), rgba(255, 255, 255, 0.4)),
-    url("C:\Users\wiroj\OneDrive\Desktop\swt\project_IoT_TTGOdisplay\frontend\image\bg.jpg");
   background-repeat: no-repeat;
   background-size: cover;
   background-position: center;
 }
 
 /* Dashboard Styles */
-.dashboard {
-  padding: 2rem 0;
-  animation: fadeInUp 0.6s ease-out;
-}
 
 @keyframes fadeInUp {
   from {
@@ -1097,14 +1030,6 @@ function prevMode() {
     opacity: 1;
     transform: translateY(0);
   }
-}
-
-.dashboard-grid {
-  display: grid;
-  grid-template-columns: repeat(3, minmax(280px, 1fr));
-  gap: 1.5rem;
-  max-width: 1000px;
-  margin: 0 auto;
 }
 
 /* Add styles for the Update card */
@@ -1162,102 +1087,53 @@ function prevMode() {
   transition: transform 0.3s ease;
 }
 
-.dashboard-card:hover::before {
+.scanner-card:hover::before {
   transform: scaleX(1);
 }
 
-.dashboard-card:hover {
+.scanner-card:hover {
   transform: translateY(-8px);
   box-shadow: var(--shadow-xl);
   border-color: rgba(37, 99, 235, 0.2);
 }
 
-.card-icon {
-  width: 60px;
-  height: 60px;
-  border-radius: 12px;
-  display: flex;
-  align-items: center;
-  justify-content: center;
-  margin-bottom: 1.5rem;
-  font-size: 1.5rem;
-  color: white;
-  transition: var(--transition);
-}
-
-.card-icon.updatetray {
-  background: linear-gradient(135deg, #faadf8, #cb32bb);
-}
-
-.card-icon.update {
-  background: linear-gradient(135deg, #667eea, #764ba2);
-}
-
-.card-icon.edit {
-  background: linear-gradient(135deg, #fccf61, #ffe495);
-}
-
-.card-icon.tray {
-  background: linear-gradient(135deg, #4facfe, #00f2fe);
-}
-
-.card-icon.table {
-  background: linear-gradient(135deg, #43e97b, #38f9d7);
-}
-
-.card-icon.clear {
-  background: linear-gradient(135deg, #ec1b03, #822011);
-}
-
-.dashboard-card:hover .card-icon {
-  transform: scale(1.1) rotate(5deg);
-}
-
 .card-title {
-  font-size: 1.25rem;
-  font-weight: 600;
+  font-size: 2rem;
   color: var(--text);
   margin-bottom: 0.5rem;
 }
 
-.card-description {
-  color: var(--text-muted);
-  font-size: 0.875rem;
-  line-height: 1.5;
-  margin-bottom: 1rem;
-}
-
-.card-arrow {
-  position: absolute;
-  bottom: 1.5rem;
-  right: 1.5rem;
-  width: 32px;
-  height: 32px;
-  border-radius: 50%;
-  background: var(--bg-secondary);
+.scanner-section {
   display: flex;
-  align-items: center;
   justify-content: center;
-  color: var(--text-muted);
-  transition: var(--transition);
+  align-items: center;
+  padding: 40px 20px;
+  min-height: 400px;
+
 }
 
-.dashboard-card:hover .card-arrow {
-  background: var(--primary);
-  color: white;
-  transform: translateX(4px);
+.scanner-cards {
+  display: flex;
+  flex-direction: row;
+  gap: 30px;
+  align-items: center;
 }
+
+.scanner-card {
+  background: white;
+  border-radius: 20px;
+  padding: 4rem;
+  width: 300px;
+  text-align: center;
+  box-shadow: 0 8px 25px rgba(0, 0, 0, 0.1);
+  transition: all 0.3s ease;
+}
+
 
 /* Responsive Design */
 @media (max-width: 768px) {
   .dashboard {
     padding: 1rem 0;
-  }
-
-  .dashboard-grid {
-    grid-template-columns: 1fr;
-    gap: 1rem;
-    padding: 0 1rem;
   }
 
   .dashboard-grid .no-hover {
@@ -1284,20 +1160,11 @@ function prevMode() {
     font-size: 1.125rem;
   }
 
-  .card-description {
-    font-size: 0.8125rem;
-    margin-bottom: 0.75rem;
-  }
-
   .card-arrow {
     width: 28px;
     height: 28px;
     bottom: 1.25rem;
     right: 1.25rem;
-  }
-
-  .dashboard-card:hover {
-    transform: translateY(-4px);
   }
 }
 
@@ -1315,10 +1182,6 @@ function prevMode() {
 
   .card-title {
     font-size: 1rem;
-  }
-
-  .card-description {
-    font-size: 0.75rem;
   }
 
   .card-arrow {
@@ -1460,47 +1323,117 @@ input.invalid {
   display: none;
 }
 
+.shelf-location-controls {
+  background: rgb(243, 239, 239);
+  padding: 10px;
+  border-radius: 8px;
+  box-shadow: 0 2px 10px rgba(0, 0, 0, 0.1);
+  display: block;
+  margin-left: 3rem;
+}
+
 .checkbox-container {
   display: flex;
   align-items: center;
   cursor: pointer;
   font-size: 14px;
   color: #666;
+  position: relative;
+  user-select: none;
 }
 
 .shelf-checkbox {
-  margin-right: 6px;
-  width: 16px;
-  height: 16px;
+  position: absolute;
+  opacity: 0;
   cursor: pointer;
+  width: 20px;
+  height: 20px;
+}
+
+.custom-checkbox {
+  width: 20px;
+  height: 20px;
+  border: 2px solid #ddd;
+  border-radius: 4px;
+  margin-right: 10px;
+  position: relative;
+  background: white;
+  transition: all 0.3s cubic-bezier(0.23, 1, 0.32, 1);
+  display: flex;
+  align-items: center;
+  justify-content: center;
 }
 
 .checkmark {
-  margin-left: 4px;
-  margin-right: 4px;
-  color: #4CAF50;
+  color: white;
   font-weight: bold;
+  font-size: 12px;
   opacity: 0;
-  transition: opacity 0.2s;
+  transform: scale(0) rotate(-12deg);
+  transition: all 0.3s cubic-bezier(0.68, -0.55, 0.265, 1.55);
 }
 
-.shelf-checkbox:checked+.checkmark {
+.shelf-checkbox:checked+.custom-checkbox {
+  background: linear-gradient(135deg, #4CAF50, #45a049);
+  border-color: #4CAF50;
+  transform: scale(1.05);
+  box-shadow: 0 0 20px rgba(76, 175, 80, 0.3);
+}
+
+.shelf-checkbox:checked+.custom-checkbox .checkmark {
   opacity: 1;
+  transform: scale(1) rotate(0deg);
+}
+
+.checkbox-container:hover .custom-checkbox {
+  border-color: #4CAF50;
+  transform: scale(1.02);
 }
 
 .checkbox-label {
-  font-size: 12px;
-  color: #888;
+  font-size: 14px;
+  color: #333;
+  font-weight: 500;
+  transition: color 0.2s ease;
 }
 
-.type-item.shelf-location {
-  border-left: 4px solid #ff9800;
-  background-color: #fff3e0;
+.shelf-checkbox:checked~.checkbox-label {
+  color: #4CAF50;
 }
 
-.type-item.shelf-location.skip-enabled {
-  border-left-color: #4CAF50;
-  background-color: #e8f5e8;
+.checkbox-container::before {
+  content: '';
+  position: absolute;
+  left: -5px;
+  top: -5px;
+  width: 30px;
+  height: 30px;
+  border-radius: 50%;
+  background: rgba(76, 175, 80, 0.1);
+  transform: scale(0);
+  transition: transform 0.2s ease;
+}
+
+.checkbox-container:active::before {
+  transform: scale(1);
+}
+
+@keyframes pulse {
+  0% {
+    transform: scale(1);
+  }
+
+  50% {
+    transform: scale(1.1);
+  }
+
+  100% {
+    transform: scale(1);
+  }
+}
+
+.shelf-checkbox:checked+.custom-checkbox {
+  animation: pulse 0.4s ease;
 }
 
 .error-text {

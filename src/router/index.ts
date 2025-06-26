@@ -6,6 +6,8 @@ import TrayInfo from '@/components/EditTray.vue'
 import ClearPO from '../components/ClearPO.vue'
 import Dashboard from '../components/menu.vue'
 import UpdateTray from '@/components/UpdateTray.vue'
+import RackTracking from '@/components/TableRack.vue'
+import ScanRack from '@/components/scanRack.vue'
 
 const routes = [
   { path: '/', component: Dashboard },
@@ -15,6 +17,8 @@ const routes = [
   { path: '/tray', component: TrayInfo },
   { path: '/clear', component: ClearPO },
   { path: '/update-tray', component: UpdateTray },
+  { path: '/rack', component: RackTracking },
+  { path: '/scan-rack', component: ScanRack },
 ]
 
 const router = createRouter({
