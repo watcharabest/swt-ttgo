@@ -8,7 +8,7 @@
 
 
     <div class="view-box">
-      <h1 style="margin-top: 1rem;">History </h1>
+      <h1 style="padding-top: 1rem;">History </h1>
       <table v-if="pagedRows.length">
         <thead>
           <tr>
@@ -798,7 +798,8 @@ table {
   border-radius: 8px;
   overflow: hidden;
   box-shadow: 0 4px 6px rgba(0, 0, 0, 0.05);
-  margin-top: 1rem;
+
+  padding: 1rem;
 }
 
 th {

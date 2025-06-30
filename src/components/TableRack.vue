@@ -352,6 +352,7 @@ label {
   font-size: 1.25rem;
   color: #9e4e4e;
   margin-bottom: 1rem;
+  
 }
 
 

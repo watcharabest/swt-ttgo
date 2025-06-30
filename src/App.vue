@@ -157,6 +157,7 @@
       </main>
     </div>
   </div>
+  
 </template>
 
 <script setup>
@@ -224,7 +225,6 @@ const handleResize = () => {
 
 // Initialize sidebar state from localStorage or default to false
 onMounted(() => {
-document.title = 'SMT E-TAG'
   const savedSidebarState = localStorage.getItem('sidebarCollapsed')
   if (savedSidebarState !== null) {
     isSidebarCollapsed.value = savedSidebarState === 'true'
@@ -415,6 +415,7 @@ body {
   justify-content: space-between;
   align-items: center;
   border-bottom: 1px solid rgba(255, 255, 255, 0.1);
+  background-color: #2c3e50;
 }
 
 .logo {
