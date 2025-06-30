@@ -863,7 +863,12 @@ body {
   .main {
     padding-left: 0.75rem;
     padding-right: 0.75rem;
+    overflow-x: auto;
+    -webkit-overflow-scrolling: touch;
+    max-width: 100%;
+    overflow: hidden;
   }
+
 
   .dashboard {
     padding: 1rem 0;
