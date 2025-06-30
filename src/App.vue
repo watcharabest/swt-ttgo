@@ -224,6 +224,7 @@ const handleResize = () => {
 
 // Initialize sidebar state from localStorage or default to false
 onMounted(() => {
+document.title = 'SMT E-TAG'
   const savedSidebarState = localStorage.getItem('sidebarCollapsed')
   if (savedSidebarState !== null) {
     isSidebarCollapsed.value = savedSidebarState === 'true'

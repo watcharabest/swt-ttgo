@@ -211,7 +211,7 @@ const pagedRows = computed(() => {
 
 async function loadTable() {
   try {
-    const res = await axios.get(`https://10.100.107.164:8000/${viewTable.value}`)
+    const res = await axios.get(`https://localhost:8000/${viewTable.value}`)
 
     if (viewTable.value === 'table_location') {
       rows.value = Array.isArray(res.data?.location_summary) ? res.data.location_summary : []
