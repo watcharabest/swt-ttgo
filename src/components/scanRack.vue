@@ -1,12 +1,11 @@
 <template>
   <div class="dashboard">
-    <div class="scanner-card">
       <div class="scan-container">
         <button type="button" @click="toggleScanner('update')" :disabled="loading" class="scan-btn">
-          Scan QR Code
+          Click to Scan
         </button>
       </div>
-    </div>
+
 
     <div class="view-box">
       <h1 style="margin-top: 1rem;">History </h1>
@@ -230,7 +229,7 @@ const pagedRows = computed(() => {
 
 async function loadTable() {
   try {
-    const res = await axios.get(`https://localhost:8000/table_rack_log`)
+    const res = await axios.get(`https://10.100.10.139:8000/table_rack_log`)
     rows.value = Array.isArray(res.data) ? res.data : []
     console.log('Loaded data:', { rows: rows.value })
     currentPage.value = 1
@@ -302,7 +301,7 @@ const handleApiCall = async (data) => {
     }
     console.log("Request Data:", requestData);
     const response = await axios.post(
-      `https://localhost:8000${endpoint}`,
+      `https://10.100.10.139:8000${endpoint}`,
       requestData
     );
     success.value = true;
@@ -406,9 +405,6 @@ const handleFirstScan = async (currentDataType, trimmedData) => {
     } catch (err) {
       scannerSuccess.value = ""; // Clear success message
       scannerError.value = err.response?.data?.detail || "❌ API call failed. Please try again.";
-      setTimeout(() => {
-        scannerError.value = "";
-      }, 2000);
       scannedData.value.pop();
       return false;
     }
@@ -447,9 +443,6 @@ const handleFirstScan = async (currentDataType, trimmedData) => {
     } catch (err) {
       scannerSuccess.value = ""; // Clear success message
       scannerError.value = err.response?.data?.detail || "❌ API call failed. Please try again.";
-      setTimeout(() => {
-        scannerError.value = "";
-      }, 2000);
       scannedData.value.pop();
       return false;
     }
@@ -479,18 +472,12 @@ const handleSecondScan = async (currentDataType, trimmedData) => {
         resetScanState();
         scannerSuccess.value = "";
         scannerError.value = err.response?.data?.detail || "❌ API call failed. Please try again.";
-        setTimeout(() => {
-          scannerError.value = "";
-        }, 2000);
         return false;
       }
     } else if (currentDataType === "Rack") {
       scannedData.value.pop();
       resetScanState();
       scannerError.value = "Cannot scan Rack twice!";
-      setTimeout(() => {
-        scannerError.value = "";
-      }, 2000);
       return false;
     }
   } else if (firstScanType === "Location") {
@@ -517,9 +504,6 @@ const handleSecondScan = async (currentDataType, trimmedData) => {
         scannedData.value.pop();
         scannerSuccess.value = "";
         scannerError.value = err.response?.data?.detail || "❌ API call failed. Please try again.";
-        setTimeout(() => {
-          scannerError.value = "";
-        }, 2000);
         return false;
       }
     } else if (StatusForRemember.value && currentDataType === "Location") {
@@ -551,9 +535,6 @@ const handleSecondScan = async (currentDataType, trimmedData) => {
         scannedData.value.pop();
         scannerSuccess.value = "";
         scannerError.value = err.response?.data?.detail || "❌ API call failed. Please try again.";
-        setTimeout(() => {
-          scannerError.value = "";
-        }, 2000);
         return false;
       }
     } else if (["Location"].includes(currentDataType)) {
@@ -941,21 +922,6 @@ tr:hover td {
 
 }
 
-.scanner-cards {
-  display: flex;
-  flex-direction: row;
-  gap: 30px;
-  align-items: center;
-}
-
-.scanner-card {
-  background: white;
-  border-radius: 20px;
-  padding: 5rem;
-  text-align: center;
-  box-shadow: 0 8px 25px rgba(0, 0, 0, 0.1);
-  transition: all 0.3s ease;
-}
 
 
 /* Responsive Design */
@@ -1113,34 +1079,30 @@ input.invalid {
 }
 
 .scan-btn {
-  background-color: #8dbaed;
-  color: #fff;
-  border: none;
-  padding: 0.75rem 0.5rem;
-  border-radius: 12px;
-  cursor: pointer;
-  font-size: 1.5rem;
+  font: inherit;
+  background-color: #f0f0f0;
+  border: 0;
+  color: #242424;
+  border-radius: 0.5em;
+  font-size: 2rem;
+  padding: 5rem;
   font-weight: 600;
-  transition: all 0.3s ease;
-  box-shadow: 0 4px 6px rgba(141, 186, 237, 0.2);
-  display: flex;
-  align-items: center;
-  gap: 0.5rem;
-  box-shadow: 0px 8px 10px #1b4778, 0px 2px 2px #1b4778;
+  text-shadow: 0 0.0625em 0 #fff;
+  box-shadow: inset 0 0.0625em 0 0 #f4f4f4, 0 0.0625em 0 0 #efefef,
+    0 0.125em 0 0 #ececec, 0 0.25em 0 0 #e0e0e0, 0 0.3125em 0 0 #dedede,
+    0 0.375em 0 0 #dcdcdc, 0 0.425em 0 0 #cacaca, 0 0.425em 0.5em 0 #cecece;
+  transition: 0.15s ease;
+  cursor: pointer;
+  margin-bottom: 1rem;
 }
 
-.scan-btn:hover {
-  background-color: #7aa8db;
-  transform: translateY(-1px);
-  box-shadow: 0 6px 12px rgba(141, 186, 237, 0.3);
+.scan-btn:active  {
+  translate: 0 0.225em;
+  box-shadow: inset 0 0.03em 0 0 #f4f4f4, 0 0.03em 0 0 #efefef,
+    0 0.0625em 0 0 #ececec, 0 0.125em 0 0 #e0e0e0, 0 0.125em 0 0 #dedede,
+    0 0.2em 0 0 #dcdcdc, 0 0.225em 0 0 #cacaca, 0 0.225em 0.375em 0 #cecece;
 }
 
-.scan-btn:disabled {
-  background-color: #cbd5e1;
-  cursor: not-allowed;
-  transform: none;
-  box-shadow: none;
-}
 
 /* Remove unused styles */
 .update-form,
@@ -1154,7 +1116,6 @@ input.invalid {
 .shelf-location-controls {
   display: inline-flex;
   align-items: center;
-  margin-left: 10px;
   vertical-align: middle;
 }
 
@@ -1166,7 +1127,7 @@ input.invalid {
   color: #666;
   position: relative;
   user-select: none;
-  margin-left: 3rem;
+  margin-left: 1rem;
 }
 
 .shelf-checkbox {
@@ -1781,9 +1742,9 @@ img:hover {
 
 .type-item {
   display: flex;
-  flex-wrap: wrap;
+
   align-items: center;
-  gap: 0.5rem;
+
   padding: 0.75rem;
   border-radius: 8px;
   font-size: 0.9rem;
@@ -1851,7 +1812,7 @@ img:hover {
 
 .type-label {
   font-weight: 600;
-  min-width: 110px;
+  min-width: 80px;
   color: white;
 }
 

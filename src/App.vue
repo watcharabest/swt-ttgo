@@ -290,14 +290,20 @@ onUnmounted(() => {
   min-width: 100vw;
   font-family: 'Roboto', sans-serif;
   color: var(--text);
-  background: linear-gradient(rgba(41, 126, 175, 0.4), rgba(243, 237, 237, 0.4));
-  background-repeat: no-repeat;
-  background-size: cover;
-  background-position: center center;
-  background-attachment: fixed;
+  --color: #E1E1E1;
+  background-color: #F3F3F3;
+  background-image: linear-gradient(0deg, transparent 24%, var(--color) 25%, var(--color) 26%, transparent 27%,transparent 74%, var(--color) 75%, var(--color) 76%, transparent 77%,transparent),
+      linear-gradient(90deg, transparent 24%, var(--color) 25%, var(--color) 26%, transparent 27%,transparent 74%, var(--color) 75%, var(--color) 76%, transparent 77%,transparent);
+  background-size: 55px 55px;
+
 
   display: flex;
   flex-direction: column;
+}
+
+body {
+  margin: 0;
+  padding: 0;
 }
 
 

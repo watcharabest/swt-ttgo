@@ -16,93 +16,97 @@
 
     <div class="view-box">
       <div v-if="viewTable === 'table_location'" class="total-text">Total Rack : {{ totalCount }}</div>
-      <table v-if="pagedRows.length">
-        <!-- Header สำหรับ table_rack มีคอลัมน์ Image -->
-        <thead v-if="viewTable === 'table_rack'">
-          <tr>
-            <th @click="sortBy('rack')" class="sortable">
-              Rack
-              <span v-if="sortKey === 'rack'" class="sort-icon">
-                {{ sortOrder === 'asc' ? '↑' : '↓' }}
-              </span>
-            </th>
-            <th @click="sortBy('product_order')" class="sortable">
-              Product Order
-              <span v-if="sortKey === 'product_order'" class="sort-icon">
-                {{ sortOrder === 'asc' ? '↑' : '↓' }}
-              </span>
-            </th>
-            <th @click="sortBy('qty')" class="sortable">
-              Qty
-              <span v-if="sortKey === 'qty'" class="sort-icon">
-                {{ sortOrder === 'asc' ? '↑' : '↓' }}
-              </span>
-            </th>
-            <th @click="sortBy('location')" class="sortable">
-              Location
-              <span v-if="sortKey === 'location'" class="sort-icon">
-                {{ sortOrder === 'asc' ? '↑' : '↓' }}
-              </span>
-            </th>
-            <th @click="sortBy('time_rack_po')" class="sortable">
-              Time Rack PO
-              <span v-if="sortKey === 'time_rack_po'" class="sort-icon">
-                {{ sortOrder === 'asc' ? '↑' : '↓' }}
-              </span>
-            </th>
-            <th @click="sortBy('time_rack_location')" class="sortable">
-              Time Rack Location
-              <span v-if="sortKey === 'time_rack_location'" class="sort-icon">
-                {{ sortOrder === 'asc' ? '↑' : '↓' }}
-              </span>
-            </th>
-            <th @click="sortBy('time_ago')" class="sortable">
-              Time Ago
-              <span v-if="sortKey === 'time_ago'" class="sort-icon">
-                {{ sortOrder === 'asc' ? '↑' : '↓' }}
-              </span>
-            </th>
-          </tr>
-        </thead>
-        <!-- Header สำหรับ table_location ไม่มีคอลัมน์ Image -->
-        <thead v-else>
+      <div class="table-scroll-wrapper">
+        <div class="table-container">
+          <table v-if="pagedRows.length">
+            <!-- Header สำหรับ table_rack มีคอลัมน์ Image -->
+            <thead v-if="viewTable === 'table_rack'">
+              <tr>
+                <th @click="sortBy('rack')" class="sortable">
+                  Rack
+                  <span v-if="sortKey === 'rack'" class="sort-icon">
+                    {{ sortOrder === 'asc' ? '↑' : '↓' }}
+                  </span>
+                </th>
+                <th @click="sortBy('product_order')" class="sortable">
+                  Product Order
+                  <span v-if="sortKey === 'product_order'" class="sort-icon">
+                    {{ sortOrder === 'asc' ? '↑' : '↓' }}
+                  </span>
+                </th>
+                <th @click="sortBy('qty')" class="sortable">
+                  Qty
+                  <span v-if="sortKey === 'qty'" class="sort-icon">
+                    {{ sortOrder === 'asc' ? '↑' : '↓' }}
+                  </span>
+                </th>
+                <th @click="sortBy('location')" class="sortable">
+                  Location
+                  <span v-if="sortKey === 'location'" class="sort-icon">
+                    {{ sortOrder === 'asc' ? '↑' : '↓' }}
+                  </span>
+                </th>
+                <th @click="sortBy('time_rack_po')" class="sortable">
+                  Time Rack PO
+                  <span v-if="sortKey === 'time_rack_po'" class="sort-icon">
+                    {{ sortOrder === 'asc' ? '↑' : '↓' }}
+                  </span>
+                </th>
+                <th @click="sortBy('time_rack_location')" class="sortable">
+                  Time Rack Location
+                  <span v-if="sortKey === 'time_rack_location'" class="sort-icon">
+                    {{ sortOrder === 'asc' ? '↑' : '↓' }}
+                  </span>
+                </th>
+                <th @click="sortBy('time_ago')" class="sortable">
+                  Time Ago
+                  <span v-if="sortKey === 'time_ago'" class="sort-icon">
+                    {{ sortOrder === 'asc' ? '↑' : '↓' }}
+                  </span>
+                </th>
+              </tr>
+            </thead>
+            <!-- Header สำหรับ table_location ไม่มีคอลัมน์ Image -->
+            <thead v-else>
 
-          <tr>
-            <th @click="sortBy('location')" class="sortable">
-              Location
-              <span v-if="sortKey === 'location'" class="sort-icon">
-                {{ sortOrder === 'asc' ? '↑' : '↓' }}
-              </span>
-            </th>
-            <th @click="sortBy('rack_count')" class="sortable">
-              Rack Count
-              <span v-if="sortKey === 'rack_count'" class="sort-icon">
-                {{ sortOrder === 'asc' ? '↑' : '↓' }}
-              </span>
-            </th>
-          </tr>
-        </thead>
+              <tr>
+                <th @click="sortBy('location')" class="sortable">
+                  Location
+                  <span v-if="sortKey === 'location'" class="sort-icon">
+                    {{ sortOrder === 'asc' ? '↑' : '↓' }}
+                  </span>
+                </th>
+                <th @click="sortBy('rack_count')" class="sortable">
+                  Rack Count
+                  <span v-if="sortKey === 'rack_count'" class="sort-icon">
+                    {{ sortOrder === 'asc' ? '↑' : '↓' }}
+                  </span>
+                </th>
+              </tr>
+            </thead>
 
-        <!-- Body สำหรับ table_rack แสดงรูป -->
-        <tbody v-if="viewTable === 'table_rack'">
-          <tr v-for="(row, i) in pagedRows" :key="i">
-            <td>{{ row.rack || '-' }}</td>
-            <td>{{ row.product_order || '-' }}</td>
-            <td>{{ row.qty || '-' }}</td>
-            <td>{{ row.location || '-' }}</td>
-            <td>{{ row.time_rack_po || '-' }}</td>
-            <td>{{ row.time_rack_location || '-' }}</td>
-            <td>{{ timeAgo(row.time_rack_location) }}</td>
-          </tr>
-        </tbody>
-        <!-- Body สำหรับ table_location -->
-        <tbody v-else>
-          <tr v-for="(row, i) in pagedRows" :key="i">
-            <td>{{ row.location || '-' }}</td>
-            <td>{{ row.rack_count || '0' }}</td>
-          </tr>
-        </tbody>
-      </table>
+            <!-- Body สำหรับ table_rack แสดงรูป -->
+            <tbody v-if="viewTable === 'table_rack'">
+              <tr v-for="(row, i) in pagedRows" :key="i">
+                <td>{{ row.rack || '-' }}</td>
+                <td>{{ row.product_order || '-' }}</td>
+                <td>{{ row.qty || '-' }}</td>
+                <td>{{ row.location || '-' }}</td>
+                <td>{{ row.time_rack_po || '-' }}</td>
+                <td>{{ row.time_rack_location || '-' }}</td>
+                <td>{{ timeAgo(row.time_rack_location) }}</td>
+              </tr>
+            </tbody>
+            <!-- Body สำหรับ table_location -->
+            <tbody v-else>
+              <tr v-for="(row, i) in pagedRows" :key="i">
+                <td>{{ row.location || '-' }}</td>
+                <td>{{ row.rack_count || '0' }}</td>
+              </tr>
+            </tbody>
+          </table>
+        </div>
+      </div>
 
       <!-- Pagination Controls -->
       <div v-if="totalPages > 1" class="pagination">
@@ -161,7 +165,7 @@ const filteredAndSortedRows = computed(() => {
     const [datePart, timePart] = dateStr.split(' ');
     const [day, month, year] = datePart.split('/').map(Number);
     const [hours, minutes] = timePart.split(':').map(Number);
-    
+
     // Create a date object with the parsed values (using 2000 + year for YY format)
     const fullYear = 2000 + year;
     return new Date(fullYear, month - 1, day, hours, minutes).getTime();
@@ -171,27 +175,27 @@ const filteredAndSortedRows = computed(() => {
   if (sortKey.value) {
     result.sort((a, b) => {
       let aValue, bValue;
-      
+
       // Special handling for time_ago column - use the original timestamp
       if (sortKey.value === 'time_ago') {
         aValue = a.time_rack_location ? parseCustomDate(a.time_rack_location) : 0;
         bValue = b.time_rack_location ? parseCustomDate(b.time_rack_location) : 0;
-      } 
+      }
       // Handle other date/time fields
       else if (['time_rack_po', 'time_rack_location'].includes(sortKey.value)) {
         aValue = a[sortKey.value] ? parseCustomDate(a[sortKey.value]) : 0;
         bValue = b[sortKey.value] ? parseCustomDate(b[sortKey.value]) : 0;
-      } 
+      }
       // Handle other fields
       else {
         aValue = a[sortKey.value];
         bValue = b[sortKey.value];
       }
-      
+
       // Handle undefined/null values
       if (aValue === undefined || aValue === null) aValue = '';
       if (bValue === undefined || bValue === null) bValue = '';
-      
+
       // Compare values
       if (aValue === bValue) return 0;
       const comparison = aValue > bValue ? 1 : -1;
@@ -211,7 +215,7 @@ const pagedRows = computed(() => {
 
 async function loadTable() {
   try {
-    const res = await axios.get(`https://localhost:8000/${viewTable.value}`)
+    const res = await axios.get(`https://10.100.10.139:8000/${viewTable.value}`)
 
     if (viewTable.value === 'table_location') {
       rows.value = Array.isArray(res.data?.location_summary) ? res.data.location_summary : []
@@ -273,6 +277,8 @@ function timeAgo(input) {
   background: rgba(255, 255, 255, 0.95);
   box-shadow: 0 8px 32px rgba(0, 0, 0, 0.1);
   margin: 2rem;
+
+
 }
 
 h2 {
@@ -457,12 +463,36 @@ tr:hover td {
   font-size: 1rem;
 }
 
+.table-scroll-wrapper {
+  width: 100%;
+  overflow-x: auto;
+  -webkit-overflow-scrolling: touch;
+  -ms-overflow-style: -ms-autohiding-scrollbar;
+  margin-bottom: 1.5rem;
+  border-radius: 8px;
+  box-shadow: 0 1px 3px rgba(0, 0, 0, 0.1);
+  -webkit-overflow-scrolling: touch;
+  touch-action: pan-x;
+  position: relative;
+}
+
+.table-container {
+  display: inline-block;
+  min-width: 100%;
+  box-sizing: border-box;
+}
+
 @media (max-width: 480px) {
   .view-box {
-    margin: 1rem;
-    padding: 1.5rem;
-    width: calc(100% - 2rem);
-    box-sizing: border-box;
+    margin: 0.5rem !important;
+    padding: 0.5rem !important;
+    /* ลดพื้นที่ padding */
+    width: calc(100% - 1rem) !important;
+    box-sizing: border-box !important;
+    max-width: 100% !important;
+    overflow: visible !important;
+    /* สำคัญมาก: ต้องเป็น visible */
+    position: relative !important;
   }
 
   .search-box {
@@ -486,27 +516,71 @@ tr:hover td {
     padding: 0.875rem;
   }
 
-  /* Add responsive table styles */
+  .table-scroll-wrapper {
+    overflow-x: auto !important;
+    overflow-y: hidden !important;
+    -webkit-overflow-scrolling: touch !important;
+    width: 100% !important;
+    max-width: 100% !important;
+    position: relative !important;
+    /* ลบการตั้งค่าที่ทำให้เกิดปัญหา */
+    margin: 0 !important;
+    padding: 0 !important;
+    box-sizing: border-box !important;
+  }
+
+  .table-container {
+    min-width: max-content !important;
+    width: auto !important;
+    padding: 0.5rem !important;
+    box-sizing: border-box !important;
+  }
+
   table {
-    display: block;
-    overflow-x: auto;
-    white-space: nowrap;
-    -webkit-overflow-scrolling: touch;
+    width: auto !important;
+    /* เปลี่ยนจาก 100% */
+    min-width: 600px !important;
+    table-layout: auto !important;
+    border-collapse: collapse !important;
+    margin: 0 !important;
   }
 
   th,
   td {
-    min-width: 120px;
-    padding: 0.75rem;
+    min-width: 100px !important;
+    padding: 0.5rem !important;
+    white-space: nowrap !important;
+    font-size: 0.85rem !important;
+  }
+  .pagination {
+    flex-direction: column !important;
+    gap: 0.5rem !important;
+    padding: 0.5rem !important;
+    margin-top: 1rem !important;
   }
 
-  .image-cell {
-    min-width: 100px;
+  .pagination button {
+    width: 100% !important;
+    padding: 0.75rem !important;
+  }
+  
+  .table-scroll-wrapper::before {
+    content: '← เลื่อนเพื่อดูเพิ่มเติม →' !important;
+    position: absolute !important;
+    top: -1.5rem !important;
+    right: 0 !important;
+    font-size: 0.7rem !important;
+    color: #666 !important;
+    z-index: 2 !important;
+    background: rgba(255, 255, 255, 0.9) !important;
+    padding: 0.2rem 0.5rem !important;
+    border-radius: 4px !important;
   }
 
-  .image-cell img {
-    width: 40px;
-    height: 40px;
+  /* ปรับ total-text ให้ไม่ขัดขวาง */
+  .total-text {
+    margin-bottom: 0.5rem !important;
+    font-size: 0.9rem !important;
   }
 
   /* Improve text readability on mobile */
@@ -515,20 +589,24 @@ tr:hover td {
     font-size: 0.9rem;
   }
 
-  /* Add horizontal scroll indicator */
-  .view-box {
-    position: relative;
-  }
-
-  .view-box::after {
+  /* Scroll indicator */
+  .table-scroll-wrapper::after {
     content: '';
     position: absolute;
-    right: 0;
+    right: 1rem;
     top: 0;
     bottom: 0;
     width: 20px;
-    background: linear-gradient(to right, transparent, rgba(255, 255, 255, 0.95));
+    background: linear-gradient(to right, rgba(255, 255, 255, 0), rgba(255, 255, 255, 0.95));
     pointer-events: none;
+    z-index: 1;
+    opacity: 0;
+    transition: opacity 0.3s ease;
+  }
+
+  .table-scroll-wrapper:hover::after,
+  .table-scroll-wrapper:focus-within::after {
+    opacity: 1;
   }
 }
 </style>
