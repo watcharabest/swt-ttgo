@@ -133,7 +133,7 @@ const groupRows = ref([])
 const currentPage = ref(1)
 const pageSize = 10
 const searchQuery = ref('')
-const sortKey = ref('')
+const sortKey = ref('time_ago')
 const sortOrder = ref('asc')
 
 const tableTitle = computed(() =>

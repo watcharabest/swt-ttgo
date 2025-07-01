@@ -117,7 +117,7 @@
 </template>
 
 <script setup>
-import { ref, onMounted, computed, watch } from "vue";
+import { ref, onMounted, onUnmounted, computed, watch } from "vue";
 import { QrcodeStream } from "vue-qrcode-reader";
 import axios from "axios";
 import dayjs from 'dayjs'
@@ -164,6 +164,9 @@ const dataType = ref("");
 
 // Add new refs for tray management
 const trayOperation = ref("Change"); // 'add', 'change', or 'delete'
+
+// Buffer for characters coming from Bluetooth barcode scanner (acts like a keyboard)
+const bluetoothBuffer = ref("");
 const scannedTrayIds = ref([]); // Store scanned tray IDs
 
 const viewTable = ref('table_rack')
@@ -173,8 +176,7 @@ const currentPage = ref(1)
 const pageSize = 7
 const searchQuery = ref('')
 const sortKey = ref('timestamp_rack_location')
-const sortOrder = ref('desc')
-const totalCount = ref(0)
+const sortOrder = ref('asc')
 
 // Filter and sort the rows
 const filteredAndSortedRows = computed(() => {
@@ -426,7 +428,7 @@ const handleFirstScan = async (currentDataType, trimmedData) => {
       value: trimmedData,
     });
     return true;
-  } else if (currentDataType === 'Rack') {
+  } else if (scannedData.value[0].type === "Location" && currentDataType === 'Rack') {
     try {
       await new Promise((resolve) => setTimeout(resolve, 2000));
       await handleApiCall({
@@ -576,6 +578,22 @@ const onDetect = async (detectedCodes) => {
       // Update display for current scan
       updateScanDisplay(currentDataType, trimmedData);
 
+      // Determine current stage BEFORE scanCount is modified
+      const currentStage = scanCount.value;
+      let stageSuccess = false;
+      if (currentStage === 0) {
+        stageSuccess = await handleFirstScan(currentDataType, trimmedData);
+      } else if (currentStage === 1) {
+        stageSuccess = await handleSecondScan(currentDataType, trimmedData);
+      } else if (currentStage === 2) {
+        stageSuccess = await handleThirdScan(currentDataType, trimmedData);
+      } else {
+        // Unexpected; reset state
+        resetScanState();
+        return;
+      }
+      if (!stageSuccess) return;
+
       // watch(StatusForRemember, (newVal, oldVal) => {
       //   if (oldVal && !newVal) {
       //     scannedData.value = [];
@@ -585,14 +603,7 @@ const onDetect = async (detectedCodes) => {
       //     })
       //   }
       // });
-      // Handle different scan sequences
-      if (scanCount.value === 0) {
-        if (!handleFirstScan(currentDataType, trimmedData)) return;
-      } else if (scanCount.value === 1) {
-        if (!(await handleSecondScan(currentDataType, trimmedData))) return;
-      } else if (scanCount.value === 2) {
-        if (!(await handleThirdScan(currentDataType, trimmedData))) return;
-      }
+      
 
       console.log(scannedData.value)
 
@@ -668,12 +679,76 @@ const toggleMicroMode = () => {
   isMicroMode.value = !isMicroMode.value;
 };
 
-// Initialize camera check on mount
+// Initialize camera check on mount and start listening for Bluetooth scanner input
 onMounted(() => {
   checkCameraSupport();
+  window.addEventListener("keypress", handleBluetoothKeypress);
+});
+
+// Clean up when component is unmounted
+onUnmounted(() => {
+  window.removeEventListener("keypress", handleBluetoothKeypress);
 });
 
 // Add handleSubmit function if it doesn't exist
+
+// ================= Bluetooth Scanner Support =================
+// Process scanned text (from Bluetooth scanner) using the same pipeline as camera scans
+const processScannedData = async (scannedText) => {
+  const trimmedData = scannedText.trim();
+  if (!trimmedData) return;
+
+  const currentDataType = classifyData(trimmedData);
+  console.log("Bluetooth scan detected:", trimmedData, "as", currentDataType);
+
+  // Update UI display
+  updateScanDisplay(currentDataType, trimmedData);
+
+  try {
+    // Determine stage by current scanCount BEFORE increment
+    const currentStage = scanCount.value;
+    let stageSuccess = false;
+    if (currentStage === 0) {
+      stageSuccess = await handleFirstScan(currentDataType, trimmedData);
+    } else if (currentStage === 1) {
+      stageSuccess = await handleSecondScan(currentDataType, trimmedData);
+    } else if (currentStage === 2) {
+      stageSuccess = await handleThirdScan(currentDataType, trimmedData);
+    } else {
+      resetScanState();
+      return;
+    }
+    if (!stageSuccess) return;
+
+    success.value = true;
+    setTimeout(() => {
+      success.value = false;
+    }, 2000);
+  } catch (err) {
+    console.error("Error processing Bluetooth scan:", err);
+  }
+};
+
+// Accumulate key presses until the scanner sends an Enter key (\r or \n)
+const handleBluetoothKeypress = async (event) => {
+  // Most hardware scanners act like keyboards and send characters followed by Enter
+  if (event.key === "Enter") {
+    // Prevent the default action (such as triggering a focused button click)
+    // which can inadvertently close the scanner modal.
+    event.preventDefault();
+    event.stopPropagation();
+    const dataToProcess = bluetoothBuffer.value;
+    bluetoothBuffer.value = ""; // reset buffer
+    await processScannedData(dataToProcess);
+  } else {
+    // Ignore non-printable characters
+    if (event.key.length === 1) {
+      bluetoothBuffer.value += event.key;
+    }
+  }
+};
+// ============================================================
+
 
 // Check if device has multiple cameras
 const checkCameraSupport = async () => {
