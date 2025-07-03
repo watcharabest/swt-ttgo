@@ -1,22 +1,19 @@
 <template>
   <div class="dashboard">
-    <div class="scanner-section">
-      <div class="scanner-cards">
-        <div class="scanner-card">
-          <h3 class="card-title" style="text-align: center">Update</h3>
-          <div class="scan-container">
-            <button type="button" @click="toggleScanner('update')" :disabled="loading" class="scan-btn">
-              📱 Scan QR Code
-            </button>
-          </div>
+
+    <div class="scanner-cards">
+      <div class="scan-container">
+        <div class="scan-container">
+          <button type="button" @click="toggleScanner('update')" :disabled="loading" class="scan-btn">
+            Click to Scan<br><span style="font-size: 1.5rem; color: #00cc41 ;">( Mapping )</span>
+          </button>
         </div>
-        <div class="scanner-card">
-          <h3 class="card-title" style="text-align: center">Lookup</h3>
-          <div class="scan-container">
-            <button type="button" @click="toggleScanner('lookup')" :disabled="loading" class="scan-btn">
-              📱 Scan QR Code
-            </button>
-          </div>
+      </div>
+      <div class="scan-container">
+        <div class="scan-container">
+          <button type="button" @click="toggleScanner('lookup')" :disabled="loading" class="scan-btn">
+            Click to Scan<br><span style="font-size: 1.5rem; color: #0066cc;">( Lookup )</span>
+          </button>
         </div>
       </div>
     </div>
@@ -154,17 +151,16 @@
         </div>
       </div>
     </div>
+
   </div>
 </template>
 
 <script setup>
-import { useRouter } from "vue-router";
-import { ref, onMounted, computed, watch } from "vue";
+import { ref, onMounted, onUnmounted, computed, watch } from "vue";
 import { QrcodeStream } from "vue-qrcode-reader";
 import axios from "axios";
 
-const router = useRouter();
-const navigateTo = (path) => router.push(path);
+
 
 const productOrder = ref("");
 const loading = ref(false);
@@ -179,6 +175,7 @@ const trayIds = ref(Array(12).fill(""));
 const childLocations = ref(Array(12).fill(null));
 const operationLog = ref("");
 const rememberShelfLocation = ref(false);
+const bluetoothBuffer = ref("");
 // Error states
 const macError = ref(false);
 const orderError = ref(false);
@@ -240,16 +237,15 @@ const handleApiCall = async (data) => {
         mac_address: data.macAddress,
         product_order: data.productOrder,
       };
+    } else if (endpoint === "/update_tray_product") {
+      requestData = {
+        tray_id: data.trayId,
+        product_order: data.productOrder,
+      };
     } else if (endpoint === "/update_mac_tray") {
       requestData = {
         mac_address: data.macAddress,
         tray_id: data.trayId,
-      };
-    } else if (endpoint === "/update_mac_product-tray") {
-      requestData = {
-        product_order: data.productOrder,
-        tray_id: data.trayId,
-        mac_address: data.macAddress,
       };
     } else if (endpoint === "/change-tray-scan") {
       requestData = {
@@ -265,15 +261,10 @@ const handleApiCall = async (data) => {
       requestData = {
         tray_id: data.tray_id,
       };
-    } else if (endpoint === "/update-location") {
+    } else if (endpoint === "/update_tray_location") {
       requestData = {
         tray_id: data.trayId,
         shelf_location: data.shelf_location,
-      };
-    } else if (endpoint === "/update-rack-location") {
-      requestData = {
-        rack: data.rack,
-        location: data.location,
       };
     }
     console.log("Request Data:", requestData);
@@ -287,7 +278,7 @@ const handleApiCall = async (data) => {
     return response.data;
   } catch (err) {
     console.error(err);
-    error.value = err.response?.data?.detail || "Error sending request";
+    error.value = err.response?.data?.detail || err.response?.data?.error || "Error sending request";
     throw err;
   } finally {
     loading.value = false;
@@ -323,18 +314,6 @@ const startScanner = async () => {
 const classifyData = (data) => {
   if (/^92\d{7}$/.test(data)) {
     return "Product Order";
-  } else if (/^RK\d{7}$/.test(data)) {
-    return "Rack";
-  } else if (/^RT\d{4}-\d{2}$/.test(data)) {
-    return "Location";
-  } else if (/^HR\d{4}-\d{4}$/.test(data)) {
-    return "Location";
-  } else if (/^WO\d{4}-\d{3}$/.test(data)) {
-    return "Location";
-  } else if (/^TL\d{4}-\d{3}$พำโำได/.test(data)) {
-    return "Location";
-  } else if (/^PLA\d{4}$/.test(data)) {
-    return "Location";
   }
   // Tray ID pattern (starts with T and follows T##-######)
   else if (/^TW\d{5}$/.test(data)) {
@@ -346,8 +325,6 @@ const classifyData = (data) => {
   } else if (/^SH[4-6][1-9]\d{4}$/.test(data)) {
     return "Shelf Location";
   }
-
-
   // MAC Address pattern (6 pairs of hex digits)
   else if (/^([0-9A-Fa-f]{2}[:-]){5}([0-9A-Fa-f]{2})$/.test(data)) {
     return "MAC Address";
@@ -359,7 +336,7 @@ const classifyData = (data) => {
 const handleFirstScan = async (currentDataType, trimmedData) => {
   scannedTrayIds.value = [trimmedData];
   if (trayOperation.value.toLocaleLowerCase() === "delete") {
-    if (!confirm(`You want to Delete Tray ID : "${scannedTrayIds.value}"?`)) return;
+    if (!confirm(`You want to Delete Tray ID : "${trimmedData}"?`)) return;
     handleTrayOperation("delete");
     resetScanState();
     scannerSuccess.value = "✅ Tray deleted successfully! Ready for next scan.";
@@ -374,7 +351,7 @@ const handleFirstScan = async (currentDataType, trimmedData) => {
       await handleApiCall({
         shelf_location: rememberShelfLocation.value,
         trayId: trimmedData,
-        endpoint: "/update-location",
+        endpoint: "/update_tray_location",
       });
       scannedData.value.push({
         type: "Shelf Location",
@@ -387,11 +364,50 @@ const handleFirstScan = async (currentDataType, trimmedData) => {
       }, 2000);
       return true;
     } catch (err) {
-      scannerError.value = "❌ API call failed. Please try again.";
-      scannerSuccess.value = "";
+      scannerSuccess.value = ""; // Clear success message
+      scannerError.value = err.response?.data?.detail || "❌ API call failed. Please try again.";
+      scannedData.value.pop();
       return false;
     }
-  }
+  } else if (StatusForRemember.value && currentDataType === "Shelf Location") {
+    scannedData.value = [];
+    StatusForRemember.value = false;
+    rememberShelfLocation.value = trimmedData;
+    scannedData.value.push({
+      type: "Shelf Location",
+      value: trimmedData,
+    });
+    return true;
+  } else if (currentDataType === "Shelf Location") {
+    scannedData.value = [];
+    StatusForRemember.value = false;
+    rememberShelfLocation.value = trimmedData;
+    scannedData.value.push({
+      type: "Shelf Location",
+      value: trimmedData,
+    });
+    return true;
+  } else if (scannedData.value[0].type === "Shelf Location" && currentDataType === 'Rack') {
+    try {
+      await new Promise((resolve) => setTimeout(resolve, 500));
+      await handleApiCall({
+        shelf_location: rememberShelfLocation.value,
+        tray_id: trimmedData,
+        endpoint: "/update_tray_location",
+      });
+      scannerSuccess.value = "✅ Scan successful! Ready for next scan.";
+      scannerError.value = "";
+      setTimeout(() => {
+        scannerSuccess.value = "";
+      }, 2000);
+      return true;
+    } catch (err) {
+      scannerSuccess.value = ""; // Clear success message
+      scannerError.value = err.response?.data?.detail || "❌ API call failed. Please try again.";
+      scannedData.value.pop();
+      return false;
+    }
+  } 
   scanCount.value++;
   return true;
 };
@@ -400,9 +416,28 @@ const handleSecondScan = async (currentDataType, trimmedData) => {
   const firstScanType = scannedData.value[0].type;
   if (["TrayBlack ID", "TrayRed ID", "TrayWhite ID"].includes(firstScanType)) {
     if (currentDataType === "Product Order") {
-      waitingForMac.value = true;
-      scanCount.value++;
-      return true;
+      try {
+        await new Promise((resolve) => setTimeout(resolve, 2000));
+        await handleApiCall({
+          productOrder: trimmedData,
+          trayId: scannedData.value[0].value,
+          endpoint: "/update_tray_product",
+        });
+        scannerSuccess.value = "✅ Scan successful! Ready for next scan.";
+        scannerError.value = "";
+        setTimeout(() => {
+          scannerSuccess.value = "";
+        }, 2000);
+        return true;
+      } catch (err) {
+        scannerError.value = "❌ API call failed. Please try again.";
+        scannerSuccess.value = "";
+        setTimeout(() => {
+          scannerError.value = "";
+        }, 2000);
+        resetScanState();
+        return false;
+      }
     } else if (["TrayBlack ID", "TrayRed ID", "TrayWhite ID"].includes(currentDataType)) {
       scannedTrayIds.value = [scannedData.value[0].value, trimmedData];
       handleTrayOperation(trayOperation.value.toLowerCase());
@@ -413,37 +448,13 @@ const handleSecondScan = async (currentDataType, trimmedData) => {
         scannerSuccess.value = "";
       }, 2000);
       return false;
-    } else if (currentDataType === "MAC Address") {
-      try {
-        await new Promise((resolve) => setTimeout(resolve, 2000));
-        await handleApiCall({
-          trayId: scannedData.value[0].value,
-          macAddress: trimmedData,
-          endpoint: "/update_mac_tray",
-        });
-        resetScanState();
-        scannerSuccess.value = "✅ Scan successful! Ready for next scan.";
-        scannerError.value = "";
-        setTimeout(() => {
-          scannerSuccess.value = "";
-        }, 2000);
-        return true;
-      } catch (err) {
-        scannerError.value = "❌ API call failed. Please try again.";
-        scannerSuccess.value = "";
-        setTimeout(() => {
-          scannerError.value = "";
-        }, 2000);
-        resetScanState();
-        return false;
-      }
     } else if (currentDataType === "Shelf Location") {
       try {
         await new Promise((resolve) => setTimeout(resolve, 2000));
         await handleApiCall({
           trayId: scannedData.value[0].value,
           shelf_location: trimmedData,
-          endpoint: "/update-location",
+          endpoint: "/update_tray_location",
         });
         resetScanState();
         scannerSuccess.value = "✅ Scan successful! Ready for next scan.";
@@ -461,74 +472,6 @@ const handleSecondScan = async (currentDataType, trimmedData) => {
         resetScanState();
         return false;
       }
-    }
-  } else if (firstScanType === "Rack") {
-    if (currentDataType === "Location") {
-      try {
-        await new Promise((resolve) => setTimeout(resolve, 2000));
-        await handleApiCall({
-          rack: scannedData.value[0].value,
-          location: trimmedData,
-          endpoint: "/update-rack-location",
-        });
-        resetScanState();
-        scannerSuccess.value = "✅ Scan successful! Ready for next scan.";
-        scannerError.value = "";
-        setTimeout(() => {
-          scannerSuccess.value = "";
-        }, 2000);
-        return true;
-      } catch (err) {
-        scannerError.value = "❌ API call failed. Please try again.";
-        scannerSuccess.value = "";
-        setTimeout(() => {
-          scannerError.value = "";
-        }, 2000);
-        resetScanState();
-        return false;
-      }
-    } else if (currentDataType === "Rack") {
-      scannedData.value.pop();
-      resetScanState();
-      scannerError.value = "Cannot scan Rack twice!";
-      setTimeout(() => {
-        scannerError.value = "";
-      }, 2000);
-      return false;
-    }
-  } else if (firstScanType === "Location") {
-    if (currentDataType === "Rack") {
-      try {
-        await new Promise((resolve) => setTimeout(resolve, 2000));
-        await handleApiCall({
-          location: scannedData.value[0].value,
-          rack: trimmedData,
-          endpoint: "/update-rack-location",
-        });
-        resetScanState();
-        scannerSuccess.value = "✅ Scan successful! Ready for next scan.";
-        scannerError.value = "";
-        setTimeout(() => {
-          scannerSuccess.value = "";
-        }, 2000);
-        return true;
-      } catch (err) {
-        scannerError.value = "❌ API call failed. Please try again.";
-        scannerSuccess.value = "";
-        setTimeout(() => {
-          scannerError.value = "";
-        }, 2000);
-        resetScanState();
-        return false;
-      }
-    } else if (currentDataType === "Location") {
-      scannedData.value.pop();
-      resetScanState();
-      scannerError.value = "Cannot scan Location twice!";
-      setTimeout(() => {
-        scannerError.value = "";
-      }, 2000);
-      return false;
     }
   } else if (firstScanType === "Product Order") {
     // Original Product Order first flow
@@ -540,70 +483,14 @@ const handleSecondScan = async (currentDataType, trimmedData) => {
         scannerError.value = "";
       }, 2000);
       return false;
-    } else if (currentDataType === "MAC Address") {
+    } else if (["TrayBlack ID", "TrayRed ID", "TrayWhite ID"].includes(currentDataType)) {
       try {
         await new Promise((resolve) => setTimeout(resolve, 2000));
         await handleApiCall({
           productOrder: scannedData.value[0].value,
-          macAddress: trimmedData,
-          endpoint: "/update_mac_product",
-        });
-        resetScanState();
-        scannerSuccess.value = "✅ Scan successful! Ready for next scan.";
-        scannerError.value = "";
-        setTimeout(() => {
-          scannerSuccess.value = "";
-        }, 2000);
-        return true;
-      } catch (err) {
-        resetScanState();
-        scannerError.value = "❌ Product Order Have TTGO Already.";
-        scannerSuccess.value = "";
-        setTimeout(() => {
-          scannerError.value = "";
-        }, 2000);
-        return false;
-      }
-    } else if (["TrayBlack ID", "TrayRed ID", "TrayWhite ID"].includes(currentDataType)) {
-      waitingForMac.value = true;
-      scanCount.value++;
-      return true;
-    }
-  } else if (firstScanType === "MAC Address") {
-    // MAC Address first flow
-    if (currentDataType === "Product Order") {
-      try {
-        await new Promise((resolve) => setTimeout(resolve, 2000));
-        await handleApiCall({
-          macAddress: scannedData.value[0].value,
-          productOrder: trimmedData,
-          endpoint: "/update_mac_product",
-        });
-        resetScanState();
-        scannerSuccess.value = "✅ Scan successful! Ready for next scan.";
-        scannerError.value = "";
-        setTimeout(() => {
-          scannerSuccess.value = "";
-        }, 2000);
-        return true;
-      } catch (err) {
-        resetScanState();
-        scannerError.value = "❌ Product Order Have TTGO Already.";
-        scannerSuccess.value = "";
-        setTimeout(() => {
-          scannerError.value = "";
-        }, 2000);
-        return false;
-      }
-    } else if (["TrayBlack ID", "TrayRed ID", "TrayWhite ID"].includes(currentDataType)) {
-      try {
-        await new Promise((resolve) => setTimeout(resolve, 2000));
-        await handleApiCall({
-          macAddress: scannedData.value[0].value,
           trayId: trimmedData,
-          endpoint: "/update_mac_tray",
+          endpoint: "/update_tray_product",
         });
-        resetScanState();
         scannerSuccess.value = "✅ Scan successful! Ready for next scan.";
         scannerError.value = "";
         setTimeout(() => {
@@ -613,16 +500,12 @@ const handleSecondScan = async (currentDataType, trimmedData) => {
       } catch (err) {
         scannerError.value = "❌ API call failed. Please try again.";
         scannerSuccess.value = "";
+        setTimeout(() => {
+          scannerError.value = "";
+        }, 2000);
+        resetScanState();
         return false;
       }
-    } else if (currentDataType === "MAC Address") {
-      scannedData.value.pop();
-      resetScanState();
-      scannerError.value = "Cannot scan MAC Address twice!";
-      setTimeout(() => {
-        scannerError.value = "";
-      }, 2000);
-      return false;
     }
   } else if (firstScanType === "Shelf Location") {
     if (StatusForRemember.value && ["TrayBlack ID", "TrayRed ID", "TrayWhite ID"].includes(currentDataType)) {
@@ -632,7 +515,7 @@ const handleSecondScan = async (currentDataType, trimmedData) => {
         await handleApiCall({
           shelf_location: scannedData.value[0].value,
           trayId: trimmedData,
-          endpoint: "/update-location",
+          endpoint: "/update_tray_location",
         });
         scannedData.value.push({
           type: "Shelf Location",
@@ -649,6 +532,15 @@ const handleSecondScan = async (currentDataType, trimmedData) => {
         scannerSuccess.value = "";
         return false;
       }
+    } else if (StatusForRemember.value && currentDataType === "Shelf Location") {
+      scannedData.value = [];
+      StatusForRemember.value = false;
+      rememberShelfLocation.value = trimmedData;
+      scannedData.value.push({
+        type: "Shelf Location",
+        value: trimmedData,
+      });
+      return true;
     }
     // Original logic for when checkbox is not checked or first scan
     if (["TrayBlack ID", "TrayRed ID", "TrayWhite ID"].includes(currentDataType)) {
@@ -657,7 +549,7 @@ const handleSecondScan = async (currentDataType, trimmedData) => {
         await handleApiCall({
           shelf_location: scannedData.value[0].value,
           trayId: trimmedData,
-          endpoint: "/update-location",
+          endpoint: "/update_tray_location",
         });
         scannerSuccess.value = "✅ Scan successful! Ready for next scan.";
         scannerError.value = "";
@@ -666,51 +558,21 @@ const handleSecondScan = async (currentDataType, trimmedData) => {
         }, 2000);
         return true;
       } catch (err) {
-        scannerError.value = "❌ API call failed. Please try again.";
+        scannedData.value.pop();
         scannerSuccess.value = "";
+        scannerError.value = err.response?.data?.detail || "❌ API call failed. Please try again.";
         return false;
       }
+    } else if (["Shelf Location"].includes(currentDataType)) {
+      scannedData.value = [];
+      scannedData.value.push({
+        type: "Shelf Location",
+        value: trimmedData,
+      })
+      return true;
     }
   }
   return false; // Default return if no conditions match
-};
-
-const handleThirdScan = async (currentDataType, trimmedData) => {
-  if (scanCount.value === 2 && waitingForMac.value) {
-    if (currentDataType === "MAC Address") {
-      try {
-        await new Promise((resolve) => setTimeout(resolve, 2000));
-        // Find the product order and tray ID from scanned data
-        const productOrder = scannedData.value.find(
-          (item) => item.type === "Product Order"
-        )?.value;
-        const trayId = scannedData.value.find((item) =>
-          ["TrayBlack ID", "TrayRed ID", "TrayWhite ID"].includes(item.type)
-        )?.value;
-
-        await handleApiCall({
-          productOrder: productOrder,
-          trayId: trayId,
-          macAddress: trimmedData,
-          endpoint: "/update_mac_product-tray",
-        });
-        resetScanState();
-        scannerSuccess.value = "✅ Scan successful! Ready for next scan.";
-        scannerError.value = "";
-        setTimeout(() => {
-          scannerSuccess.value = "";
-        }, 2000);
-      } catch (err) {
-        scannerError.value = "❌ API call failed. Please try again.";
-        scannerSuccess.value = "";
-      }
-    } else {
-      scannerError.value = "Please scan a MAC Address";
-      scannedData.value.pop();
-      return false;
-    }
-  }
-  return true;
 };
 
 const updateScanDisplay = (currentDataType, trimmedData) => {
@@ -736,7 +598,7 @@ const onDetect = async (detectedCodes) => {
       if (scanMode.value === "lookup") {
         try {
           loading.value = true;
-          await handleLookup(trimmedData); // ฟังก์ชันค้นหาข้อมูล
+          await handleLookup(trimmedData);
           scannerSuccess.value = "Lookup successful! Data found.";
           setTimeout(() => {
             scannerSuccess.value = "";
@@ -751,18 +613,11 @@ const onDetect = async (detectedCodes) => {
       // Update display for current scan
       updateScanDisplay(currentDataType, trimmedData);
 
-      watch(StatusForRemember, (newVal, oldVal) => {
-        if (oldVal && !newVal) {
-          resetScanState();
-        }
-      });
       // Handle different scan sequences
       if (scanCount.value === 0) {
         if (!handleFirstScan(currentDataType, trimmedData)) return;
       } else if (scanCount.value === 1) {
         if (!(await handleSecondScan(currentDataType, trimmedData))) return;
-      } else if (scanCount.value === 2) {
-        if (!(await handleThirdScan(currentDataType, trimmedData))) return;
       }
 
       success.value = true;
@@ -775,6 +630,53 @@ const onDetect = async (detectedCodes) => {
         scannerError.value = "";
       }, 3000);
     }
+  }
+};
+
+const processScannedData = async (scannedText) => {
+  const trimmedData = scannedText.trim();
+  if (!trimmedData) return;
+
+  const currentDataType = classifyData(trimmedData);
+  console.log("Bluetooth scan detected:", trimmedData, "as", currentDataType);
+  if (scanMode.value === "lookup") {
+    try {
+      loading.value = true;
+      await handleLookup(trimmedData);
+      scannerSuccess.value = "Lookup successful! Data found.";
+      setTimeout(() => {
+        scannerSuccess.value = "";
+      }, 2000);
+    } catch (err) {
+      scannerError.value = "Lookup failed: " + err.message;
+    } finally {
+      loading.value = false;
+    }
+    return; // 🛑 หยุดตรงนี้ ไม่ให้ไป logic ข้างล่าง
+  }
+  // Update UI display
+  updateScanDisplay(currentDataType, trimmedData);
+
+  try {
+    // Determine stage by current scanCount BEFORE increment
+    const currentStage = scanCount.value;
+    let stageSuccess = false;
+    if (currentStage === 0) {
+      stageSuccess = await handleFirstScan(currentDataType, trimmedData);
+    } else if (currentStage === 1) {
+      stageSuccess = await handleSecondScan(currentDataType, trimmedData);
+    } else {
+      resetScanState();
+      return;
+    }
+    if (!stageSuccess) return;
+
+    success.value = true;
+    setTimeout(() => {
+      success.value = false;
+    }, 2000);
+  } catch (err) {
+    console.error("Error processing Bluetooth scan:", err);
   }
 };
 
@@ -791,7 +693,7 @@ const handleLookup = async (qrCode) => {
 
     lookupResult.value = data;
     console.log("Lookup result:", lookupResult.value);
-    const tray = await axios.post("https://10.100.10.139:8000/lookup-product-order", {
+    const tray = await axios.post("https://10.100.10.139:8000/lookup-tray", {
       product_order: lookupResult.value[0].product_order,
     });
     trayMain.value = tray.data.tray_id_main;
@@ -900,6 +802,12 @@ const toggleMicroMode = () => {
 // Initialize camera check on mount
 onMounted(() => {
   checkCameraSupport();
+  window.addEventListener("keypress", handleBluetoothKeypress);
+});
+
+// Clean up when component is unmounted
+onUnmounted(() => {
+  window.removeEventListener("keypress", handleBluetoothKeypress);
 });
 
 // Add handleSubmit function if it doesn't exist
@@ -916,6 +824,26 @@ const checkCameraSupport = async () => {
     return false;
   }
 };
+
+// Accumulate key presses until the scanner sends an Enter key (\r or \n)
+const handleBluetoothKeypress = async (event) => {
+  // Most hardware scanners act like keyboards and send characters followed by Enter
+  if (event.key === "Enter") {
+    // Prevent the default action (such as triggering a focused button click)
+    // which can inadvertently close the scanner modal.
+    event.preventDefault();
+    event.stopPropagation();
+    const dataToProcess = bluetoothBuffer.value;
+    bluetoothBuffer.value = ""; // reset buffer
+    await processScannedData(dataToProcess);
+  } else {
+    // Ignore non-printable characters
+    if (event.key.length === 1) {
+      bluetoothBuffer.value += event.key;
+    }
+  }
+};
+// ============================================================
 
 // Add new function to handle tray operations
 const handleTrayOperation = async (mode) => {
@@ -1018,98 +946,10 @@ function prevMode() {
   background-position: center;
 }
 
-/* Dashboard Styles */
-
-@keyframes fadeInUp {
-  from {
-    opacity: 0;
-    transform: translateY(30px);
-  }
-
-  to {
-    opacity: 1;
-    transform: translateY(0);
-  }
-}
-
-/* Add styles for the Update card */
-.dashboard-grid .no-hover {
-  display: grid;
-  grid-template-columns: repeat(2, minmax(1fr));
-  /* Center in the grid */
-  width: 80%;
-  /* Make it wider */
-  height: auto;
-  /* Allow height to adjust based on content */
-  margin-left: 60%;
-  /* Offset the extra width to keep it centered */
-  padding: 2rem;
-  /* More padding */
-  background: rgba(255, 255, 255, 0.9);
-  /* Slightly more opaque */
-  box-shadow: 0 4px 6px rgba(0, 0, 0, 0.1);
-}
-
-.dashboard-card {
-  background: rgba(255, 255, 255, 0.8);
-  backdrop-filter: blur(10px);
-  border: 1px solid rgba(255, 255, 255, 0.2);
-  border-radius: 16px;
-  padding: 2rem;
-  cursor: pointer;
-  transition: all 0.15s cubic-bezier(0.4, 0, 0.2, 1);
-  position: relative;
-  overflow: hidden;
-  animation: slideInUp 0.3s ease-out both;
-}
-
-@keyframes slideInUp {
-  from {
-    opacity: 0;
-    transform: translateY(20px);
-  }
-
-  to {
-    opacity: 1;
-    transform: translateY(0);
-  }
-}
-
-.dashboard-card::before {
-  content: "";
-  position: absolute;
-  top: 0;
-  left: 0;
-  right: 0;
-  height: 4px;
-  background: linear-gradient(90deg, var(--primary), #8b5cf6);
-  transform: scaleX(0);
-  transition: transform 0.3s ease;
-}
-
-.scanner-card:hover::before {
-  transform: scaleX(1);
-}
-
-.scanner-card:hover {
-  transform: translateY(-8px);
-  box-shadow: var(--shadow-xl);
-  border-color: rgba(37, 99, 235, 0.2);
-}
-
 .card-title {
   font-size: 2rem;
   color: var(--text);
   margin-bottom: 0.5rem;
-}
-
-.scanner-section {
-  display: flex;
-  justify-content: center;
-  align-items: center;
-  padding: 40px 20px;
-  min-height: 400px;
-
 }
 
 .scanner-cards {
@@ -1119,35 +959,8 @@ function prevMode() {
   align-items: center;
 }
 
-.scanner-card {
-  background: white;
-  border-radius: 20px;
-  padding: 4rem;
-  width: 300px;
-  text-align: center;
-  box-shadow: 0 8px 25px rgba(0, 0, 0, 0.1);
-  transition: all 0.3s ease;
-}
-
-
 /* Responsive Design */
 @media (max-width: 768px) {
-  .dashboard {
-    padding: 1rem 0;
-  }
-
-  .dashboard-grid .no-hover {
-    grid-column: auto;
-    width: 100%;
-    margin-left: 0;
-    padding: 2rem;
-  }
-
-  .dashboard-card {
-    padding: 1.25rem;
-    margin: 0 0.25rem;
-    border-radius: 12px;
-  }
 
   .card-icon {
     width: 50px;
@@ -1169,10 +982,6 @@ function prevMode() {
 }
 
 @media (max-width: 480px) {
-  .dashboard-card {
-    padding: 1rem;
-    margin: 0;
-  }
 
   .card-icon {
     width: 45px;
@@ -1190,12 +999,6 @@ function prevMode() {
     bottom: 1rem;
     right: 1rem;
   }
-}
-
-/* Clean Focus States */
-.dashboard-card:focus-visible {
-  outline: 2px solid var(--primary);
-  outline-offset: 2px;
 }
 
 /* Smooth Scrollbar */
@@ -1284,35 +1087,6 @@ input.invalid {
   padding: 1rem 0;
 }
 
-.scan-btn {
-  background-color: #8dbaed;
-  color: #fff;
-  border: none;
-  padding: 0.75rem 0.5rem;
-  border-radius: 12px;
-  cursor: pointer;
-  font-size: 1.1rem;
-  font-weight: 600;
-  transition: all 0.3s ease;
-  box-shadow: 0 4px 6px rgba(141, 186, 237, 0.2);
-  display: flex;
-  align-items: center;
-  gap: 0.5rem;
-  box-shadow: 0px 8px 10px #1b4778, 0px 2px 2px #1b4778;
-}
-
-.scan-btn:hover {
-  background-color: #7aa8db;
-  transform: translateY(-1px);
-  box-shadow: 0 6px 12px rgba(141, 186, 237, 0.3);
-}
-
-.scan-btn:disabled {
-  background-color: #cbd5e1;
-  cursor: not-allowed;
-  transform: none;
-  box-shadow: none;
-}
 
 /* Remove unused styles */
 .update-form,
@@ -1321,6 +1095,31 @@ input.invalid {
 .error-message,
 .data-type-indicator {
   display: none;
+}
+
+.scan-btn {
+  font: inherit;
+  background-color: #f0f0f0;
+  border: 0;
+  color: #242424;
+  border-radius: 0.5em;
+  font-size: 2rem;
+  padding: 5rem;
+  font-weight: 600;
+  text-shadow: 0 0.0625em 0 #fff;
+  box-shadow: inset 0 0.0625em 0 0 #f4f4f4, 0 0.0625em 0 0 #efefef,
+    0 0.125em 0 0 #ececec, 0 0.25em 0 0 #e0e0e0, 0 0.3125em 0 0 #dedede,
+    0 0.375em 0 0 #dcdcdc, 0 0.425em 0 0 #cacaca, 0 0.425em 0.5em 0 #cecece;
+  transition: 0.15s ease;
+  cursor: pointer;
+  margin-bottom: 1rem;
+}
+
+.scan-btn:active {
+  translate: 0 0.225em;
+  box-shadow: inset 0 0.03em 0 0 #f4f4f4, 0 0.03em 0 0 #efefef,
+    0 0.0625em 0 0 #ececec, 0 0.125em 0 0 #e0e0e0, 0 0.125em 0 0 #dedede,
+    0 0.2em 0 0 #dcdcdc, 0 0.225em 0 0 #cacaca, 0 0.225em 0.375em 0 #cecece;
 }
 
 .shelf-location-controls {

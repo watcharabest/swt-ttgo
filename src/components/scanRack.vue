@@ -171,7 +171,6 @@ const scannedTrayIds = ref([]); // Store scanned tray IDs
 
 const viewTable = ref('table_rack')
 const rows = ref([])
-const groupRows = ref([])
 const currentPage = ref(1)
 const pageSize = 7
 const searchQuery = ref('')
@@ -388,7 +387,7 @@ const handleFirstScan = async (currentDataType, trimmedData) => {
   scannedTrayIds.value = [trimmedData];
   if (StatusForRemember.value && currentDataType === 'Rack') {
     try {
-      await new Promise((resolve) => setTimeout(resolve, 2000));
+      await new Promise((resolve) => setTimeout(resolve, 500));
       await handleApiCall({
         location: rememberShelfLocation.value,
         rack: trimmedData,
@@ -430,7 +429,7 @@ const handleFirstScan = async (currentDataType, trimmedData) => {
     return true;
   } else if (scannedData.value[0].type === "Location" && currentDataType === 'Rack') {
     try {
-      await new Promise((resolve) => setTimeout(resolve, 2000));
+      await new Promise((resolve) => setTimeout(resolve, 500));
       await handleApiCall({
         location: rememberShelfLocation.value,
         rack: trimmedData,
@@ -458,7 +457,7 @@ const handleSecondScan = async (currentDataType, trimmedData) => {
   if (firstScanType === "Rack") {
     if (currentDataType === "Location") {
       try {
-        await new Promise((resolve) => setTimeout(resolve, 2000));
+        await new Promise((resolve) => setTimeout(resolve, 500));
         await handleApiCall({
           rack: scannedData.value[0].value,
           location: trimmedData,
@@ -486,7 +485,7 @@ const handleSecondScan = async (currentDataType, trimmedData) => {
     if (StatusForRemember.value && currentDataType === "Rack") {
       rememberShelfLocation.value = scannedData.value[0].value;
       try {
-        await new Promise((resolve) => setTimeout(resolve, 2000));
+        await new Promise((resolve) => setTimeout(resolve, 500));
         await handleApiCall({
           location: scannedData.value[0].value,
           rack: trimmedData,
@@ -521,7 +520,7 @@ const handleSecondScan = async (currentDataType, trimmedData) => {
     // Original logic for when checkbox is not checked or first scan
     if (["Rack"].includes(currentDataType)) {
       try {
-        await new Promise((resolve) => setTimeout(resolve, 2000));
+        await new Promise((resolve) => setTimeout(resolve, 500));
         await handleApiCall({
           location: scannedData.value[0].value,
           rack: trimmedData,
@@ -585,8 +584,6 @@ const onDetect = async (detectedCodes) => {
         stageSuccess = await handleFirstScan(currentDataType, trimmedData);
       } else if (currentStage === 1) {
         stageSuccess = await handleSecondScan(currentDataType, trimmedData);
-      } else if (currentStage === 2) {
-        stageSuccess = await handleThirdScan(currentDataType, trimmedData);
       } else {
         // Unexpected; reset state
         resetScanState();
@@ -712,8 +709,6 @@ const processScannedData = async (scannedText) => {
       stageSuccess = await handleFirstScan(currentDataType, trimmedData);
     } else if (currentStage === 1) {
       stageSuccess = await handleSecondScan(currentDataType, trimmedData);
-    } else if (currentStage === 2) {
-      stageSuccess = await handleThirdScan(currentDataType, trimmedData);
     } else {
       resetScanState();
       return;
@@ -821,7 +816,7 @@ function prevMode() {
 }
 
 /* Dashboard Styles */
-
+  
 @keyframes fadeInUp {
   from {
     opacity: 0;
@@ -835,35 +830,6 @@ function prevMode() {
 }
 
 /* Add styles for the Update card */
-.dashboard-grid .no-hover {
-  display: grid;
-  grid-template-columns: repeat(2, minmax(1fr));
-  /* Center in the grid */
-  width: 80%;
-  /* Make it wider */
-  height: auto;
-  /* Allow height to adjust based on content */
-  margin-left: 60%;
-  /* Offset the extra width to keep it centered */
-  padding: 2rem;
-  /* More padding */
-  background: rgba(255, 255, 255, 0.9);
-  /* Slightly more opaque */
-  box-shadow: 0 4px 6px rgba(0, 0, 0, 0.1);
-}
-
-.dashboard-card {
-  background: rgba(255, 255, 255, 0.8);
-  backdrop-filter: blur(10px);
-  border: 1px solid rgba(255, 255, 255, 0.2);
-  border-radius: 16px;
-  padding: 2rem;
-  cursor: pointer;
-  transition: all 0.15s cubic-bezier(0.4, 0, 0.2, 1);
-  position: relative;
-  overflow: hidden;
-  animation: slideInUp 0.3s ease-out both;
-}
 
 table {
   width: 100%;
@@ -959,30 +925,6 @@ tr:hover td {
   font-size: 1rem;
 }
 
-@keyframes slideInUp {
-  from {
-    opacity: 0;
-    transform: translateY(20px);
-  }
-
-  to {
-    opacity: 1;
-    transform: translateY(0);
-  }
-}
-
-.dashboard-card::before {
-  content: "";
-  position: absolute;
-  top: 0;
-  left: 0;
-  right: 0;
-  height: 4px;
-  background: linear-gradient(90deg, var(--primary), #8b5cf6);
-  transform: scaleX(0);
-  transition: transform 0.3s ease;
-}
-
 .card-title {
   font-size: 2rem;
   color: var(--text);
@@ -1005,20 +947,6 @@ tr:hover td {
   .dashboard {
     padding: 1rem 0;
   }
-
-  .dashboard-grid .no-hover {
-    grid-column: auto;
-    width: 100%;
-    margin-left: 0;
-    padding: 2rem;
-  }
-
-  .dashboard-card {
-    padding: 1.25rem;
-    margin: 0 0.25rem;
-    border-radius: 12px;
-  }
-
   .card-icon {
     width: 50px;
     height: 50px;
@@ -1039,10 +967,6 @@ tr:hover td {
 }
 
 @media (max-width: 480px) {
-  .dashboard-card {
-    padding: 1rem;
-    margin: 0;
-  }
 
   .card-icon {
     width: 45px;
@@ -1063,10 +987,6 @@ tr:hover td {
 }
 
 /* Clean Focus States */
-.dashboard-card:focus-visible {
-  outline: 2px solid var(--primary);
-  outline-offset: 2px;
-}
 
 /* Smooth Scrollbar */
 ::-webkit-scrollbar {

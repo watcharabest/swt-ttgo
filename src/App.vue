@@ -165,7 +165,6 @@ import { ref, onMounted, onUnmounted, watch } from 'vue'
 import { useRouter, useRoute } from 'vue-router'
 
 const router = useRouter()
-const route = useRoute()
 const mobileMenuOpen = ref(false)
 const isScrolled = ref(false)
 const isSidebarCollapsed = ref(false)
