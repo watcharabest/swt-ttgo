@@ -230,7 +230,7 @@ const pagedRows = computed(() => {
 
 async function loadTable() {
   try {
-    const res = await axios.get(`https://10.100.10.139:8000/table_rack_log`)
+    const res = await axios.get(`${__API_BASE_URL__}/table_rack_log`)
     rows.value = Array.isArray(res.data) ? res.data : []
     console.log('Loaded data:', { rows: rows.value })
     currentPage.value = 1
@@ -302,7 +302,7 @@ const handleApiCall = async (data) => {
     }
     console.log("Request Data:", requestData);
     const response = await axios.post(
-      `https://10.100.10.139:8000${endpoint}`,
+      `${__API_BASE_URL__}${endpoint}`,
       requestData
     );
     success.value = true;
@@ -426,6 +426,7 @@ const handleFirstScan = async (currentDataType, trimmedData) => {
       type: "Location",
       value: trimmedData,
     });
+    scanCount.value++;
     return true;
   } else if (scannedData.value[0].type === "Location" && currentDataType === 'Rack') {
     try {
@@ -774,14 +775,6 @@ watch(currentModeIndex, (newVal) => {
   handleMode(trayModes[newVal]);
 });
 
-function nextMode() {
-  currentModeIndex.value = (currentModeIndex.value + 1) % trayModes.length;
-}
-
-function prevMode() {
-  currentModeIndex.value =
-    (currentModeIndex.value - 1 + trayModes.length) % trayModes.length;
-}
 </script>
 
 <style scoped>
@@ -1464,20 +1457,6 @@ input.invalid {
     padding: 0.4rem;
     font-size: 0.8rem;
     display: flex;
-  }
-}
-
-@keyframes pulse {
-  0% {
-    box-shadow: 0 0 0 0 rgba(0, 255, 0, 0.4), 0 0 0 9999px rgba(0, 0, 0, 0.7);
-  }
-
-  70% {
-    box-shadow: 0 0 0 10px rgba(0, 255, 0, 0), 0 0 0 9999px rgba(0, 0, 0, 0.7);
-  }
-
-  100% {
-    box-shadow: 0 0 0 0 rgba(0, 255, 0, 0), 0 0 0 9999px rgba(0, 0, 0, 0.7);
   }
 }
 

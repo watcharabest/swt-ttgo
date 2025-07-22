@@ -37,14 +37,14 @@ const onDelete = async () => {
   deleteError.value = ''
 
   try {
-    await axios.post('https://10.100.10.139:8000/clear-display', { product_order: deletePo.value })
+    await axios.post(`${__API_BASE_URL__}/clear-display`, { product_order: deletePo.value });
     deleteSuccess.value = true
     deletePo.value = ''
   } catch (error) {
-  deleteError.value = error.response?.data?.detail || error.message || 'Failed to clear display'
+    deleteError.value = error.response?.data?.detail || error.message || 'Failed to clear display'
 }
  finally {
-    loading.value = false
+    loading.value = false   
   }
 }
 </script>

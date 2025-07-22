@@ -4,8 +4,8 @@
     <div class="form-group">
       <label for="viewTableSelect">Select Table to View</label>
       <select id="viewTableSelect" v-model="viewTable" class="table-select">
-        <option value="table01">Table 01</option>
-        <option value="table02">Table 02</option>
+        <option value="table_rack">Rack Table </option>
+        <option value="table_location">Location Table</option>
       </select>
     </div>
 
@@ -15,74 +15,91 @@
     </div>
 
     <div class="view-box">
+      <div v-if="viewTable === 'table_location'" class="total-text">Total Rack : {{ totalCount }}</div>
       <table v-if="pagedRows.length">
-        <!-- Header สำหรับ table01 มีคอลัมน์ Image -->
-        <thead v-if="viewTable === 'table01'">
+        <!-- Header สำหรับ table_rack มีคอลัมน์ Image -->
+        <thead v-if="viewTable === 'table_rack'">
           <tr>
+            <th @click="sortBy('rack')" class="sortable">
+              Rack
+              <span v-if="sortKey === 'rack'" class="sort-icon">
+                {{ sortOrder === 'asc' ? '↑' : '↓' }}
+              </span>
+            </th>
             <th @click="sortBy('product_order')" class="sortable">
               Product Order
               <span v-if="sortKey === 'product_order'" class="sort-icon">
                 {{ sortOrder === 'asc' ? '↑' : '↓' }}
               </span>
             </th>
-            <th @click="sortBy('material')" class="sortable">
-              Material
-              <span v-if="sortKey === 'material'" class="sort-icon">
+            <th @click="sortBy('qty')" class="sortable">
+              Qty
+              <span v-if="sortKey === 'qty'" class="sort-icon">
                 {{ sortOrder === 'asc' ? '↑' : '↓' }}
               </span>
             </th>
-            <th @click="sortBy('name_product')" class="sortable">
-              Name Product
-              <span v-if="sortKey === 'name_product'" class="sort-icon">
+            <th @click="sortBy('location')" class="sortable">
+              Location
+              <span v-if="sortKey === 'location'" class="sort-icon">
                 {{ sortOrder === 'asc' ? '↑' : '↓' }}
               </span>
             </th>
-            <th>Image</th>
+            <th @click="sortBy('time_rack_po')" class="sortable">
+              Time Rack PO
+              <span v-if="sortKey === 'time_rack_po'" class="sort-icon">
+                {{ sortOrder === 'asc' ? '↑' : '↓' }}
+              </span>
+            </th>
+            <th @click="sortBy('time_rack_location')" class="sortable">
+              Time Rack Location
+              <span v-if="sortKey === 'time_rack_location'" class="sort-icon">
+                {{ sortOrder === 'asc' ? '↑' : '↓' }}
+              </span>
+            </th>
+            <th @click="sortBy('time_ago')" class="sortable">
+              Time Ago
+              <span v-if="sortKey === 'time_ago'" class="sort-icon">
+                {{ sortOrder === 'asc' ? '↑' : '↓' }}
+              </span>
+            </th>
           </tr>
         </thead>
-        <!-- Header สำหรับ table02 ไม่มีคอลัมน์ Image -->
+        <!-- Header สำหรับ table_location ไม่มีคอลัมน์ Image -->
         <thead v-else>
+
           <tr>
-            <th @click="sortBy('tray_id')" class="sortable">
-              Tray ID
-              <span v-if="sortKey === 'tray_id'" class="sort-icon">
+            <th @click="sortBy('location')" class="sortable">
+              Location
+              <span v-if="sortKey === 'location'" class="sort-icon">
                 {{ sortOrder === 'asc' ? '↑' : '↓' }}
               </span>
             </th>
-            <th @click="sortBy('mac_address')" class="sortable">
-              MAC Address
-              <span v-if="sortKey === 'mac_address'" class="sort-icon">
-                {{ sortOrder === 'asc' ? '↑' : '↓' }}
-              </span>
-            </th>
-            <th @click="sortBy('product_order')" class="sortable">
-              Product Order
-              <span v-if="sortKey === 'product_order'" class="sort-icon">
+            <th @click="sortBy('rack_count')" class="sortable">
+              Rack Count
+              <span v-if="sortKey === 'rack_count'" class="sort-icon">
                 {{ sortOrder === 'asc' ? '↑' : '↓' }}
               </span>
             </th>
           </tr>
         </thead>
 
-        <!-- Body สำหรับ table01 แสดงรูป -->
-        <tbody v-if="viewTable === 'table01'">
+        <!-- Body สำหรับ table_rack แสดงรูป -->
+        <tbody v-if="viewTable === 'table_rack'">
           <tr v-for="(row, i) in pagedRows" :key="i">
-            <td>{{ row.product_order }}</td>
-            <td>{{ row.material }}</td>
-            <td>{{ row.name_product }}</td>
-            <td class="image-cell">
-              <img v-if="row.material" :src="`/images/${row.material}.jpg`" :alt="row.material" />
-              <span v-else>No image</span>
-            </td>
-
+            <td>{{ row.rack || '-' }}</td>
+            <td>{{ row.product_order || '-' }}</td>
+            <td>{{ row.qty || '-' }}</td>
+            <td>{{ row.location || '-' }}</td>
+            <td>{{ row.time_rack_po || '-' }}</td>
+            <td>{{ row.time_rack_location || '-' }}</td>
+            <td>{{ timeAgo(row.time_rack_location) }}</td>
           </tr>
         </tbody>
-        <!-- Body สำหรับ table02 -->
+        <!-- Body สำหรับ table_location -->
         <tbody v-else>
           <tr v-for="(row, i) in pagedRows" :key="i">
-            <td>{{ row.tray_id }}</td>
-            <td>{{ row.mac_address }}</td>
-            <td>{{ row.product_order }}</td>
+            <td>{{ row.location || '-' }}</td>
+            <td>{{ row.rack_count || '0' }}</td>
           </tr>
         </tbody>
       </table>
@@ -100,24 +117,32 @@
 <script setup>
 import { ref, computed, watch, onMounted } from 'vue'
 import axios from 'axios'
+import dayjs from 'dayjs'
 
-const viewTable = ref('table01')
+import relativeTime from 'dayjs/plugin/relativeTime'
+import customParseFormat from 'dayjs/plugin/customParseFormat'
+import 'dayjs/locale/th'
+
+dayjs.extend(relativeTime)
+dayjs.extend(customParseFormat)
+dayjs.locale('en')
+
+const viewTable = ref('table_rack')
 const rows = ref([])
+const groupRows = ref([])
 const currentPage = ref(1)
 const pageSize = 10
 const searchQuery = ref('')
-const sortKey = ref('')
+const sortKey = ref('time_ago')
 const sortOrder = ref('asc')
 
 const tableTitle = computed(() =>
-  viewTable.value === 'table01' ? 'Product Table' : 'Track Product Order'
+  viewTable.value === 'table_rack' ? 'Rack Table' : 'Location Table'
 )
 
-// Filter and sort the rows
 const filteredAndSortedRows = computed(() => {
   let result = [...rows.value]
 
-  // Apply search filter
   if (searchQuery.value) {
     const query = searchQuery.value.toLowerCase()
     result = result.filter(row =>
@@ -127,21 +152,53 @@ const filteredAndSortedRows = computed(() => {
     )
   }
 
+  const parseCustomDate = (dateStr) => {
+    if (!dateStr) return 0;
+    const [datePart, timePart] = dateStr.split(' ');
+    if (!datePart || !timePart) return 0;
+
+    const [year, month, day] = datePart.split('/').map(Number);
+    const [hours, minutes] = timePart.split(':').map(Number);
+    const fullYear = 2000 + year;
+
+    return new Date(fullYear, month - 1, day, hours, minutes).getTime();
+  };
+
   // Apply sorting
   if (sortKey.value) {
-    result.sort((a, b) => {
-      const aValue = a[sortKey.value]
-      const bValue = b[sortKey.value]
+    const actualKey = sortKey.value === 'time_ago' ? 'time_rack_location' : sortKey.value;
 
-      if (sortOrder.value === 'asc') {
-        return aValue > bValue ? 1 : -1
+    result.sort((a, b) => {
+      let aValue, bValue;
+
+      // Handle date fields
+      if (['time_rack_po', 'time_rack_location'].includes(actualKey)) {
+        aValue = a[actualKey] ? parseCustomDate(a[actualKey]) : 0;
+        bValue = b[actualKey] ? parseCustomDate(b[actualKey]) : 0;
       } else {
-        return aValue < bValue ? 1 : -1
+        aValue = a[actualKey];
+        bValue = b[actualKey];
       }
-    })
+
+      // Handle fallback
+      if (aValue === undefined || aValue === null) aValue = '';
+      if (bValue === undefined || bValue === null) bValue = '';
+
+      if (aValue === bValue) return 0;
+
+      let comparison;
+
+      if (sortKey.value === 'time_ago') {
+        comparison = aValue > bValue ? -1 : 1;
+      } else {
+        comparison = aValue > bValue ? 1 : -1;
+      }
+
+      return sortOrder.value === 'asc' ? comparison : -comparison;
+    });
   }
 
-  return result
+  return result;
 })
 
 // คำนวณหน้าทั้งหมด และข้อมูลที่จะแสดง
@@ -154,14 +211,35 @@ const pagedRows = computed(() => {
 async function loadTable() {
   try {
     const res = await axios.get(`${__API_BASE_URL__}/${viewTable.value}`)
-    rows.value = Array.isArray(res.data) ? res.data : []
+
+    if (viewTable.value === 'table_location') {
+      rows.value = Array.isArray(res.data?.location_summary) ? res.data.location_summary : []
+      groupRows.value = Array.isArray(res.data?.location_table) ? res.data.location_table : []
+    } else {
+      rows.value = Array.isArray(res.data) ? res.data : []
+      groupRows.value = []
+
+    }
+    console.log('Loaded data:', { table: viewTable.value, rows: rows.value, total: totalCount.value })
     currentPage.value = 1
   } catch (err) {
-    console.error(err)
+    console.error('Error loading table data:', err)
     rows.value = []
+    groupRows.value = []
     currentPage.value = 1
   }
 }
+
+const totalCount = computed(() => {
+  if (viewTable.value === 'table_location') {
+    // ใช้ข้อมูลที่กรองแล้วแทนข้อมูลดิบ
+    return pagedRows.value.reduce((sum, item) => sum + (item.rack_count || 0), 0)
+  } else {
+    // สำหรับ table_rack ใช้จำนวนแถวที่กรองแล้ว
+    return pagedRows.value.length
+  }
+})
+
 
 // รีโหลดข้อมูลเมื่อเปลี่ยนตาราง
 watch(viewTable, () => {
@@ -187,10 +265,17 @@ function sortBy(key) {
     sortOrder.value = 'asc'
   }
 }
+
+function timeAgo(input) {
+  if (!input) return 'N/A'
+  const time = dayjs(input, 'YY/MM/DD HH:mm')
+  return time.isValid() ? time.fromNow() : 'เวลาไม่ถูกต้อง'
+}
 </script>
 
 <style scoped>
 .view-box {
+  max-width: 100%;
   grid-area: view;
   border: none;
   border-radius: 16px;
@@ -198,6 +283,7 @@ function sortBy(key) {
   background: rgba(255, 255, 255, 0.95);
   box-shadow: 0 8px 32px rgba(0, 0, 0, 0.1);
   margin: 2rem;
+  overflow: auto;
 }
 
 h2 {
@@ -206,10 +292,6 @@ h2 {
   font-size: 2rem;
   font-weight: 600;
   text-align: center;
-}
-
-.form-group {
-  margin-bottom: 1.5rem;
 }
 
 label {
@@ -256,6 +338,18 @@ label {
   box-sizing: border-box;
 }
 
+
+.total-text {
+  margin-left: 2.45rem;
+  width: 100%;
+  display: block;
+  font-size: 1.25rem;
+  color: #9e4e4e;
+  margin-bottom: 1rem;
+
+}
+
+
 .search-input:focus {
   outline: none;
   border-color: #8DBAED;
@@ -266,14 +360,9 @@ table {
   width: 100%;
   border-collapse: separate;
   border-spacing: 0;
-  margin-top: 1.5rem;
   background: white;
   border-radius: 8px;
-  overflow: hidden;
   box-shadow: 0 4px 6px rgba(0, 0, 0, 0.05);
-  overflow-x: auto;
-  -webkit-overflow-scrolling: touch;
-
 }
 
 th {
@@ -376,11 +465,12 @@ tr:hover td {
 }
 
 @media (max-width: 480px) {
+
   .view-box {
     margin: 1rem;
     padding: 1.5rem;
-    width: calc(100% - 2rem);
     box-sizing: border-box;
+    max-width: 100%;
   }
 
   .search-box {
@@ -407,9 +497,8 @@ tr:hover td {
   /* Add responsive table styles */
   table {
     display: block;
-    overflow-x: auto;
     white-space: nowrap;
-    -webkit-overflow-scrolling: touch;
+    max-width: 100%;
   }
 
   th,

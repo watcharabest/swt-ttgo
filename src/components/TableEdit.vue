@@ -202,7 +202,7 @@ const submit = async () => {
 
   try {
     // เรียก endpoint เดียว
-    await axios.post('https://10.100.10.139:8000/submit-product-info', data)
+    await axios.post(`${__API_BASE_URL__}/submit-product-info`, data)
     success.value = true
     imageSuccess.value = !!selectedFile.value
     // เคลียร์ฟอร์ม
@@ -234,7 +234,7 @@ async function onDelete() {
   }
   loading.value = true
   try {
-    await axios.delete(`https://10.100.10.139:8000/delete-product/${deletePo.value}`)
+    await axios.delete(`${__API_BASE_URL__}/delete-product/${deletePo.value}`)
     deleteSuccess.value = true
     deletePo.value = ''
   } catch (err) {

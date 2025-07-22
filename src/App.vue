@@ -3,7 +3,7 @@
     <!-- Sidebar Toggle Button (Moved outside) -->
     <button class="sidebar-toggle" @click="toggleSidebar">
       <i class="fas" :class="isSidebarCollapsed ? 'fa-chevron-right' : 'fa-chevron-left'"></i>
-      <span class="submenu-arrow"  style="margin-right: 5px;">{{ isSidebarCollapsed ? '◀' : '▶' }}</span>
+      <span class="submenu-arrow" style="margin-right: 5px;">{{ isSidebarCollapsed ? '▶' : '◀' }}</span>
     </button>
 
     <!-- Sidebar -->
@@ -11,13 +11,12 @@
       <div class="sidebar-header">
         <div class="logo" @click="goHome">
           <span class="logo-icon">●</span>
-          <span class="logo-text">Product Order</span>
+          <span class="logo-text">user0000001</span>
         </div>
       </div>
 
       <nav class="sidebar-nav">
         <div @click="toggleSubMenu" class="nav-link-header">
-          <i class="fas fa-map-marked-alt"></i>
           <span class="link-text">Mapping TTGO</span>
           <span class="submenu-arrow">{{ showSubMenu ? '▲' : '▼' }}</span>
         </div>
@@ -25,10 +24,9 @@
         <transition name="submenu-slide">
           <div v-show="showSubMenu" class="submenu-wrapper">
             <router-link to="/" class="nav-link" @click="closeMobileMenu">
-              <i class="fas fa-home"></i>
-              <span class="link-text">Home</span>
+              <span class="link-text">Scan TTGO</span>
             </router-link>
-            <router-link to="/update-tray" class="nav-link" @click="closeMobileMenu">
+            <!-- <router-link to="/update-tray" class="nav-link" @click="closeMobileMenu">
               <i class="fas fa-map-marked-alt"></i>
               <span class="link-text">Map TTGO to Tray</span>
             </router-link>
@@ -43,20 +41,18 @@
             <router-link to="/table" class="nav-link" @click="closeMobileMenu">
               <i class="fas fa-edit"></i>
               <span class="link-text">Edit Database</span>
-            </router-link>
+            </router-link> -->
             <router-link to="/showtable" class="nav-link" @click="closeMobileMenu">
-              <i class="fas fa-table"></i>
               <span class="link-text">Show Table</span>
             </router-link>
-            <router-link to="/clear" class="nav-link" @click="closeMobileMenu">
+            <!-- <router-link to="/clear" class="nav-link" @click="closeMobileMenu">
               <i class="fas fa-broom"></i>
               <span class="link-text">Clear</span>
-            </router-link>
+            </router-link> -->
           </div>
         </transition>
 
         <div @click="toggleRackMenu" class="nav-link-header">
-          <i class="fas fa-warehouse"></i>
           <span class="link-text">Rack Tracking</span>
           <span class="submenu-arrow">{{ showRackMenu ? '▲' : '▼' }}</span>
         </div>
@@ -64,12 +60,32 @@
         <transition name="submenu-slide">
           <div v-show="showRackMenu" class="submenu-wrapper">
             <router-link to="/scan-rack" class="nav-link" @click="closeMobileMenu">
-              <i class="fas fa-warehouse"></i>
               <span class="link-text">Scan Rack</span>
             </router-link>
             <router-link to="/rack" class="nav-link" @click="closeMobileMenu">
-              <i class="fas fa-warehouse"></i>
               <span class="link-text">Rack Table</span>
+            </router-link>
+          </div>
+        </transition>
+
+        <div @click="toggleTaskMenu" class="nav-link-header">
+          <span class="link-text">Task Form</span>
+          <span class="submenu-arrow">{{ showTaskMenu ? '▲' : '▼' }}</span>
+        </div>
+
+        <transition name="submenu-slide">
+          <div v-show="showTaskMenu" class="submenu-wrapper">
+            <router-link to="/task-form" class="nav-link" @click="closeMobileMenu">
+              <span class="link-text">Task Form</span>
+            </router-link>
+            <router-link to="/task-checkin" class="nav-link" @click="closeMobileMenu">
+              <span class="link-text">Task Checkin</span>
+            </router-link>
+            <router-link to="/task-table" class="nav-link" @click="closeMobileMenu">
+              <span class="link-text">Task Table</span>
+            </router-link>
+            <router-link to="/task-dashboard" class="nav-link" @click="closeMobileMenu">
+              <span class="link-text">Task Dashboard</span>
             </router-link>
           </div>
         </transition>
@@ -80,89 +96,104 @@
     <!-- Main Content -->
     <div class="main-content">
       <!-- Mobile Header -->
-      <header class="mobile-header" :class="{ 'scrolled': isScrolled }">
+      <header class="mobile-header">
         <button class="mobile-menu-toggle" @click="toggleMobileMenu">
-          <i class="fas fa-bars"></i>
         </button>
         <div class="mobile-title" @click="goHome">
           <span class="logo-icon">●</span>
           <span>Product Order</span>
         </div>
-          <div @click="toggleSubMenu" class="nav-link-header">
-            <i class="fas fa-map-marked-alt"></i>
-            <span class="link-text">Mapping TTGO</span>
-            <span class="submenu-arrow">{{ showSubMenu ? '▲' : '▼' }}</span>
+        <div @click="toggleSubMenu" class="nav-link-header">
+          <span class="link-text">Mapping TTGO</span>
+          <span class="submenu-arrow">{{ showSubMenu ? '▲' : '▼' }}</span>
+        </div>
+
+        <transition name="submenu-slide">
+          <div v-show="showSubMenu" class="submenu-wrapper">
+            <router-link to="/" class="nav-link" @click="closeMobileMenu">
+              <span class="link-text">Scan TTGO</span>
+            </router-link>
+            <!-- <router-link to="/update-tray" class="nav-link" @click="closeMobileMenu">
+              <span class="link-text">Map TTGO to Tray</span>
+            </router-link>
+            <router-link to="/update" class="nav-link" @click="closeMobileMenu">
+              <span class="link-text">Map TTGO to Product Order</span>
+            </router-link>
+            <router-link to="/tray" class="nav-link" @click="closeMobileMenu">
+              <span class="link-text">Tray List</span>
+            </router-link>
+            <router-link to="/table" class="nav-link" @click="closeMobileMenu">
+              <span class="link-text">Edit Database</span>
+            </router-link> -->
+            <router-link to="/showtable" class="nav-link" @click="closeMobileMenu">
+              <span class="link-text">Show Table</span>
+            </router-link>
+            <!-- <router-link to="/clear" class="nav-link" @click="closeMobileMenu">
+              <span class="link-text">Clear</span>
+            </router-link> -->
           </div>
+        </transition>
 
-          <transition name="submenu-slide">
-            <div v-show="showSubMenu" class="submenu-wrapper">
-              <router-link to="/" class="nav-link" @click="closeMobileMenu">
-                <i class="fas fa-home"></i>
-                <span class="link-text">Home</span>
-              </router-link>
-              <router-link to="/update-tray" class="nav-link" @click="closeMobileMenu">
-                <i class="fas fa-map-marked-alt"></i>
-                <span class="link-text">Map TTGO to Tray</span>
-              </router-link>
-              <router-link to="/update" class="nav-link" @click="closeMobileMenu">
-                <i class="fas fa-map"></i>
-                <span class="link-text">Map TTGO to Product Order</span>
-              </router-link>
-              <router-link to="/tray" class="nav-link" @click="closeMobileMenu">
-                <i class="fas fa-utensils"></i>
-                <span class="link-text">Tray List</span>
-              </router-link>
-              <router-link to="/table" class="nav-link" @click="closeMobileMenu">
-                <i class="fas fa-edit"></i>
-                <span class="link-text">Edit Database</span>
-              </router-link>
-              <router-link to="/showtable" class="nav-link" @click="closeMobileMenu">
-                <i class="fas fa-table"></i>
-                <span class="link-text">Show Table</span>
-              </router-link>
-              <router-link to="/clear" class="nav-link" @click="closeMobileMenu">
-                <i class="fas fa-broom"></i>
-                <span class="link-text">Clear</span>
-              </router-link>
-            </div>
-          </transition>
-          <div @click="toggleRackMenu" class="nav-link-header">
-            <i class="fas fa-warehouse"></i>
-            <span class="link-text">Rack Tracking</span>
-            <span class="submenu-arrow">{{ showRackMenu ? '▲' : '▼' }}</span>
+        <div @click="toggleRackMenu" class="nav-link-header">
+          <span class="link-text">Rack Tracking</span>
+          <span class="submenu-arrow">{{ showRackMenu ? '▲' : '▼' }}</span>
+        </div>
+
+        <transition name="submenu-slide">
+          <div v-show="showRackMenu" class="submenu-wrapper">
+            <router-link to="/scan-rack" class="nav-link" @click="closeMobileMenu">
+              <span class="link-text">Scan Rack</span>
+            </router-link>
+            <router-link to="/rack" class="nav-link" @click="closeMobileMenu">
+              <span class="link-text">Rack Table</span>
+            </router-link>
           </div>
+        </transition>
 
-          <transition name="submenu-slide">
-            <div v-show="showRackMenu" class="submenu-wrapper">
-              <router-link to="/scan-rack" class="nav-link" @click="closeMobileMenu">
-                <i class="fas fa-warehouse"></i>
-                <span class="link-text">Scan Rack</span>
-              </router-link>
-              <router-link to="/rack" class="nav-link" @click="closeMobileMenu">
-                <i class="fas fa-warehouse"></i>
-                <span class="link-text">Rack Table</span>
-              </router-link>
-            </div>
-          </transition>
+        <div @click="toggleTaskMenu" class="nav-link-header">
+          <span class="link-text">Task Form</span>
+          <span class="submenu-arrow">{{ showTaskMenu ? '▲' : '▼' }}</span>
+        </div>
 
+        <transition name="submenu-slide">
+          <div v-show="showTaskMenu" class="submenu-wrapper">
+            <router-link to="/task-form" class="nav-link" @click="closeMobileMenu">
+              <span class="link-text">Task Form</span>
+            </router-link>
+            <router-link to="/task-checkin" class="nav-link" @click="closeMobileMenu">
+              <span class="link-text">Task Checkin</span>
+            </router-link>
+            <router-link to="/task-table" class="nav-link" @click="closeMobileMenu">
+              <span class="link-text">Task Table</span>
+            </router-link>
+            <router-link to="/task-dashboard" class="nav-link" @click="closeMobileMenu">
+              <span class="link-text">Task Dashboard</span>
+            </router-link>
+          </div>
+        </transition>
       </header>
 
       <!-- Page Content -->
-      <main class="main">
-        <router-view v-slot="{ Component }">
+      <router-view v-slot="{ Component, route }">
+        <main class="main" v-if="!route.meta?.noMain">
           <transition name="page" mode="out-in" appear>
             <component :is="Component" />
           </transition>
-        </router-view>
-      </main>
+        </main>
+
+        <transition name="page" mode="out-in" appear v-else>
+          <component :is="Component" />
+        </transition>
+      </router-view>
+
     </div>
   </div>
-  
+
 </template>
 
 <script setup>
 import { ref, onMounted, onUnmounted, watch } from 'vue'
-import { useRouter, useRoute } from 'vue-router'
+import { useRouter } from 'vue-router'
 
 const router = useRouter()
 const mobileMenuOpen = ref(false)
@@ -170,20 +201,32 @@ const isScrolled = ref(false)
 const isSidebarCollapsed = ref(false)
 const showSubMenu = ref(false)
 const showRackMenu = ref(false)
+const showTaskMenu = ref(false)
 
 const toggleSubMenu = () => {
   showSubMenu.value = !showSubMenu.value
   // Close rack menu when opening this one
-  if (showRackMenu.value) showRackMenu.value = false
+  if (showSubMenu.value) {
+    showRackMenu.value = false
+    showTaskMenu.value = false
+  }
 }
 
 const toggleRackMenu = () => {
   showRackMenu.value = !showRackMenu.value
-  // Close other submenu when opening this one
-  if (showSubMenu.value) showSubMenu.value = false
+  if (showRackMenu.value) {
+    showSubMenu.value = false
+    showTaskMenu.value = false
+  }
 }
 
-
+const toggleTaskMenu = () => {
+  showTaskMenu.value = !showTaskMenu.value
+  if (showTaskMenu.value) {
+    showSubMenu.value = false
+    showRackMenu.value = false
+  }
+}
 
 const toggleSidebar = () => {
   isSidebarCollapsed.value = !isSidebarCollapsed.value
@@ -202,11 +245,6 @@ const closeMobileMenu = () => {
 
 const goHome = () => {
   router.push('/')
-  closeMobileMenu()
-}
-
-const navigateTo = (path) => {
-  router.push(path)
   closeMobileMenu()
 }
 
@@ -287,12 +325,12 @@ onUnmounted(() => {
 #app {
   min-height: 100vh;
   min-width: 100vw;
-  font-family: 'Roboto', sans-serif;
+  font-family: 'Kanit';
   color: var(--text);
   --color: #E1E1E1;
   background-color: #F3F3F3;
-  background-image: linear-gradient(0deg, transparent 24%, var(--color) 25%, var(--color) 26%, transparent 27%,transparent 74%, var(--color) 75%, var(--color) 76%, transparent 77%,transparent),
-      linear-gradient(90deg, transparent 24%, var(--color) 25%, var(--color) 26%, transparent 27%,transparent 74%, var(--color) 75%, var(--color) 76%, transparent 77%,transparent);
+  background-image: linear-gradient(0deg, transparent 24%, var(--color) 25%, var(--color) 26%, transparent 27%, transparent 74%, var(--color) 75%, var(--color) 76%, transparent 77%, transparent),
+    linear-gradient(90deg, transparent 24%, var(--color) 25%, var(--color) 26%, transparent 27%, transparent 74%, var(--color) 75%, var(--color) 76%, transparent 77%, transparent);
   background-size: 55px 55px;
 
 
@@ -313,10 +351,11 @@ body {
   font-size: 0.85rem;
   color: #ccc;
   transition: var(--transition);
-  
+
 }
 
 .submenu-wrapper {
+  margin-left: 1rem;
   overflow: hidden;
 }
 
@@ -346,7 +385,7 @@ body {
   display: flex;
   align-items: center;
   gap: 0.5rem;
-  font-weight: 700;
+  font-weight: 400;
   font-size: 1.25rem;
   color: var(--text);
   transition: var(--transition);
@@ -424,7 +463,6 @@ body {
   white-space: nowrap;
   color: white;
   text-decoration: none;
-  font-weight: bold;
   font-size: 1.2rem;
 }
 
@@ -485,16 +523,12 @@ body {
   transition: all 0.2s;
   white-space: nowrap;
   cursor: pointer;
-}
-
-.nav-link-header i {
-  margin-right: 15px;
-  width: 20px;
-  text-align: center;
+  margin: 10px;
 }
 
 .nav-link-header:hover,
 .nav-link-header.router-link-active {
+  background-color: #576779;
   color: #42b983;
 }
 
@@ -517,10 +551,12 @@ body {
 
 .nav-link:hover,
 .nav-link.router-link-active {
+  background-color: #576779;
   color: #42b983;
 }
 
 .link-text {
+  font-size: 1.125rem;
   transition: opacity 0.2s;
 }
 
@@ -556,14 +592,9 @@ body {
   background: #2c3e50;
   color: white;
   align-items: center;
-  position: sticky;
   top: 0;
   z-index: 900;
   transition: all 0.3s ease;
-}
-
-.mobile-header.scrolled {
-  box-shadow: 0 2px 10px rgba(0, 0, 0, 0.1);
 }
 
 .mobile-menu-toggle {
@@ -578,7 +609,6 @@ body {
 .mobile-title {
   display: flex;
   align-items: center;
-  font-weight: bold;
   font-size: 1.1rem;
   cursor: pointer;
   margin-bottom: 1rem;
@@ -754,7 +784,7 @@ body {
 
 /* Clean Main Content */
 .main {
-  max-width: 1200px;
+  max-width: 100%;
   margin: 0 auto;
   padding-left: 1.5rem;
   padding-right: 1.5rem;
@@ -775,145 +805,5 @@ body {
 .page-leave-to {
   opacity: 0;
   transform: translateY(-10px);
-}
-
-/* Responsive Design */
-/* เพิ่ม media queries เหล่านี้ในส่วน responsive design */
-
-/* Tablet Portrait (768px - 1024px) */
-@media (min-width: 768px) and (max-width: 1024px) {
-  .dashboard-grid {
-    grid-template-columns: repeat(2, 1fr);
-    gap: 1.25rem;
-    max-width: 100%;
-    padding: 0 1rem;
-  }
-
-  .dashboard-card {
-    padding: 1.5rem;
-    border-radius: 14px;
-  }
-
-  .card-title {
-    font-size: 1.175rem;
-  }
-
-  .card-description {
-    font-size: 0.85rem;
-    margin-bottom: 0.875rem;
-  }
-
-  .main {
-    padding-left: 1rem;
-    padding-right: 1rem;
-  }
-
-  .dashboard {
-    padding: 1.5rem 0;
-  }
-}
-
-/* Mobile Only (max-width: 767px) */
-@media (max-width: 767px) {
-  .nav-container {
-    padding: 0 1rem;
-  }
-
-  .menu-toggle {
-    display: flex;
-  }
-
-  .nav-links {
-    position: absolute;
-    top: 100%;
-    left: 0;
-    right: 0;
-    flex-direction: column;
-    background: #FFE495;
-    backdrop-filter: blur(12px);
-    border-bottom: 1px solid var(--border);
-    box-shadow: var(--shadow-lg);
-    gap: 0;
-    opacity: 0;
-    visibility: hidden;
-    transform: translateY(-10px);
-    transition: var(--transition);
-  }
-
-  .nav-links.active {
-    opacity: 1;
-    visibility: visible;
-    transform: translateY(0);
-  }
-
-  .nav-link {
-    padding: 1rem 1.5rem;
-    border-radius: 0;
-    border-bottom: 1px solid var(--border);
-  }
-
-  .nav-link:last-child {
-    border-bottom: none;
-  }
-
-  .nav-link::after {
-    display: none;
-  }
-
-  .main {
-    padding-left: 0.75rem;
-    padding-right: 0.75rem;
-    overflow-x: auto;
-    -webkit-overflow-scrolling: touch;
-    max-width: 100%;
-    overflow: hidden;
-  }
-
-
-  .dashboard {
-    padding: 1rem 0;
-  }
-
-  .dashboard-grid {
-    grid-template-columns: 1fr;
-    gap: 1rem;
-    padding: 0;
-  }
-
-  .dashboard-card {
-    padding: 1.25rem;
-    margin: 0 0.25rem;
-    border-radius: 12px;
-  }
-
-  .card-title {
-    font-size: 1.125rem;
-  }
-
-  .card-description {
-    font-size: 0.8125rem;
-    margin-bottom: 0.75rem;
-  }
-
-
-  .dashboard-card:hover {
-    transform: translateY(-4px);
-  }
-}
-
-/* แก้ไขการตั้งค่าเริ่มต้นของ dashboard-grid */
-.dashboard-grid {
-  display: grid;
-  grid-template-columns: repeat(auto-fit, minmax(320px, 1fr));
-  gap: 1.5rem;
-  max-width: 1000px;
-  margin: 0 auto;
-}
-
-/* สำหรับหน้าจอใหญ่ */
-@media (min-width: 1025px) {
-  .dashboard-grid {
-    grid-template-columns: repeat(2, minmax(280px, 1fr));
-  }
 }
 </style>

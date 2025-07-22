@@ -6,16 +6,11 @@ import vueJsx from '@vitejs/plugin-vue-jsx'
 import vueDevTools from 'vite-plugin-vue-devtools'
 import fs from 'fs'
 
-// https://vite.dev/config/
 export default defineConfig({
-  plugins: [
-    vue(),
-    vueJsx(),
-    vueDevTools(),
-  ],
+  plugins: [vue(), vueJsx(), vueDevTools()],
   resolve: {
     alias: {
-      '@': fileURLToPath(new URL('./src', import.meta.url))
+      '@': fileURLToPath(new URL('./src', import.meta.url)),
     },
   },
   server: {
@@ -24,15 +19,19 @@ export default defineConfig({
       cert: fs.readFileSync('./cert/cert.pem'),
     },
     host: '0.0.0.0',
+    allowedHosts: true,
     port: 5173,
     strictPort: false,
     cors: true,
     proxy: {
       '/images': {
-        target: 'https://10.100.10.139:8000',
+        target: 'https://10.100.19.230:8000',
         changeOrigin: true,
         secure: false,
-      }
-    }
-  }
+      },
+    },
+  },
+  define: {
+    __API_BASE_URL__: JSON.stringify('https://10.100.19.230:8000'),
+  },
 })

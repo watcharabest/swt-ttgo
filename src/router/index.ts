@@ -6,19 +6,29 @@ import TrayInfo from '@/components/EditTray.vue'
 import ClearPO from '../components/ClearPO.vue'
 import Dashboard from '../components/menu.vue'
 import UpdateTray from '@/components/UpdateTray.vue'
-import RackTracking from '@/components/TableRack.vue'
-import ScanRack from '@/components/scanRack.vue'
+import Rack_Table from '@/components/Rack_Table.vue'
+import Rack_Scan from '@/components/Rack_Scan.vue'
+import Task_Form from '@/components/Task_Form.vue'
+import Task_Checkin from '@/components/Task_Checkin.vue'
+import Task_Table from '@/components/Task_Table.vue'
+import Task_Dashboard from '@/components/Task_Dashboard.vue'
 
 const routes = [
-  { path: '/', component: Dashboard },
+  { path: '/home', component: Dashboard },
   { path: '/update', component: UpdateStep },
   { path: '/table', component: TableView },
   { path: '/showtable', component: ProductTableViewer },
   { path: '/tray', component: TrayInfo },
   { path: '/clear', component: ClearPO },
   { path: '/update-tray', component: UpdateTray },
-  { path: '/rack', component: RackTracking },
-  { path: '/scan-rack', component: ScanRack },
+
+  { path: '/rack', component: Rack_Table },
+  { path: '/scan-rack', component: Rack_Scan },
+
+  { path: '/task-form', component: Task_Form },
+  { path: '/task-checkin', component: Task_Checkin },
+  { path: '/task-table', component: Task_Table },
+  { path: '/task-dashboard', component: Task_Dashboard, meta: { noMain: true } },
 ]
 
 const router = createRouter({

@@ -137,7 +137,7 @@ const lookupTray = async (preserveEditMode = false) => {
   errorMessage.value = ''
   try {
     const res = await axios.post(
-      'https://10.100.10.139:8000/lookup-product-order',
+      `${__API_BASE_URL__}/lookup-product-order`,
       { product_order: productOrder.value }
     )
     trayMain.value = res.data.tray_id_main
@@ -166,7 +166,7 @@ const acceptTray = async (index) => {
     if (!confirm(`Update main tray ID to "${newId}"?`)) return
     try {
       await axios.post(
-        'https://10.100.10.139:8000/update-main-tray-id',
+        `${__API_BASE_URL__}/update-main-tray-id`,
         {
           old_tray_id: trayMain.value,
           new_tray_id: newId
@@ -182,12 +182,12 @@ const acceptTray = async (index) => {
     if (!confirm(`Add new tray ID "${newId}" at slot #${index + 1}?`)) return
     try {
       await axios.post(
-        'https://10.100.10.139:8000/add-tray',
+        `${__API_BASE_URL__}/add-tray`,
         { tray_id_main: trayMain.value, tray_id: newId }
       )
       const firstTray = trayIds.value.find(v => v) || ''
       await axios.post(
-        'https://10.100.10.139:8000/get-tray-info',
+        `${__API_BASE_URL__}/get-tray-info`,
         {
           tray_id_main: trayMain.value,  // ให้ตรงกับ Pydantic model Tray
           tray_id: firstTray             // ส่ง tray_id ที่เลือก
@@ -207,12 +207,12 @@ const deleteTray = async (index) => {
   if (!confirm(`Delete tray ID "${idToDelete}" at slot #${index + 1}?`)) return
   try {
     await axios.post(
-      'https://10.100.10.139:8000/delete-tray',
+      `${__API_BASE_URL__}/delete-tray`,
       { tray_id_main: trayMain.value, tray_id: idToDelete }
     )
     const firstTray = trayIds.value.find(v => v) || ''
     await axios.post(
-      'https://10.100.10.139:8000/get-tray-info',
+      `${__API_BASE_URL__}/get-tray-info`,
       {
         tray_id_main: trayMain.value,  // ให้ตรงกับ Pydantic model Tray
         tray_id: firstTray             // ส่ง tray_id ที่เลือก
@@ -229,12 +229,12 @@ const clearTray = async () => {
   if (!confirm(`Clear all trays for PO "${productOrder.value}"?`)) return
   try {
     await axios.post(
-      'https://10.100.10.139:8000/clear-tray',
+      `${__API_BASE_URL__}/clear-tray`,
       { tray_id_main: trayMain.value }
     )
     const firstTray = trayIds.value.find(v => v) || ''
     await axios.post(
-      'https://10.100.10.139:8000/get-tray-info',
+      `${__API_BASE_URL__}/get-tray-info`,
       {
         tray_id_main: trayMain.value,  // ให้ตรงกับ Pydantic model Tray
         tray_id: firstTray             // ส่ง tray_id ที่เลือก
@@ -253,7 +253,7 @@ const submitTrayInfo = async () => {
     // หา first non-empty tray_id
     const firstTray = trayIds.value.find(v => v) || ''
     await axios.post(
-      'https://10.100.10.139:8000/get-tray-info',
+      `${__API_BASE_URL__}/get-tray-info`,
       {
         tray_id_main: trayMain.value,  // ให้ตรงกับ Pydantic model Tray
         tray_id: firstTray             // ส่ง tray_id ที่เลือก
@@ -286,7 +286,7 @@ const replaceTray = async (index) => {
   if (!confirm(`Replace tray ID "${existingId}" with "${newId}"?`)) return
   try {
     await axios.post(
-      'https://10.100.10.139:8000/update-tray-id',
+      `${__API_BASE_URL__}/update-tray-id`,
       {
         old_tray_id: existingId,
         new_tray_id: newId

@@ -269,7 +269,7 @@ const handleApiCall = async (data) => {
     }
     console.log("Request Data:", requestData);
     const response = await axios.post(
-      `https://10.100.10.139:8000${endpoint}`,
+      `${__API_BASE_URL__}${endpoint}`,
       requestData
     );
     success.value = true;
@@ -386,6 +386,7 @@ const handleFirstScan = async (currentDataType, trimmedData) => {
       type: "Shelf Location",
       value: trimmedData,
     });
+    scanCount.value++;
     return true;
   } else if (scannedData.value[0].type === "Shelf Location" && currentDataType === 'Rack') {
     try {
@@ -685,7 +686,7 @@ const handleLookup = async (qrCode) => {
   scannedTrayIds.value = [qrCode];
 
   try {
-    const res = await axios.get(`https://10.100.10.139:8000/table01-lookup`, {
+    const res = await axios.get(`${__API_BASE_URL__}/table01-lookup`, {
       params: { qr: qrCode },
     });
 
@@ -693,7 +694,7 @@ const handleLookup = async (qrCode) => {
 
     lookupResult.value = data;
     console.log("Lookup result:", lookupResult.value);
-    const tray = await axios.post("https://10.100.10.139:8000/lookup-tray", {
+    const tray = await axios.post(`${__API_BASE_URL__}/lookup-tray`, {
       product_order: lookupResult.value[0].product_order,
     });
     trayMain.value = tray.data.tray_id_main;

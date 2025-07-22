@@ -319,7 +319,7 @@ const onSubmit = async () => {
 
   loading.value = true;
   try {
-    await axios.post("https://10.100.10.139:8000/update_mac_tray", {
+    await axios.post(`${__API_BASE_URL__}/update_mac_tray`, {
       mac_address: mac.value,
       tray_id: order.value,
     });
