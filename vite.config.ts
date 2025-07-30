@@ -25,13 +25,13 @@ export default defineConfig({
     cors: true,
     proxy: {
       '/images': {
-        target: 'https://10.100.19.230:8000',
+        target: 'https://10.85.163.101:8000',
         changeOrigin: true,
         secure: false,
       },
     },
   },
   define: {
-    __API_BASE_URL__: JSON.stringify('https://10.100.19.230:8000'),
+    __API_BASE_URL__: JSON.stringify('https://10.85.163.101:8000'),
   },
 })

@@ -99,9 +99,9 @@
                 <label>ทองแดง</label>
                 <input id="surface" v-model="form.surface" type="radio" value="ทองแดง"
                   :disabled="form.surface !== null && form.surface !== 'ทองแดง'" :class="{ invalid: errors.surface }" />
-                <label>ออกผิว</label>
-                <input id="surface" v-model="form.surface" type="radio" value="ออกผิว"
-                  :disabled="form.surface !== null && form.surface !== 'ออกผิว'" :class="{ invalid: errors.surface }" />
+                <label>ออกสี</label>
+                <input id="surface" v-model="form.surface" type="radio" value="ออกสี"
+                  :disabled="form.surface !== null && form.surface !== 'ออกสี'" :class="{ invalid: errors.surface }" />
                 <label>เปิดผิว</label>
                 <input id="surface" v-model="form.surface" type="radio" value="เปิดผิว"
                   :disabled="form.surface !== null && form.surface !== 'เปิดผิว'"
@@ -111,14 +111,15 @@
             <div class="form-radio">
               <div class="radio-option" style="gap: 0px;">
                 <label>Big Barrel</label>
-                <input type="text" v-model="inputs.BIG"
+                <input type="number" step="any" v-model="inputs.BIG"
                   :disabled="!!selectedType?.value && selectedType.value !== 'BIG'" @focus="setType('BIG')"
                   :class="{ invalid: errors.type || hasMultipleInputs }" />
-                <label>TT</label>
-                <input type="text" v-model="inputs.TT" :disabled="!!selectedType?.value && selectedType.value !== 'TT'"
-                  @focus="setType('TT')" :class="{ invalid: errors.type || hasMultipleInputs }" />
+                <label>Intergo</label>
+                <input type="number" step="any" v-model="inputs.INTERGO"
+                  :disabled="!!selectedType?.value && selectedType.value !== 'INTERGO'" @focus="setType('INTERGO')"
+                  :class="{ invalid: errors.type || hasMultipleInputs }" />
                 <label>OTEC</label>
-                <input type="text" v-model="inputs.OTEC"
+                <input type="number" step="any" v-model="inputs.OTEC"
                   :disabled="!!selectedType?.value && selectedType.value !== 'OTEC'" @focus="setType('OTEC')"
                   :class="{ invalid: errors.type || hasMultipleInputs }" />
               </div>
@@ -152,69 +153,108 @@
       <div v-else>
         <h1 style="color: red;">No Tray detected</h1>
       </div>
-      <form @submit.prevent="submit" novalidate>
-        <div class="group-product">
-          <span>Product Order</span>
-          <input id="productname" v-model="form.product_order" type="text" placeholder="Enter Product Name"
-            :class="{ invalid: errors.product_name }" />
-          <p v-if="errors.product_name" class="error-text">Required</p>
-        </div>
+      <div class="form">
+        <form @submit.prevent="submit" novalidate>
+          <div class="group-product">
+            <span>Product Order</span>
+            <input id="productname" v-model="form.product_order" type="text" placeholder="Enter Product Name"
+              :class="{ invalid: errors.product_name }" />
+            <span v-if="errors.product_name" class="error-text">Required</span>
+          </div>
 
-        <div class="form-group">
-          <span>Material</span>
-          <input id="material" v-model="form.material_no" type="text" placeholder="Enter Material"
-            :class="{ invalid: errors.material_no }" />
-          <p v-if="errors.material_no" class="error-text">Required</p>
-        </div>
+          <div class="form-group">
+            <span>Material</span>
+            <input id="material" v-model="form.material_no" type="text" placeholder="Enter Material"
+              :class="{ invalid: errors.material_no }" />
+            <span v-if="errors.material_no" class="error-text">Required</span>
+          </div>
 
-        <div class="form-group">
-          <span>Material Description</span>
-          <input id="material" v-model="form.material_des" type="text" placeholder="Enter Material"
-            :class="{ invalid: errors.material_des }" />
-          <p v-if="errors.material_des" class="error-text">Required</p>
-        </div>
+          <div class="form-group">
+            <span>Material Description</span>
+            <input id="material" v-model="form.material_des" type="text" placeholder="Enter Material"
+              :class="{ invalid: errors.material_des }" />
+            <span v-if="errors.material_des" class="error-text">Required</span>
+          </div>
 
-        <div class="form-group">
-          <span>Amount</span>
-          <input id="amount" v-model="form.amount" type="text" placeholder="Enter Amount"
-            :class="{ invalid: errors.amount }" />
-          <p v-if="errors.amount" class="error-text">Required</p>
-        </div>
+          <div class="form-group">
+            <span>Name</span>
+            <input id="material" v-model="form.name_material" type="text" placeholder="Enter Material"
+              :class="{ invalid: errors.name_material }" />
+            <span v-if="errors.name_material" class="error-text">Required</span>
+          </div>
 
-        <div class="form-group">
-          <div class="group-radio-type">
-            <div class="form-radio">
-              <div class="radio-option">
-                <label>ทองแดง</label>
-                <input id="surface" v-model="form.surface" type="radio" value="ทองแดง" @click="toggleRadio('ทองแดง')"
-                  style="cursor: pointer;" :class="{ invalid: errors.surface }" />
-                <label>ออกผิว</label>
-                <input id="surface" v-model="form.surface" type="radio" value="ออกผิว" @click="toggleRadio('ออกผิว')"
-                  style="cursor: pointer;" :class="{ invalid: errors.surface }" />
-                <label>เปิดผิว</label>
-                <input id="surface" v-model="form.surface" type="radio" value="เปิดผิว" @click="toggleRadio('เปิดผิว')"
-                  style="cursor: pointer;" :class="{ invalid: errors.surface }" />
+          <div class="form-group">
+            <span>Amount</span>
+            <input id="amount" v-model="form.amount" type="text" placeholder="Enter Amount"
+              :class="{ invalid: errors.amount }" />
+            <span v-if="errors.amount" class="error-text">Required</span>
+          </div>
+
+          <div class="form-group">
+            <div class="group-radio-type">
+              <div class="form-radio">
+                <div class="radio-option">
+                  <label>ทองแดง</label>
+                  <input id="surface" v-model="form.surface" type="radio" value="ทองแดง" @click="toggleRadio('ทองแดง')"
+                    style="cursor: pointer;" :class="{ invalid: errors.surface }" />
+                  <label>ออกสี</label>
+                  <input id="surface" v-model="form.surface" type="radio" value="ออกสี" @click="toggleRadio('ออกสี')"
+                    style="cursor: pointer;" :class="{ invalid: errors.surface }" />
+                  <label>เปิดผิว</label>
+                  <input id="surface" v-model="form.surface" type="radio" value="เปิดผิว"
+                    @click="toggleRadio('เปิดผิว')" style="cursor: pointer;" :class="{ invalid: errors.surface }" />
+                </div>
               </div>
             </div>
           </div>
-        </div>
+          <button type="submit" :disabled="loading" class="btn-submit">{{ loading ? 'Processing…' : 'Submit' }}</button>
+          <p v-if="errors.tray_id" class="error-text">Please scan tray QR code</p>
+        </form>
+        <div>
+          <div class="images-grid">
+            <div class="image-input-wrapper" v-for="(image, index) in images" :key="index">
+              <!-- Hidden camera input -->
+              <input :id="`cameraInput${index}`" type="file" accept="image/*" capture="environment"
+                @change="(e) => handleFileChange(e, index)" class="hidden-file-input" />
 
-        <div class="form-group">
-          <span>Image</span>
-          <input id="imageFileInput" type="file" accept="image/png, image/jpeg" @change="handleFileChange"
-            class="img-input" />
-          <label for="imageFileInput" class="img-input">
-            <i class="fa-solid fa-image"></i>Click to select image
-          </label>
-          <p v-if="errors.image" class="error-text">Required</p>
-        </div>
-        <div class="preview" v-if="previewUrl">
-          <img :src="previewUrl" alt="Preview" />
-        </div>
+              <!-- Image display container -->
+              <div class="image-display-box" @click="() => takePhoto(index)" v-if="!image.previewUrl">
+                <div class="image-placeholder">
+                  <i class="fa-solid fa-camera"></i>
+                  <span>Tap to Capture</span>
+                </div>
+              </div>
 
-        <button type="submit" :disabled="loading" class="btn-submit">{{ loading ? 'Processing…' : 'Submit' }}</button>
-        <p v-if="errors.tray_id" class="error-text">Please scan tray QR code</p>
-      </form>
+              <!-- Preview container with controls -->
+              <div class="image-preview-container" v-if="image.previewUrl" @mouseenter="image.showControls = true"
+                @mouseleave="image.showControls = false">
+                <img :src="image.previewUrl" alt="Preview" class="preview-image" />
+
+                <!-- Control overlay -->
+                <div class="image-controls" :class="{ 'show': image.showControls }">
+                  <button type="button" @click="() => takePhoto(index)" class="control-btn retake-btn" title="ถ่ายใหม่">
+                    <i class="fa-solid fa-camera-retro"></i>
+                    <span>Change</span>
+                  </button>
+                  <button type="button" @click="() => removeImage(index)" class="control-btn delete-btn" title="ลบรูป">
+                    <i class="fa-solid fa-trash"></i>
+                    <span>Delete</span>
+                  </button>
+                </div>
+              </div>
+              <span v-if="errors[`image${index}`]" class="error-text">Required</span>
+            </div>
+          </div>
+          <form>
+            <div class="form-group">
+              <span>P.S (optional)</span>
+              <input id="ps" v-model="form.material_des" type="text" placeholder="Enter P.S"
+                :class="{ invalid: errors.material_des }" style="min-height: 50px;"/>
+              <span v-if="errors.material_des" class="error-text">Required</span>
+            </div>
+          </form>
+        </div>
+      </div>
     </div>
 
 
@@ -261,11 +301,35 @@
         </div>
       </div>
     </div>
+
+    <div v-if="showCameraModal" class="camera-modal" @click="closeCameraModal">
+      <div class="camera-modal-content" @click.stop>
+        <div class="camera-header">
+          <h3>Take Photo - Image {{ currentCameraIndex + 1 }}</h3>
+          <button type="button" @click="closeCameraModal" class="close-camera-btn">✕</button>
+        </div>
+        <div class="camera-container">
+          <video id="cameraVideo" autoplay playsinline :srcObject="cameraStream" class="camera-video"></video>
+
+          <!-- Camera Switch Button -->
+          <button v-if="hasMultipleCameras" @click="switchCameraInModal" class="floating-camera-switch-btn"
+            :title="currentCameraFacing === 'user' ? 'Switch to Back Camera' : 'Switch to Front Camera'">
+            <i class="fa-solid fa-camera-rotate"></i>
+          </button>
+        </div>
+        <div class="camera-controls">
+          <button type="button" @click="capturePhoto" class="capture-btn">
+            <i class="fa-solid fa-camera"></i>
+            Capture Photo
+          </button>
+        </div>
+      </div>
+    </div>
   </div>
 </template>
 
 <script setup>
-import { ref, reactive, computed ,watch} from 'vue'
+import { ref, reactive, computed, watch, onUnmounted, onMounted } from 'vue'
 import { useMyVar } from '../myVar'
 import axios from 'axios'
 import Swal from 'sweetalert2'
@@ -275,9 +339,11 @@ const form = reactive({
   product_order: '',
   material_no: '',
   material_des: '',
+  name_material: '',
   amount: '',
   surface: '',
-  image: ''
+  image: '',
+  ps: ''
 })
 
 const errors = reactive({
@@ -285,11 +351,20 @@ const errors = reactive({
   product_name: false,
   material_no: false,
   material_des: false,
+  name_material: false,
   amount: false,
   type: false,
   surface: false,
-  image: false
+  image: false,
+  ps: false
 })
+
+const images = ref([
+  { file: null, previewUrl: '', showControls: false },
+  { file: null, previewUrl: '', showControls: false },
+  { file: null, previewUrl: '', showControls: false },
+  { file: null, previewUrl: '', showControls: false }
+])
 
 // Form Value
 const store = useMyVar()
@@ -298,14 +373,9 @@ const selectedType = ref(null)
 
 const inputs = ref({
   BIG: '',
-  TT: '',
+  INTERGO: '',
   OTEC: ''
 })
-
-const selectedFile = ref(null)
-const previewUrl = ref('')
-const imageError = ref(null)
-const imageSuccess = ref(false)
 
 const loading = ref(false);
 const error = ref(null);
@@ -320,6 +390,7 @@ const tray_id = ref("");
 const scanCount = ref(0);
 const scannedData = ref([]);
 
+const bluetoothBuffer = ref("");
 // QR Scanner related
 const showScanner = ref(false);
 const scannerError = ref("");
@@ -328,6 +399,35 @@ const hasMultipleCameras = ref(true);
 const currentCamera = ref("environment");
 const isMicroMode = ref(false);
 
+const showCameraModal = ref(false)
+const cameraStream = ref(null)
+const currentCameraIndex = ref(0)
+const currentCameraFacing = ref('environment')
+
+let timer = null
+
+watch(() => form.product_order, (newVal) => {
+  if (!newVal || newVal.length < 3) {
+    form.material_no = ''
+    form.material_des = ''
+    form.name_material = ''
+    return
+  } else {
+    if (timer) {
+      clearTimeout(timer)
+    }
+    timer = setTimeout(async () => {
+      const res = await axios.post('https://10.85.163.101:8000/product_task_info', {
+        product_order: form.product_order
+      })
+      form.material_no = res.data.material_id
+      form.material_des = res.data.material_description
+      form.name_material = res.data.name_material
+      form.ps = res.data.ps
+    }, 500)
+  }
+})
+
 const setType = (type) => {
   if (!selectedType.value) {
     selectedType.value = type
@@ -335,7 +435,7 @@ const setType = (type) => {
 }
 
 const hasMultipleInputs = computed(() => {
-  const filled = [inputs.value.BIG, inputs.value.TT, inputs.value.OTEC]
+  const filled = [inputs.value.BIG, inputs.value.INTERGO, inputs.value.OTEC]
     .filter(v => v && v.trim() !== '')
   return filled.length > 1
 })
@@ -344,10 +444,109 @@ watch(inputs, () => {
   if (!hasMultipleInputs.value) errors.type = false
 }, { deep: true })
 
-function handleFileChange(e) {
+function handleFileChange(e, imageIndex) {
   const file = e.target.files[0]
-  selectedFile.value = file || null
-  previewUrl.value = file ? URL.createObjectURL(file) : ''
+  if (file) {
+    images.value[imageIndex].file = file
+    images.value[imageIndex].previewUrl = URL.createObjectURL(file)
+    errors[`image${imageIndex}`] = false
+  }
+}
+
+const isMobileDevice = () => {
+  return /Android|webOS|iPhone|iPad|iPod|BlackBerry|IEMobile|Opera Mini/i.test(navigator.userAgent) ||
+    (navigator.maxTouchPoints && navigator.maxTouchPoints > 2 && /MacIntel/.test(navigator.platform))
+}
+
+async function takePhoto(imageIndex) {
+  if (isMobileDevice()) {
+    document.getElementById(`cameraInput${imageIndex}`).click()
+  } else {
+    try {
+      const stream = await navigator.mediaDevices.getUserMedia({
+        video: {
+          facingMode: currentCameraFacing.value,
+          width: { ideal: 1280 },
+          height: { ideal: 720 }
+        }
+      })
+
+      currentCameraIndex.value = imageIndex
+      cameraStream.value = stream
+      showCameraModal.value = true
+
+    } catch (error) {
+      console.error('Camera access denied:', error)
+      document.getElementById(`cameraInput${imageIndex}`).click()
+    }
+  }
+}
+
+async function switchCameraInModal() {
+  try {
+    // Stop current stream
+    if (cameraStream.value) {
+      cameraStream.value.getTracks().forEach(track => track.stop())
+    }
+
+    // Switch camera facing
+    currentCameraFacing.value = currentCameraFacing.value === 'environment' ? 'user' : 'environment'
+
+    // Get new stream with switched camera
+    const stream = await navigator.mediaDevices.getUserMedia({
+      video: {
+        facingMode: currentCameraFacing.value,
+        width: { ideal: 1280 },
+        height: { ideal: 720 }
+      }
+    })
+
+    cameraStream.value = stream
+
+  } catch (error) {
+    console.error('Failed to switch camera:', error)
+    // Revert to previous camera if switch fails
+    currentCameraFacing.value = currentCameraFacing.value === 'environment' ? 'user' : 'environment'
+  }
+}
+
+function capturePhoto() {
+  const video = document.getElementById('cameraVideo')
+  const canvas = document.createElement('canvas')
+  const context = canvas.getContext('2d')
+
+  canvas.width = video.videoWidth
+  canvas.height = video.videoHeight
+  context.drawImage(video, 0, 0)
+
+  canvas.toBlob((blob) => {
+    if (blob) {
+      const file = new File([blob], `image_${currentCameraIndex.value + 1}.jpg`, { type: 'image/jpeg' })
+      images.value[currentCameraIndex.value].file = file
+      images.value[currentCameraIndex.value].previewUrl = URL.createObjectURL(file)
+      errors[`image${currentCameraIndex.value}`] = false
+    }
+    closeCameraModal()
+  }, 'image/jpeg', 0.8)
+}
+
+function closeCameraModal() {
+  if (cameraStream.value) {
+    cameraStream.value.getTracks().forEach(track => track.stop())
+    cameraStream.value = null
+  }
+  showCameraModal.value = false
+  // Reset camera facing to default
+  currentCameraFacing.value = 'environment'
+}
+
+function removeImage(imageIndex) {
+  images.value[imageIndex].file = null
+  images.value[imageIndex].previewUrl = ''
+  images.value[imageIndex].showControls = false
+
+  const cameraInput = document.getElementById(`cameraInput${imageIndex}`)
+  if (cameraInput) cameraInput.value = ''
 }
 
 function toggleRadio(value) {
@@ -364,7 +563,6 @@ const submit = async () => {
   imageSuccess.value = false
   error.value = null
   loading.value = true
-  console.log(form)
   if (!tray_id.value) {
     errors.tray_id = true
     loading.value = false
@@ -401,6 +599,13 @@ const submit = async () => {
   } else {
     errors.material_des = false
   }
+  if (!form.name_material) {
+    errors.name_material = true
+    loading.value = false
+    return
+  } else {
+    errors.name_material = false
+  }
   if (!form.amount) {
     errors.amount = true
     loading.value = false
@@ -423,11 +628,28 @@ const submit = async () => {
     }
     errors.type = false
   }
+  if (!checkTaskForm.value) {
+    let hasImageError = false
+    images.value.forEach((image, index) => {
+      if (!image.file) {
+        errors[`image${index}`] = true
+        hasImageError = true
+      } else {
+        errors[`image${index}`] = false
+      }
+    })
+
+    if (hasImageError) {
+      loading.value = false
+      return
+    }
+  }
   const data = new FormData()
   {
     data.append('product_order', form.product_order)
     data.append('material_no', form.material_no)
     data.append('material_des', form.material_des)
+    data.append('name_material', form.name_material)
     data.append('amount', form.amount)
     data.append('image', selectedFile.value)
     data.append('line', store.line)
@@ -437,26 +659,26 @@ const submit = async () => {
     }
     data.append('surface', form.surface)
     data.append('tray_id', tray_id.value)
+    images.value.forEach((image, index) => {
+      if (image.file) {
+        data.append(`image${index}`, image.file)
+      }
+    })
+    data.append('ps', form.ps)
   }
 
   try {
     await axios.post(`${__API_BASE_URL__}/submit-task`, data)
-    imageSuccess.value = !!selectedFile.value
-    checkTaskForm.value = ""
-    Object.assign(form, {
-      product_order: '',
-      material_no: '',
-      material_des: '',
-      surface: '',
-      amount: '',
-    })
-    selectedType.value = null
-    inputs.value = { BIG: '', TT: '', OTEC: '' }
-    tray_id.value = ''
-    selectedFile.value = null
+    console.log("data :", form)
     Swal.fire({
       icon: "success",
       title: "Add Task Information Success",
+      html: `
+      <div style="text-align: left;">
+        <p><strong>Tray:</strong> ${tray_id.value}</p>
+        <p><strong>Product Order:</strong> ${form.product_order}</p>
+        <p><strong>Amount:</strong> ${form.amount}</p>
+      </div>`,
       toast: true,
       position: "top-end",
       showConfirmButton: false,
@@ -467,6 +689,27 @@ const submit = async () => {
         toast.onmouseleave = Swal.resumeTimer;
       }
     });
+    imageSuccess.value = !!selectedFile.value
+    checkTaskForm.value = ""
+    Object.assign(form, {
+      product_order: '',
+      material_no: '',
+      material_des: '',
+      name_material: '',
+      amount: '',
+      surface: '',
+      ps: ''
+    })
+    selectedType.value = null
+    inputs.value = { BIG: '', INTERGO: '', OTEC: '' }
+    tray_id.value = ''
+
+    images.value.forEach((image, index) => {
+      image.file = null
+      image.previewUrl = ''
+      image.showControls = false
+    })
+
   } catch (err) {
     const msg = err.response?.data?.detail || err.message
     if (msg.includes('image')) imageError.value = msg
@@ -595,9 +838,7 @@ const handleFirstScan = async (currentDataType, trimmedData) => {
       const res = await axios.get(`${__API_BASE_URL__}/check_task_form`, {
         params: { tray_id: trimmedData },
       });
-      console.log("Task ID : ", res.data)
       checkTaskForm.value = res.data?.task_id?.[0] || '';
-      console.log("checkTaskForm.value : ", checkTaskForm.value)
       resetScanState()
       if (checkTaskForm.value) {
         const taskRes = await axios.post(`${__API_BASE_URL__}/product_task_order`, {
@@ -606,8 +847,10 @@ const handleFirstScan = async (currentDataType, trimmedData) => {
         form.product_order = taskRes.data.product_order;
         form.material_no = taskRes.data.material_no;
         form.material_des = taskRes.data.material_des;
+        form.name_material = taskRes.data.name_material;
         form.amount = taskRes.data.amount;
         form.surface = taskRes.data.surface;
+        form.ps = taskRes.data.ps;
         tray_id.value = trimmedData;
       }
       return true
@@ -663,11 +906,70 @@ const paintBoundingBox = (detectedCodes, ctx) => {
   }
 };
 
+onMounted(() => {
+  checkCameraSupport();
+  window.addEventListener("keypress", handleBluetoothKeypress);
+});
+
+// Clean up when component is unmounted
+onUnmounted(() => {
+  window.removeEventListener("keypress", handleBluetoothKeypress);
+});
+
+const handleBluetoothKeypress = async (event) => {
+  // Most hardware scanners act like keyboards and send characters followed by Enter
+  if (event.key === "Enter") {
+    // Prevent the default action (such as triggering a focused button click)
+    // which can inadvertently close the scanner modal.
+    event.preventDefault();
+    event.stopPropagation();
+    const dataToProcess = bluetoothBuffer.value;
+    bluetoothBuffer.value = ""; // reset buffer
+    await processScannedData(dataToProcess);
+  } else {
+    // Ignore non-printable characters
+    if (event.key.length === 1) {
+      bluetoothBuffer.value += event.key;
+    }
+  }
+};
+
+const processScannedData = async (scannedText) => {
+  const trimmedData = scannedText.trim();
+  if (!trimmedData) return;
+
+  const currentDataType = classifyData(trimmedData);
+  console.log("Bluetooth scan detected:", trimmedData, "as", currentDataType);
+
+  // Update UI display
+  updateScanDisplay(currentDataType, trimmedData);
+
+  try {
+    // Determine stage by current scanCount BEFORE increment
+    const currentStage = scanCount.value;
+    let stageSuccess = false;
+    if (currentStage === 0) {
+      stageSuccess = await handleFirstScan(currentDataType, trimmedData);
+    } else if (currentStage === 1) {
+      stageSuccess = await handleSecondScan(currentDataType, trimmedData);
+    } else {
+      resetScanState()
+      return;
+    }
+    if (!stageSuccess) return;
+    closeScanner()
+
+
+  } catch (err) {
+    console.error("Error processing Bluetooth scan:", err);
+  }
+};
+
 </script>
 
 <style scoped>
 header {
-  max-width: 100vw;
+  max-width: 420px;
   margin: 1rem auto;
   padding: 2rem;
   background: #eeeeee;
@@ -712,6 +1014,131 @@ header {
     0 0.2em 0 0 #dcdcdc, 0 0.225em 0 0 #cacaca, 0 0.225em 0.375em 0 #cecece;
 }
 
+.camera-modal {
+  position: fixed;
+  top: 0;
+  left: 0;
+  right: 0;
+  bottom: 0;
+  background: rgba(0, 0, 0, 0.9);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  z-index: 1000;
+}
+
+.camera-modal-content {
+  background: white;
+  border-radius: 12px;
+  overflow: hidden;
+  max-width: 600px;
+  width: 90%;
+  max-height: 80vh;
+  display: flex;
+  flex-direction: column;
+}
+
+.camera-header {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  padding: 15px 20px;
+  background: #f8f9fa;
+  border-bottom: 1px solid #ddd;
+}
+
+.camera-header h3 {
+  margin: 0;
+  color: #333;
+  font-size: 1.2rem;
+}
+
+.close-camera-btn {
+  background: none;
+  border: none;
+  font-size: 1.5rem;
+  cursor: pointer;
+  color: #666;
+  padding: 5px;
+  line-height: 1;
+}
+
+.close-camera-btn:hover {
+  color: #333;
+}
+
+.camera-container {
+  position: relative;
+  background: #000;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+}
+
+.camera-video {
+  width: 100%;
+  height: auto;
+  max-height: 400px;
+  object-fit: cover;
+}
+
+.camera-controls {
+  padding: 20px;
+  text-align: center;
+  background: #f8f9fa;
+}
+
+.floating-camera-switch-btn {
+  position: absolute;
+  top: 15px;
+  right: 15px;
+  background: rgba(255, 255, 255, 0.9);
+  border: none;
+  border-radius: 50%;
+  width: 50px;
+  height: 50px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  cursor: pointer;
+  font-size: 20px;
+  color: #333;
+  box-shadow: 0 2px 10px rgba(0, 0, 0, 0.3);
+  transition: all 0.2s;
+  z-index: 10;
+}
+
+.floating-camera-switch-btn:hover {
+  background: rgba(255, 255, 255, 1);
+  transform: scale(1.05);
+}
+
+.floating-camera-switch-btn:active {
+  transform: scale(0.95);
+}
+
+.capture-btn {
+  background: #ADCFF1;
+  color: white;
+  border: none;
+  padding: 12px 24px;
+  border-radius: 8px;
+  font-size: 1rem;
+  cursor: pointer;
+  display: inline-flex;
+  align-items: center;
+  gap: 8px;
+  transition: background-color 0.3s ease;
+}
+
+.capture-btn:hover {
+  background: #0056b3;
+}
+
+.capture-btn i {
+  font-size: 1.1rem;
+}
+
 .box-wrapper {
   max-width: fit-content;
   margin: 1rem auto;
@@ -720,6 +1147,13 @@ header {
   border-radius: 2rem;
   box-shadow: 10px 10px 30px #c2c8d0, -10px -10px 30px #ffffff;
   color: #666;
+}
+
+.form {
+  display: grid;
+  grid-template-columns: repeat(2, 1fr);
+  gap: 2rem;
+  align-items: start;
 }
 
 .group-product {
@@ -787,7 +1221,6 @@ header {
   align-items: stretch;
 }
 
-
 .radio-option {
   display: grid;
   grid-template-columns: repeat(2, 1fr);
@@ -828,7 +1261,7 @@ header {
   transition: all 0.3s ease;
 }
 
-.radio-option input[type="text"] {
+.radio-option input[type="number"] {
   width: 50%;
   margin: 10px 0;
   padding: 12px;
@@ -909,6 +1342,150 @@ header {
   padding: 0.6rem;
 }
 
+.images-grid {
+  display: grid;
+  grid-template-columns: repeat(2, 1fr);
+  gap: 1rem;
+  margin-top: 20px;
+  padding: 20px;
+  background: rgba(255, 255, 255, 0.5);
+  border-radius: 8px;
+}
+
+.image-input-wrapper {
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+}
+
+.hidden-file-input {
+  display: none;
+}
+
+.image-display-box {
+  width: 100%;
+  height: 160px;
+  border: 2px dashed #ddd;
+  border-radius: 8px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  cursor: pointer;
+  transition: all 0.3s ease;
+  background-color: #fff;
+}
+
+.image-display-box:hover {
+  border-color: #ADCFF1;
+  background-color: #f0f8ff;
+}
+
+.image-placeholder {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 8px;
+  color: #666;
+}
+
+.image-placeholder i {
+  font-size: 1.8rem;
+  color: #999;
+}
+
+.image-placeholder span {
+  font-size: 0.9rem;
+  text-align: center;
+  font-weight: 500;
+}
+
+.image-preview-container {
+  position: relative;
+  width: 100%;
+  height: 160px;
+  border-radius: 8px;
+  overflow: hidden;
+  cursor: pointer;
+}
+
+.preview-image {
+  width: 100%;
+  height: 100%;
+  object-fit: cover;
+  border-radius: 8px;
+}
+
+.image-controls {
+  position: absolute;
+  top: 0;
+  left: 0;
+  right: 0;
+  bottom: 0;
+  background: rgba(0, 0, 0, 0.6);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 0.5rem;
+  opacity: 0;
+  transition: opacity 0.3s ease;
+}
+
+.image-controls.show {
+  opacity: 1;
+}
+
+.control-btn {
+  padding: 12px 16px;
+  border: none;
+  border-radius: 8px;
+  cursor: pointer;
+  font-size: 0.85rem;
+  transition: all 0.3s ease;
+  color: white;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  gap: 4px;
+  min-width: 70px;
+  font-weight: 500;
+}
+
+.retake-btn {
+  background-color: #ADCFF1;
+}
+
+.retake-btn:hover {
+  background-color: #0056b3;
+  transform: translateY(-2px);
+}
+
+.delete-btn {
+  background-color: #dc3545;
+}
+
+.delete-btn:hover {
+  background-color: #c82333;
+  transform: translateY(-2px);
+}
+
+.control-btn i {
+  font-size: 1.1rem;
+  margin-bottom: 2px;
+}
+
+.control-btn span {
+  font-size: 0.75rem;
+  line-height: 1;
+}
+
+.error-text {
+  color: #dc3545;
+  font-size: 0.8rem;
+  text-align: center;
+  margin-top: 4px;
+}
+
 .line {
   width: 100%;
   margin: 0 auto;
@@ -956,20 +1533,6 @@ h2 {
 .toggle-buttons button.active {
   background: #eeeeee;
   box-shadow: inset 2px 2px 5px #bec4cb, inset -2px -2px 5px #f0f5fa;
-}
-
-.form {
-  display: none;
-  flex-direction: column;
-}
-
-.form span {
-  margin-right: 0.5rem;
-  font-size: 1rem;
-}
-
-.form.active {
-  display: flex;
 }
 
 input[type="text"] {
@@ -1035,6 +1598,7 @@ input[type="file"] {
 
 .error-text {
   color: #ef4444;
+  margin-left: 0.25rem;
   font-size: 0.85rem;
 }
 
@@ -1061,6 +1625,7 @@ input[type="file"] {
   cursor: pointer;
   transition: all 0.3s ease;
   margin-top: 20px;
+  grid-column: span 2;
 }
 
 .btn-submit {
@@ -1187,7 +1752,7 @@ input[type="file"] {
   font-size: 0.9rem;
 }
 
-@media (max-width: 480px) {
+@media (max-width: 768px) {
   .box-wrapper {
     margin: 1rem;
     padding: 1.5rem;
@@ -1207,6 +1772,35 @@ input[type="file"] {
   .btn-submit,
   .btn-delete {
     padding: 0.875rem;
+  }
+
+  .form {
+    grid-template-columns: repeat(1, 1fr);
+  }
+
+  .images-grid {
+    grid-template-columns: 1fr;
+    gap: 15px;
+    padding: 15px;
+  }
+
+  .image-display-box,
+  .image-preview-container {
+    height: 180px;
+  }
+
+  .control-btn {
+    min-width: 60px;
+    padding: 10px 12px;
+    font-size: 0.8rem;
+  }
+
+  .control-btn i {
+    font-size: 1rem;
+  }
+
+  .control-btn span {
+    font-size: 0.7rem;
   }
 }
 </style>

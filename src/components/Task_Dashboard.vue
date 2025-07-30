@@ -663,6 +663,14 @@ body {
     grid-template-columns: 1fr;
     gap: 3rem;
   }
+
+  .summary-cards,.time-cards {
+    grid-template-columns: repeat(auto-fit, minmax(clamp(150px, 30vw, 200px), 1fr));
+  }
+
+  .card-subtitle {
+    display :none !important;
+  }
 }
 
 .header {
@@ -707,7 +715,7 @@ select {
 .summary-cards {
   width: 100%;
   display: grid;
-  grid-template-columns: repeat(auto-fit, minmax(clamp(150px, 30vw, 200px), 1fr));
+  grid-template-columns: repeat(2, 1fr);
   gap: 20px;
   border: none;
   border-radius: 16px;
@@ -720,7 +728,7 @@ select {
   width: 100%;
   border: none;
   border-radius: 16px;
-  padding: 2rem;
+  padding: 1.5rem 2rem;
   background: rgba(255, 255, 255, 0.95);
   box-shadow: 0 8px 32px rgba(0, 0, 0, 0.1);
   transition: transform 0.3s ease;
@@ -780,7 +788,6 @@ select {
   font-size: 2rem;
   display: flex;
   justify-content: center;
-  margin-bottom: 0.5rem;
   color: #2c3e50;
 }
 
@@ -803,7 +810,7 @@ select {
 
 .time-cards {
   display: grid;
-  grid-template-columns: repeat(auto-fit, minmax(clamp(150px, 30vw, 200px), 1fr));
+  grid-template-columns: repeat(2, 1fr);
   gap: 30px;
   border: none;
   border-radius: 16px;

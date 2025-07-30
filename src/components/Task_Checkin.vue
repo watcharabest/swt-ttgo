@@ -62,7 +62,9 @@
     <div class="group-scan">
       <div class="scan-container">
         <button type="button" @click="toggleScanner('Automate')" :disabled="loading" class="scan-btn">
-          Click to Scan Check In<br><span style="font-size: 1.5rem; color: #0066cc;"> Automate </span><span style="font-size: 1.5rem; color: #666 ;"> & </span><span style="font-size: 1.5rem; color: #00cc41 ;"> Pre-Plate </span>
+          Click to Scan Check In<br><span style="font-size: 1.5rem; color: #0066cc;"> Automate </span><span
+            style="font-size: 1.5rem; color: #666 ;"> & </span><span style="font-size: 1.5rem; color: #00cc41 ;">
+            Pre-Plate </span>
         </button>
       </div>
     </div>
@@ -112,7 +114,7 @@
 </template>
 
 <script setup>
-import { ref } from "vue";
+import { ref, onMounted, onUnmounted } from "vue";
 import { QrcodeStream } from "vue-qrcode-reader";
 import axios from "axios";
 import Swal from "sweetalert2";
@@ -128,7 +130,7 @@ const locationcheckin = ref("");
 // New state variables for tracking scans
 const scanCount = ref(0);
 const scannedData = ref([]);
-
+const checkTaskForm = ref("");
 // QR Scanner related
 const showScanner = ref(false);
 const scannerError = ref("");
@@ -141,6 +143,8 @@ const locationAuto = ref("");
 const rememberlocataionAutomate = ref(false);
 const locationPreplate = ref("");
 const rememberlocataionPreplate = ref(false);
+
+const bluetoothBuffer = ref("");
 
 const classifyData = (data) => {
   if (/^tw/i.test(data)) {
@@ -253,19 +257,72 @@ const onDetect = async (detectedCodes) => {
 
 const handleFirstScan = async (currentDataType, trimmedData) => {
   if (currentDataType === "Tray") {
-    console.log(locationAuto.value)
     try {
-      if (/^AUTO/i.test(store.line)) {
-        axios.post(`${__API_BASE_URL__}/check_in_auto`, {
-          tray_id: trimmedData,
-          location: store.line,
-        });
-        console.log("check in tray : ", trimmedData)
-        resetScanState()
+      const res = await axios.get(`${__API_BASE_URL__}/check_task_form`, {
+        params: { tray_id: trimmedData },
+      });
+      checkTaskForm.value = res.data?.task_id?.[0] || '';
+      resetScanState()
+      if (checkTaskForm.value) {
+        if (/^AUTO/i.test(store.line)) {
+          axios.post(`${__API_BASE_URL__}/check_in_auto`, {
+            tray_id: trimmedData,
+            location: store.line,
+          });
+          console.log("check in tray : ", trimmedData)
+          resetScanState()
+          await Swal.fire({
+            icon: "success",
+            title: "Check In Tray Success",
+            html: `
+            <div style="text-align: left;">
+                <p><strong>Tray:</strong> ${trimmedData}</p>
+                <p><strong>Location:</strong> ${store.line}</p>
+            </div>`,
+            toast: true,
+            position: "top-end",
+            showConfirmButton: false,
+            timer: 5000,
+            timerProgressBar: true,
+            didOpen: (toast) => {
+              toast.onmouseenter = Swal.stopTimer;
+              toast.onmouseleave = Swal.resumeTimer;
+            }
+          });
+          return true;
+        } else if (/^PRE/i.test(store.line)) {
+          axios.post(`${__API_BASE_URL__}/check_in_pre`, {
+            tray_id: trimmedData,
+            location: store.line,
+          });
+          console.log("check in tray : ", trimmedData)
+          resetScanState()
+          await Swal.fire({
+            icon: "success",
+            title: "Check In Tray Success",
+            html: `
+            <div style="text-align: left;">
+                <p><strong>Tray:</strong> ${trimmedData}</p>
+                <p><strong>Location:</strong> ${store.line}</p>
+            </div>`,
+            toast: true,
+            position: "top-end",
+            showConfirmButton: false,
+            timer: 5000,
+            timerProgressBar: true,
+            didOpen: (toast) => {
+              toast.onmouseenter = Swal.stopTimer;
+              toast.onmouseleave = Swal.resumeTimer;
+            }
+          });
+          return true
+        }
+      }
+      else {
         await Swal.fire({
-          icon: "success",
-          title: "Check In Tray Success",
-          text: "Tray : " + trimmedData,
+          icon: "error",
+          title: "Check In Tray Failed",
+          text: "Tray : " + trimmedData + " Don't have Task",
           toast: true,
           position: "top-end",
           showConfirmButton: false,
@@ -276,29 +333,7 @@ const handleFirstScan = async (currentDataType, trimmedData) => {
             toast.onmouseleave = Swal.resumeTimer;
           }
         });
-        return true;
-      } else if (/^PRE/i.test(store.line)) {
-        axios.post(`${__API_BASE_URL__}/check_in_pre`, {
-          tray_id: trimmedData,
-          location: store.line,
-        });
-        console.log("check in tray : ", trimmedData)
-        resetScanState()
-        await Swal.fire({
-          icon: "success",
-          title: "Check In Tray Success",
-          text: "Tray : " + trimmedData,
-          toast: true,
-          position: "top-end",
-          showConfirmButton: false,
-          timer: 5000,
-          timerProgressBar: true,
-          didOpen: (toast) => {
-            toast.onmouseenter = Swal.stopTimer;
-            toast.onmouseleave = Swal.resumeTimer;
-          }
-        });
-        return true
+        return false;
       }
     } catch (err) {
       scannerError.value = "Check in tray failed: " + (err.response?.data?.detail || err.message);
@@ -484,6 +519,66 @@ const paintBoundingBox = (detectedCodes, ctx) => {
     ctx.fillStyle = isMicroMode.value ? "#8DBAED" : "#00ff00";
   }
 };
+
+onMounted(() => {
+  checkCameraSupport();
+  window.addEventListener("keypress", handleBluetoothKeypress);
+});
+
+// Clean up when component is unmounted
+onUnmounted(() => {
+  window.removeEventListener("keypress", handleBluetoothKeypress);
+});
+
+const handleBluetoothKeypress = async (event) => {
+  // Most hardware scanners act like keyboards and send characters followed by Enter
+  if (event.key === "Enter") {
+    // Prevent the default action (such as triggering a focused button click)
+    // which can inadvertently close the scanner modal.
+    event.preventDefault();
+    event.stopPropagation();
+    const dataToProcess = bluetoothBuffer.value;
+    bluetoothBuffer.value = ""; // reset buffer
+    await processScannedData(dataToProcess);
+  } else {
+    // Ignore non-printable characters
+    if (event.key.length === 1) {
+      bluetoothBuffer.value += event.key;
+    }
+  }
+};
+
+const processScannedData = async (scannedText) => {
+  const trimmedData = scannedText.trim();
+  if (!trimmedData) return;
+
+  const currentDataType = classifyData(trimmedData);
+  console.log("Bluetooth scan detected:", trimmedData, "as", currentDataType);
+
+  // Update UI display
+  updateScanDisplay(currentDataType, trimmedData);
+
+  try {
+    // Determine stage by current scanCount BEFORE increment
+    const currentStage = scanCount.value;
+    let stageSuccess = false;
+    if (currentStage === 0) {
+      stageSuccess = await handleFirstScan(currentDataType, trimmedData);
+    } else if (currentStage === 1) {
+      stageSuccess = await handleSecondScan(currentDataType, trimmedData);
+    } else {
+      resetScanState()
+      return;
+    }
+    if (!stageSuccess) return;
+    closeScanner()
+
+
+  } catch (err) {
+    console.error("Error processing Bluetooth scan:", err);
+  }
+};
+
 </script>
 
 <style scoped>

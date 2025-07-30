@@ -8,6 +8,7 @@ import Dashboard from '../components/menu.vue'
 import UpdateTray from '@/components/UpdateTray.vue'
 import Rack_Table from '@/components/Rack_Table.vue'
 import Rack_Scan from '@/components/Rack_Scan.vue'
+import Rack_PO from '@/components/Rack_PO.vue'
 import Task_Form from '@/components/Task_Form.vue'
 import Task_Checkin from '@/components/Task_Checkin.vue'
 import Task_Table from '@/components/Task_Table.vue'
@@ -24,6 +25,7 @@ const routes = [
 
   { path: '/rack', component: Rack_Table },
   { path: '/scan-rack', component: Rack_Scan },
+  { path: '/rack-po', component: Rack_PO },
 
   { path: '/task-form', component: Task_Form },
   { path: '/task-checkin', component: Task_Checkin },

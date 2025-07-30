@@ -65,6 +65,9 @@
             <router-link to="/rack" class="nav-link" @click="closeMobileMenu">
               <span class="link-text">Rack Table</span>
             </router-link>
+            <router-link to="/rack-po" class="nav-link" @click="closeMobileMenu">
+              <span class="link-text">Rack Production Order</span>
+            </router-link>
           </div>
         </transition>
 
@@ -146,6 +149,9 @@
             </router-link>
             <router-link to="/rack" class="nav-link" @click="closeMobileMenu">
               <span class="link-text">Rack Table</span>
+            </router-link>
+            <router-link to="/rack-po" class="nav-link" @click="closeMobileMenu">
+              <span class="link-text">Rack Production Order</span>
             </router-link>
           </div>
         </transition>
