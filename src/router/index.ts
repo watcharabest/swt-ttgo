@@ -1,40 +1,27 @@
 import { createRouter, createWebHistory } from 'vue-router'
-import UpdateStep from '../components/UpdateStep.vue'
-import TableView from '../components/TableEdit.vue'
-import ProductTableViewer from '../components/TableView.vue'
-import TrayInfo from '@/components/EditTray.vue'
-import ClearPO from '../components/ClearPO.vue'
-import Dashboard from '../components/menu.vue'
-import UpdateTray from '@/components/UpdateTray.vue'
-import Rack_Table from '@/components/Rack_Table.vue'
-import Rack_Scan from '@/components/Rack_Scan.vue'
-import Rack_PO from '@/components/Rack_PO.vue'
-import Task_Form from '@/components/Task_Form.vue'
-import Task_Checkin from '@/components/Task_Checkin.vue'
-import Task_Table from '@/components/Task_Table.vue'
-import Task_Dashboard from '@/components/Task_Dashboard.vue'
 
 const routes = [
-  { path: '/home', component: Dashboard },
-  { path: '/update', component: UpdateStep },
-  { path: '/table', component: TableView },
-  { path: '/showtable', component: ProductTableViewer },
-  { path: '/tray', component: TrayInfo },
-  { path: '/clear', component: ClearPO },
-  { path: '/update-tray', component: UpdateTray },
+  { path: '/home', component: () => import('@/components/menu.vue') },
+  { path: '/update', component: () => import('@/components/UpdateStep.vue') },
+  { path: '/table', component: () => import('@/components/TableEdit.vue') },
+  { path: '/showtable', component: () => import('@/components/TableView.vue') },
+  { path: '/tray', component: () => import('@/components/EditTray.vue') },
+  { path: '/clear', component: () => import('@/components/ClearPO.vue') },
+  { path: '/update-tray', component: () => import('@/components/UpdateTray.vue') },
 
-  { path: '/rack', component: Rack_Table },
-  { path: '/scan-rack', component: Rack_Scan },
-  { path: '/rack-po', component: Rack_PO },
+  { path: '/rack', component: () => import('@/components/Rack_Table.vue') },
+  { path: '/scan-rack', component: () => import('@/components/Rack_Scan.vue') },
+  { path: '/rack-po', component: () => import('@/components/Rack_PO.vue') },
 
-  { path: '/task-form', component: Task_Form },
-  { path: '/task-checkin', component: Task_Checkin },
-  { path: '/task-table', component: Task_Table },
-  { path: '/task-dashboard', component: Task_Dashboard, meta: { noMain: true } },
+  { path: '/task-form', component: () => import('@/components/Task_Form.vue') },
+  { path: '/task-checkin', component: () => import('@/components/Task_Checkin.vue') },
+  { path: '/task-table', component: () => import('@/components/Task_Table.vue') },
+  { path: '/task-dashboard', component: () => import('@/components/Task_Dashboard.vue'), meta: { noMain: true } },
 ]
 
 const router = createRouter({
   history: createWebHistory('/'),
   routes
 })
+
 export default router

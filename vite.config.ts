@@ -1,5 +1,4 @@
 import { fileURLToPath, URL } from 'node:url'
-
 import { defineConfig } from 'vite'
 import vue from '@vitejs/plugin-vue'
 import vueJsx from '@vitejs/plugin-vue-jsx'
@@ -30,6 +29,14 @@ export default defineConfig({
         secure: false,
       },
     },
+  },
+  preview: {
+    https: {
+      key: fs.readFileSync('./cert/key.pem'),
+      cert: fs.readFileSync('./cert/cert.pem'),
+    },
+    host: '0.0.0.0',
+    port: 4173,
   },
   define: {
     __API_BASE_URL__: JSON.stringify('https://10.85.163.101:8000'),

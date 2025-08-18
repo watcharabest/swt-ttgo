@@ -66,126 +66,135 @@
     </div>
     <div class="box-wrapper" v-if="checkTaskForm">
       <div v-if="tray_id">
-        <h1>Tray : {{ tray_id }} </h1>
+        <h1>TAG : {{ tray_id }} </h1>
       </div>
       <div v-else>
-        <h1 style="color: red;"> No Tray detected</h1>
+        <h1 style="color: red;"> No TAG detected</h1>
       </div>
-      <form @submit.prevent="submit" novalidate>
-        <div class="group-product">
-          <span>Product Order</span>
-          <p>{{ form.product_order }}</p>
-        </div>
+      <div class="form">
+        <form @submit.prevent="submit" novalidate>
+          <div class="form-group">
+            <span>Production Order</span>
+            <p>{{ form.product_order }}</p>
+          </div>
 
-        <div class="form-group">
-          <span>Material</span>
-          <p>{{ form.material_no }}</p>
-        </div>
+          <div class="form-group">
+            <span>Material</span>
+            <p>{{ form.material_no }}</p>
+          </div>
 
-        <div class="form-group">
-          <span>Material Description</span>
-          <p>{{ form.material_des }}</p>
-        </div>
+          <div class="form-group">
+            <span>Material Description</span>
+            <p>{{ form.material_des }}</p>
+          </div>
 
-        <div class="form-group">
-          <span>Amount</span>
-          <p>{{ form.amount }}</p>
-        </div>
+          <div class="form-group">
+            <span>จำนวน</span>
+            <p>{{ form.amount }}</p>
+          </div>
 
-        <div class="form-group">
-          <div class="group-radio-type">
-            <div class="form-radio">
-              <div class="radio-option-lock">
-                <label>ทองแดง</label>
-                <input id="surface" v-model="form.surface" type="radio" value="ทองแดง"
-                  :disabled="form.surface !== null && form.surface !== 'ทองแดง'" :class="{ invalid: errors.surface }" />
-                <label>ออกสี</label>
-                <input id="surface" v-model="form.surface" type="radio" value="ออกสี"
-                  :disabled="form.surface !== null && form.surface !== 'ออกสี'" :class="{ invalid: errors.surface }" />
-                <label>เปิดผิว</label>
-                <input id="surface" v-model="form.surface" type="radio" value="เปิดผิว"
-                  :disabled="form.surface !== null && form.surface !== 'เปิดผิว'"
-                  :class="{ invalid: errors.surface }" />
+          <div class="form-group">
+            <div class="group-radio-type">
+              <div class="form-radio">
+                <div class="radio-option-lock">
+                  <label>ทองแดง</label>
+                  <input id="surface" v-model="form.surface" type="radio" value="ทองแดง"
+                    :disabled="form.surface !== null && form.surface !== 'ทองแดง'"
+                    :class="{ invalid: errors.surface }" />
+                  <label>ออกสี</label>
+                  <input id="surface" v-model="form.surface" type="radio" value="ออกสี"
+                    :disabled="form.surface !== null && form.surface !== 'ออกสี'"
+                    :class="{ invalid: errors.surface }" />
+                  <label>เปิดผิว</label>
+                  <input id="surface" v-model="form.surface" type="radio" value="เปิดผิว"
+                    :disabled="form.surface !== null && form.surface !== 'เปิดผิว'"
+                    :class="{ invalid: errors.surface }" />
+                </div>
+              </div>
+              <div class="form-radio" style ="border: 2px solid #dc3545; border-radius: 1em;">
+                <div class="radio-option" style="gap: 0px;">
+                  <label>Big Barrel</label>
+                  <input type="number" step="any" min="0" v-model="inputs.BIG"
+                    :disabled="!!selectedType?.value && selectedType.value !== 'BIG'" @focus="setType('BIG')"
+                    :class="{ invalid: errors.type || hasMultipleInputs }" />
+                  <label>Intergo</label>
+                  <input type="number" step="any" min="0" v-model="inputs.INTERGO"
+                    :disabled="!!selectedType?.value && selectedType.value !== 'INTERGO'" @focus="setType('INTERGO')"
+                    :class="{ invalid: errors.type || hasMultipleInputs }" />
+                  <label>OTEC</label>
+                  <input type="number" step="any" min="0" v-model="inputs.OTEC"
+                    :disabled="!!selectedType?.value && selectedType.value !== 'OTEC'" @focus="setType('OTEC')"
+                    :class="{ invalid: errors.type || hasMultipleInputs }" />
+                </div>
               </div>
             </div>
-            <div class="form-radio">
-              <div class="radio-option" style="gap: 0px;">
-                <label>Big Barrel</label>
-                <input type="number" step="any" v-model="inputs.BIG"
-                  :disabled="!!selectedType?.value && selectedType.value !== 'BIG'" @focus="setType('BIG')"
-                  :class="{ invalid: errors.type || hasMultipleInputs }" />
-                <label>Intergo</label>
-                <input type="number" step="any" v-model="inputs.INTERGO"
-                  :disabled="!!selectedType?.value && selectedType.value !== 'INTERGO'" @focus="setType('INTERGO')"
-                  :class="{ invalid: errors.type || hasMultipleInputs }" />
-                <label>OTEC</label>
-                <input type="number" step="any" v-model="inputs.OTEC"
-                  :disabled="!!selectedType?.value && selectedType.value !== 'OTEC'" @focus="setType('OTEC')"
-                  :class="{ invalid: errors.type || hasMultipleInputs }" />
-              </div>
+          </div>
+
+          <div class="form-group">
+            <span>จำนวน (Automate)</span>
+            <input id="material" v-model="form.amount_auto" type="number" min="0" placeholder="Enter Part Name"
+              :class="{ invalid: errors.amount_auto }" style="padding: 1rem;"/>
+            <span v-if="errors.amount_auto" class="error-text">Required</span>
+          </div>
+
+          <div class="form-group" style=" margin-bottom :5rem;">
+            <span v-if="form.ps">หมายเหตุ</span>
+            <textarea id="ps" v-model="form.ps"  :class="{ invalid: errors.ps }" rows="3" style="color: #0066cc;" >{{ form.ps }}</textarea>   
+          </div>
+
+          <button type="submit" :disabled="loading" class="btn-submit">{{ loading ? 'Processing…' : 'Submit' }}</button>
+          <p v-if="errors.tray_id" class="error-text">Please scan tray QR code</p>
+        </form>
+
+        <div v-if="taskImages && taskImages.length > 0">
+          <div class="images-grid">
+            <div class="task-image-wrapper" v-for="(imageUrl, index) in taskImages" :key="index">
+              <img :src="imageUrl" :alt="`Task Image ${index + 1}`" class="task-image" @click="openImageModal(imageUrl)"
+                @error="handleImageError" />
             </div>
           </div>
         </div>
 
-        <div class="form-group">
-          <span>Image</span>
-          <input id="imageFileInput" type="file" accept="image/png, image/jpeg" @change="handleFileChange"
-            class="img-input" />
-          <label for="imageFileInput" class="img-input">
-            <i class="fa-solid fa-image"></i>Click to select image
-          </label>
-          <p v-if="errors.image" class="error-text">Required</p>
+        <div v-else class="no-images">
+          <p>ไม่มีรูปภาพสำหรับงานนี้</p>
         </div>
-        <div class="preview" v-if="previewUrl">
-          <img :src="previewUrl" alt="Preview" />
-        </div>
-
-        <button type="submit" :disabled="loading" class="btn-submit">{{ loading ? 'Processing…' : 'Submit' }}</button>
-        <p v-if="errors.tray_id" class="error-text">Please scan tray QR code</p>
-      </form>
+      </div>
     </div>
 
     <div v-else class="box-wrapper">
       <!-- Insert Form -->
       <div v-if="tray_id">
-        <h1>Tray : {{ tray_id }} </h1>
+        <h1>TAG : {{ tray_id }} </h1>
       </div>
       <div v-else>
-        <h1 style="color: red;">No Tray detected</h1>
+        <h1 style="color: red;">No TAG detected</h1>
       </div>
       <div class="form">
         <form @submit.prevent="submit" novalidate>
-          <div class="group-product">
-            <span>Product Order</span>
-            <input id="productname" v-model="form.product_order" type="text" placeholder="Enter Product Name"
-              :class="{ invalid: errors.product_name }" />
-            <span v-if="errors.product_name" class="error-text">Required</span>
+          <div class="form-group">
+            <span>Production Order</span>
+            <input id="productname" v-model="form.product_order" type="text" placeholder="Enter Production Order"
+              :class="{ invalid: errors.product_order }" />
+            <span v-if="errors.product_order" class="error-text">Required</span>
           </div>
 
           <div class="form-group">
             <span>Material</span>
-            <input id="material" v-model="form.material_no" type="text" placeholder="Enter Material"
-              :class="{ invalid: errors.material_no }" />
+            <input id="material" v-model="form.material_no" type="text"
+              :class="{ invalid: errors.material_no }" :disabled=true />
             <span v-if="errors.material_no" class="error-text">Required</span>
           </div>
 
           <div class="form-group">
             <span>Material Description</span>
-            <input id="material" v-model="form.material_des" type="text" placeholder="Enter Material"
-              :class="{ invalid: errors.material_des }" />
+            <input id="material" v-model="form.material_des" type="text"
+              :class="{ invalid: errors.material_des }" :disabled=true />
             <span v-if="errors.material_des" class="error-text">Required</span>
           </div>
 
           <div class="form-group">
-            <span>Name</span>
-            <input id="material" v-model="form.name_material" type="text" placeholder="Enter Material"
-              :class="{ invalid: errors.name_material }" />
-            <span v-if="errors.name_material" class="error-text">Required</span>
-          </div>
-
-          <div class="form-group">
-            <span>Amount</span>
-            <input id="amount" v-model="form.amount" type="text" placeholder="Enter Amount"
+            <span>จำนวน</span>
+            <input id="amount" v-model="form.amount" type="number" step="any" min="0" placeholder="Enter Qty"
               :class="{ invalid: errors.amount }" />
             <span v-if="errors.amount" class="error-text">Required</span>
           </div>
@@ -207,8 +216,15 @@
               </div>
             </div>
           </div>
+
+          <div class="form-group" style=" margin-bottom :5rem;">
+            <span>หมายเหตุ</span>
+            <textarea id="ps" v-model="form.ps"  :class="{ invalid: errors.ps }" rows="3"></textarea>   
+            <span v-if="errors.ps" class="error-text">Required</span>
+          </div>
+          <p v-if="errors.tray_id" class="error-text"
+            style="position: absolute; bottom: 7%; left: 50%; transform: translateX(-50%);">Please scan tray QR code</p>
           <button type="submit" :disabled="loading" class="btn-submit">{{ loading ? 'Processing…' : 'Submit' }}</button>
-          <p v-if="errors.tray_id" class="error-text">Please scan tray QR code</p>
         </form>
         <div>
           <div class="images-grid">
@@ -245,14 +261,6 @@
               <span v-if="errors[`image${index}`]" class="error-text">Required</span>
             </div>
           </div>
-          <form>
-            <div class="form-group">
-              <span>P.S (optional)</span>
-              <input id="ps" v-model="form.material_des" type="text" placeholder="Enter P.S"
-                :class="{ invalid: errors.material_des }" style="min-height: 50px;"/>
-              <span v-if="errors.material_des" class="error-text">Required</span>
-            </div>
-          </form>
         </div>
       </div>
     </div>
@@ -261,40 +269,50 @@
     <div v-if="showScanner" class="scanner-modal" @click="closeScanner">
       <div class="scanner-container" @click.stop>
         <div class="scanner-header">
-          <h2>Scan Tray QR Code</h2>
+          <h3>Scan QR Code</h3>
           <button type="button" @click="closeScanner" class="close-btn">✕</button>
         </div>
+
         <div class="scanner-content">
           <QrcodeStream :key="scannerKey" @detect="onDetect" @error="onError" class="scanner-video" :constraints="{
             facingMode: currentCamera,
-            width: { ideal: 640 },
-            height: { ideal: 480 },
+            width: { ideal: isMicroMode ? 640 : 480 },
+            height: { ideal: isMicroMode ? 480 : 360 },
+            zoom: isMicroMode ? 4 : 1,
             focusMode: 'continuous',
             pointsOfInterest: [{ x: 0.5, y: 0.5 }],
-            advanced: [{ contrast: 100 }, { brightness: 0 }, { sharpness: 100 }],
+            advanced: isMicroMode
+              ? [{ contrast: 100 }, { brightness: 0 }, { sharpness: 100 }]
+              : [],
           }" :track="paintBoundingBox" />
           <div class="scanner-overlay">
-            <div class="scanner-frame"></div>
+            <div class="scanner-frame" :class="{ 'micro-mode': isMicroMode }"></div>
             <button v-if="hasMultipleCameras" @click="switchCamera" class="floating-camera-btn" :title="currentCamera === 'user'
               ? 'Switch to Back Camera'
               : 'Switch to Front Camera'
               ">
-              {{ currentCamera === "user" ? "📷" : "📱" }}
+              <i class="fa-solid fa-camera-rotate"></i>
             </button>
           </div>
         </div>
         <div class="scanner-footer">
-          <p v-if="scannerError" class="scanner-error">{{ scannerError }}</p>
-          <p v-if="scannerSuccess" class="scanner-success">{{ scannerSuccess }}</p>
-          <div v-if="operationLog" class="operation-log">
-            <p v-html="operationLog"></p>
-          </div>
+            <button type="button" @click="toggleMicroMode" class="change-mode-btn">
+              {{ isMicroMode ? "Normal Mode" : "Micro Mode" }}
+            </button>
           <div class="type-reference" v-if="scannedData.length > 0">
             <div class="type-list">
               <div v-for="(scan, index) in scannedData" :key="index"
                 :class="['type-item', scan.type.toLowerCase().replace(' ', '-')]">
                 <span class="type-label">{{ scan.type }}:</span>
                 <span class="type-format">{{ scan.value }}</span>
+                <div v-if="scan.type === 'Location'" class="shelf-location-controls">
+                  <label class="checkbox-container">
+                    <input type="checkbox" v-model="StatusForRemember" class="shelf-checkbox" />
+                    <span v-if="StatusForRemember" class="custom-checkbox">✓</span>
+                    <span v-else class="custom-checkbox"></span>
+                    <span class="checkbox-label">Remember</span>
+                  </label>
+                </div>
               </div>
             </div>
           </div>
@@ -305,7 +323,7 @@
     <div v-if="showCameraModal" class="camera-modal" @click="closeCameraModal">
       <div class="camera-modal-content" @click.stop>
         <div class="camera-header">
-          <h3>Take Photo - Image {{ currentCameraIndex + 1 }}</h3>
+          <h3 style="color: #666;">Take Photo - Image {{ currentCameraIndex + 1 }}</h3>
           <button type="button" @click="closeCameraModal" class="close-camera-btn">✕</button>
         </div>
         <div class="camera-container">
@@ -336,14 +354,15 @@ import Swal from 'sweetalert2'
 import { QrcodeStream } from "vue-qrcode-reader";
 
 const form = reactive({
+  tag: '',
   product_order: '',
   material_no: '',
   material_des: '',
-  name_material: '',
   amount: '',
   surface: '',
   image: '',
-  ps: ''
+  ps: '',
+  amount_auto: '',
 })
 
 const errors = reactive({
@@ -351,15 +370,17 @@ const errors = reactive({
   product_name: false,
   material_no: false,
   material_des: false,
-  name_material: false,
   amount: false,
   type: false,
   surface: false,
   image: false,
+  amount_auto: false,
   ps: false
 })
 
 const images = ref([
+  { file: null, previewUrl: '', showControls: false },
+  { file: null, previewUrl: '', showControls: false },
   { file: null, previewUrl: '', showControls: false },
   { file: null, previewUrl: '', showControls: false },
   { file: null, previewUrl: '', showControls: false },
@@ -385,7 +406,7 @@ const operationLog = ref("");
 const dataType = ref("");
 const checkTaskForm = ref("");
 const tray_id = ref("");
-
+const taskImages = ref([])
 // New state variables for tracking scans
 const scanCount = ref(0);
 const scannedData = ref([]);
@@ -410,20 +431,17 @@ watch(() => form.product_order, (newVal) => {
   if (!newVal || newVal.length < 3) {
     form.material_no = ''
     form.material_des = ''
-    form.name_material = ''
     return
   } else {
     if (timer) {
       clearTimeout(timer)
     }
     timer = setTimeout(async () => {
-      const res = await axios.post('https://10.85.163.101:8000/product_task_info', {
+      const res = await axios.post(`${__API_BASE_URL__}/product_task_info`, {
         product_order: form.product_order
       })
       form.material_no = res.data.material_id
       form.material_des = res.data.material_description
-      form.name_material = res.data.name_material
-      form.ps = res.data.ps
     }, 500)
   }
 })
@@ -559,8 +577,7 @@ function toggleRadio(value) {
 }
 
 const submit = async () => {
-  imageError.value = null
-  imageSuccess.value = false
+  // imageError.value = null
   error.value = null
   loading.value = true
   if (!tray_id.value) {
@@ -599,13 +616,6 @@ const submit = async () => {
   } else {
     errors.material_des = false
   }
-  if (!form.name_material) {
-    errors.name_material = true
-    loading.value = false
-    return
-  } else {
-    errors.name_material = false
-  }
   if (!form.amount) {
     errors.amount = true
     loading.value = false
@@ -620,6 +630,7 @@ const submit = async () => {
   } else {
     errors.surface = false
   }
+  
   if (checkTaskForm.value) {
     if (!selectedType.value || hasMultipleInputs.value) {
       errors.type = true
@@ -628,30 +639,29 @@ const submit = async () => {
     }
     errors.type = false
   }
-  if (!checkTaskForm.value) {
-    let hasImageError = false
-    images.value.forEach((image, index) => {
-      if (!image.file) {
-        errors[`image${index}`] = true
-        hasImageError = true
-      } else {
-        errors[`image${index}`] = false
-      }
-    })
+  // if (!checkTaskForm.value) {
+  //   // let hasImageError = false
+  // images.value.forEach((image, index) => {
+  //   if (!image.file) {
+  //     errors[`image${index}`] = true
+  //     hasImageError = true
+  //   } else {
+  //     errors[`image${index}`] = false
+  //   }
+  // })
 
-    if (hasImageError) {
-      loading.value = false
-      return
-    }
-  }
+  // if (hasImageError) {
+  //   loading.value = false
+  //   return
+  // }
+  // }
   const data = new FormData()
   {
+    data.append('tag',tray_id.value)
     data.append('product_order', form.product_order)
     data.append('material_no', form.material_no)
     data.append('material_des', form.material_des)
-    data.append('name_material', form.name_material)
     data.append('amount', form.amount)
-    data.append('image', selectedFile.value)
     data.append('line', store.line)
     if (checkTaskForm.value) {
       data.append('type', selectedType.value)
@@ -659,9 +669,10 @@ const submit = async () => {
     }
     data.append('surface', form.surface)
     data.append('tray_id', tray_id.value)
-    images.value.forEach((image, index) => {
+    data.append('amount_auto', form.amount_auto)
+    images.value.forEach((image) => {
       if (image.file) {
-        data.append(`image${index}`, image.file)
+        data.append(`images`, image.file)
       }
     })
     data.append('ps', form.ps)
@@ -669,14 +680,14 @@ const submit = async () => {
 
   try {
     await axios.post(`${__API_BASE_URL__}/submit-task`, data)
-    console.log("data :", form)
+    console.log("Form :", form)
     Swal.fire({
       icon: "success",
       title: "Add Task Information Success",
       html: `
       <div style="text-align: left;">
         <p><strong>Tray:</strong> ${tray_id.value}</p>
-        <p><strong>Product Order:</strong> ${form.product_order}</p>
+        <p><strong>Production Order:</strong> ${form.product_order}</p>
         <p><strong>Amount:</strong> ${form.amount}</p>
       </div>`,
       toast: true,
@@ -689,22 +700,22 @@ const submit = async () => {
         toast.onmouseleave = Swal.resumeTimer;
       }
     });
-    imageSuccess.value = !!selectedFile.value
     checkTaskForm.value = ""
     Object.assign(form, {
+      tag: '',
       product_order: '',
       material_no: '',
       material_des: '',
-      name_material: '',
       amount: '',
       surface: '',
+      amount_auto: '',
       ps: ''
     })
     selectedType.value = null
     inputs.value = { BIG: '', INTERGO: '', OTEC: '' }
     tray_id.value = ''
 
-    images.value.forEach((image, index) => {
+    images.value.forEach((image) => {
       image.file = null
       image.previewUrl = ''
       image.showControls = false
@@ -712,16 +723,15 @@ const submit = async () => {
 
   } catch (err) {
     const msg = err.response?.data?.detail || err.message
-    if (msg.includes('image')) imageError.value = msg
-    else error.value = msg
+    error.value = msg
   } finally {
     loading.value = false
   }
 }
 
 const classifyData = (data) => {
-  if (/^tw/i.test(data)) {
-    return "Tray";
+  if (/^tg/i.test(data)) {
+    return "TAG";
   }
   return "Unknown";
 };
@@ -832,7 +842,7 @@ const onDetect = async (detectedCodes) => {
 };
 
 const handleFirstScan = async (currentDataType, trimmedData) => {
-  if (currentDataType === "Tray") {
+  if (currentDataType === "TAG") {
     tray_id.value = trimmedData
     try {
       const res = await axios.get(`${__API_BASE_URL__}/check_task_form`, {
@@ -844,14 +854,16 @@ const handleFirstScan = async (currentDataType, trimmedData) => {
         const taskRes = await axios.post(`${__API_BASE_URL__}/product_task_order`, {
           tray_id: trimmedData,
         });
+        console.log(taskRes.data)
         form.product_order = taskRes.data.product_order;
         form.material_no = taskRes.data.material_no;
         form.material_des = taskRes.data.material_des;
-        form.name_material = taskRes.data.name_material;
         form.amount = taskRes.data.amount;
         form.surface = taskRes.data.surface;
         form.ps = taskRes.data.ps;
+        form.amount_auto = taskRes.data.amount_auto;
         tray_id.value = trimmedData;
+        taskImages.value = taskRes.data.images || [];
       }
       return true
     } catch (err) {
@@ -861,12 +873,26 @@ const handleFirstScan = async (currentDataType, trimmedData) => {
       }, 2000);
       throw err;
     }
+  } else if (currentDataType === "Unknown") {
+    await new Promise((resolve) => setTimeout(resolve, 2000));
+    resetScanState()
+    return false
   }
 }
 const onError = (err) => {
   console.error("QR Scanner error:", err);
   scannerError.value = `Scanner error: ${err.message || "Camera access denied"}`;
 };
+
+const handleImageError = (event) => {
+  console.error('Failed to load image:', event.target.src);
+  console.error('Error event:', event);
+
+  // แสดง error placeholder แทน hide
+  event.target.alt = 'Failed to load image';
+  event.target.style.border = '2px solid red';
+  event.target.style.backgroundColor = '#ffebee';
+}
 
 const paintBoundingBox = (detectedCodes, ctx) => {
   for (const detectedCode of detectedCodes) {
@@ -903,7 +929,12 @@ const paintBoundingBox = (detectedCodes, ctx) => {
     // Add status text
     ctx.font = "bold 18px Arial";
     ctx.fillStyle = isMicroMode.value ? "#8DBAED" : "#00ff00";
+    ctx.fillText("QR Code Found!", x, y > 20 ? y - 10 : y + height + 25);
   }
+};
+
+const toggleMicroMode = () => {
+  isMicroMode.value = !isMicroMode.value;
 };
 
 onMounted(() => {
@@ -1077,7 +1108,7 @@ header {
 
 .camera-video {
   width: 100%;
-  height: auto;
+  height: 350px;
   max-height: 400px;
   object-fit: cover;
 }
@@ -1151,38 +1182,10 @@ header {
 
 .form {
   display: grid;
-  grid-template-columns: repeat(2, 1fr);
+  grid-template-columns: 1fr 1fr;
   gap: 2rem;
   align-items: start;
-}
-
-.group-product {
-  display: flex;
-  width: 100%;
-  flex-direction: column;
-  margin-top: 10px;
-}
-
-.group-product span {
-  display: flex;
-  align-items: center;
-  justify-content: center;
-}
-
-.group-product p {
-  width: 100%;
-  margin: 10px 0;
-  padding: 12px;
-  border-radius: 10px;
-  border: none;
-  color: red;
-  background: #eeeeee;
-  box-shadow: inset 4px 4px 6px #dcdee0, inset -4px -4px 6px #f0f5fa;
-}
-
-.group-product input {
-  width: 100%;
-  box-sizing: border-box;
+  position: relative;
 }
 
 .form-group {
@@ -1203,7 +1206,7 @@ header {
   padding: 12px;
   border-radius: 10px;
   border: none;
-  color: red;
+  color: #0066cc;
   background: #eeeeee;
   box-shadow: inset 4px 4px 6px #dcdee0, inset -4px -4px 6px #f0f5fa;
 }
@@ -1214,6 +1217,7 @@ header {
   flex-direction: column;
   margin-bottom: 20px;
   height: 100%;
+  padding : 1rem;
 }
 
 .group-radio-type {
@@ -1277,8 +1281,8 @@ header {
 }
 
 .radio-option-lock input[type="radio"]:checked {
-  border-color: red;
-  background: red;
+  border-color: #0066cc;
+  background: #0066cc;
 }
 
 .radio-option input[type="radio"]:checked::after {
@@ -1434,6 +1438,36 @@ header {
   opacity: 1;
 }
 
+.task-image-wrapper {
+  position: relative;
+  border-radius: 8px;
+  overflow: hidden;
+  box-shadow: 0 2px 8px rgba(0, 0, 0, 0.1);
+  background: white;
+}
+
+.task-image {
+  width: 100%;
+  height: 100%;
+  object-fit: cover;
+  border-radius: 8px;
+  transition: transform 0.2s ease;
+}
+
+.task-image:hover {
+  transform: scale(1.05);
+}
+
+.no-images {
+  text-align: center;
+  padding: 40px;
+  color: #666;
+  font-style: italic;
+  background: #f8f9fa;
+  border-radius: 8px;
+  margin-top: 20px;
+}
+
 .control-btn {
   padding: 12px 16px;
   border: none;
@@ -1535,7 +1569,25 @@ h2 {
   box-shadow: inset 2px 2px 5px #bec4cb, inset -2px -2px 5px #f0f5fa;
 }
 
-input[type="text"] {
+input[type="text"],
+textarea {
+  width: 100%;
+  margin: 10px 0;
+  padding: 12px;
+  border-radius: 10px;
+  border: none;
+  background: #eeeeee;
+  box-shadow: inset 4px 4px 6px #dcdee0, inset -4px -4px 6px #f0f5fa;
+}
+
+textarea {
+  min-height: 100%;
+  line-height: 1.5;
+  resize: vertical;
+  vertical-align: top;
+}
+
+input[type="number"] {
   width: 100%;
   margin: 10px 0;
   padding: 12px;
@@ -1554,30 +1606,13 @@ select.invalid {
   box-shadow: inset 1px 1px 4px #ff0000, inset -1px -1px 6px #ff0000;
 }
 
-input[type="file"] {
-  display: none;
+input[type="number"]:focus {
+  outline: none;
 }
 
-.img-input {
-  display: block;
-  width: 275px;
-  padding: 0.6rem;
-  border: 2px dashed #e2e8f0;
-  border-radius: 8px;
-  background: #f8fafc;
-  cursor: pointer;
-  text-align: center;
-  transition: all 0.3s ease;
-  font-size: 0.9rem;
-}
-
-.img-input:hover {
-  border-color: #8DBAED;
-  background: #f1f5f9;
-}
-
-.img-input i {
-  margin-right: 0.5rem;
+input[type="number"].invalid,
+select.invalid {
+  box-shadow: inset 1px 1px 4px #ff0000, inset -1px -1px 6px #ff0000;
 }
 
 .table-select {
@@ -1602,20 +1637,9 @@ input[type="file"] {
   font-size: 0.85rem;
 }
 
-.preview {
-  margin: 1rem 0;
-  text-align: center;
-}
-
-.preview img {
-  max-width: 150px;
-  max-height: 150px;
-  border-radius: 8px;
-  box-shadow: 0 2px 4px rgba(0, 0, 0, 0.1);
-}
-
-.btn-submit,
-.btn-delete {
+.btn-submit {
+  position: absolute;
+  bottom: 0;
   width: 100%;
   padding: 1rem;
   border: none;
@@ -1687,9 +1711,77 @@ input[type="file"] {
 }
 
 .scanner-video {
-  width: 100% !important;
+  width: 100%;
   height: 350px !important;
-  transform: scaleX(-1);
+  border-radius: 12px;
+  background: #000;
+  filter: contrast(1.2) brightness(1.1);
+  object-fit: cover;
+}
+
+.scanner-video.micro-mode {
+  filter: contrast(1.5) brightness(1.3) saturate(1.2);
+  transform: scale(0.8);
+  transform-origin: center;
+}
+
+.scanner-overlay {
+  position: absolute;
+  top: 0;
+  left: 0;
+  width: 100%;
+  height: 100%;
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  pointer-events: none;
+}
+
+.scanner-frame {
+  width: 220px;
+  height: 220px;
+  border: 3px solid #00ff00;
+  border-radius: 12px;
+  background: transparent;
+  box-shadow: 0 0 0 9999px rgba(0, 0, 0, 0.7);
+  animation: pulse 2s infinite;
+  backdrop-filter: contrast(1.2) brightness(1.1);
+  transition: all 0.3s ease;
+}
+
+.scanner-frame.micro-mode {
+  border-color: #8dbaed;
+  box-shadow: 0 0 0 9999px rgba(0, 0, 0, 0.7), 0 0 20px rgba(141, 186, 237, 0.3);
+  backdrop-filter: contrast(1.5) brightness(1.3) saturate(1.2);
+  animation: pulseMicro 2s infinite;
+}
+
+@keyframes pulseMicro {
+  0% {
+    box-shadow: 0 0 0 0 rgba(141, 186, 237, 0.4), 0 0 0 9999px rgba(0, 0, 0, 0.7);
+  }
+
+  70% {
+    box-shadow: 0 0 0 10px rgba(141, 186, 237, 0), 0 0 0 9999px rgba(0, 0, 0, 0.7);
+  }
+
+  100% {
+    box-shadow: 0 0 0 0 rgba(141, 186, 237, 0), 0 0 0 9999px rgba(0, 0, 0, 0.7);
+  }
+}
+
+.change-mode-btn {
+  background-color: #8dbaed;
+  color: #fff;
+  border: none;
+  padding: 0.75rem;
+  border-radius: 8px;
+  cursor: pointer;
+  font-weight: 600;
+  transition: all 0.3s ease;
+  box-shadow: 0 2px 4px rgba(141, 186, 237, 0.2);
+  flex: 1;
+  min-width: 150px;
 }
 
 .floating-camera-btn {

@@ -19,6 +19,12 @@
         <!-- Header สำหรับ table01 มีคอลัมน์ Image -->
         <thead v-if="viewTable === 'table_task_order'">
           <tr>
+            <th @click="sortBy('tag')" class="sortable">
+              Tag
+              <span v-if="sortKey === 'tag'" class="sort-icon">
+                {{ sortOrder === 'asc' ? '↑' : '↓' }}
+              </span>
+            </th>
             <th @click="sortBy('product_order')" class="sortable">
               Product Order
               <span v-if="sortKey === 'product_order'" class="sort-icon">
@@ -37,6 +43,12 @@
                 {{ sortOrder === 'asc' ? '↑' : '↓' }}
               </span>
             </th>
+            <th @click="sortBy('name_product')" class="sortable">
+              Name Product
+              <span v-if="sortKey === 'name_product'" class="sort-icon">
+                {{ sortOrder === 'asc' ? '↑' : '↓' }}
+              </span>
+            </th>
             <th @click="sortBy('surface')" class="sortable">
               Surface
               <span v-if="sortKey === 'surface'" class="sort-icon">
@@ -50,7 +62,7 @@
               </span>
             </th>
             <th @click="sortBy('rpm')" class="sortable">
-              RPM
+              Cap.
               <span v-if="sortKey === 'rpm'" class="sort-icon">
                 {{ sortOrder === 'asc' ? '↑' : '↓' }}
               </span>
@@ -107,10 +119,12 @@
 
         <!-- Body สำหรับ table01 แสดงรูป -->
         <tbody v-if="viewTable === 'table_task_order'">
-          <tr v-for="(row, i) in pagedRows" :key="i">
+          <tr v-for="(row, i) in pagedRows" :key="i" @click="showTaskDetail(row)" class="clickable-row">
+            <td>{{ row.tag }}</td>
             <td>{{ row.product_order }}</td>
             <td>{{ row.material_no }}</td>
             <td>{{ row.material_des }}</td>
+            <td>{{ row.name_product }}</td>
             <td>{{ row.surface }}</td>
             <td>{{ row.type }}</td>
             <td>{{ row.rpm }}</td>
@@ -120,7 +134,7 @@
         </tbody>
         <!-- Body สำหรับ table02 -->
         <tbody v-else>
-          <tr v-for="(row, i) in pagedRows" :key="i">
+          <tr v-for="(row, i) in pagedRows" :key="i" @click="showTaskDetail(row)" class="clickable-row">
             <td>{{ row.product_order }}</td>
             <td>{{ row.task_id }}</td>
             <td>{{ row.tray_id }}</td>
@@ -130,11 +144,115 @@
         </tbody>
       </table>
 
+      <!-- Show message when no results found -->
+      <div v-else-if="searchQuery && !pagedRows.length" class="no-results">
+        No results found for "{{ searchQuery }}"
+      </div>
+
       <!-- Pagination Controls -->
       <div v-if="totalPages > 1" class="pagination">
         <button @click="prevPage" :disabled="currentPage === 1">Prev</button>
         <span>Page {{ currentPage }} of {{ totalPages }}</span>
         <button @click="nextPage" :disabled="currentPage === totalPages">Next</button>
+      </div>
+
+      <!-- Show total results info -->
+      <div v-if="filteredAndSortedRows.length" class="results-info">
+        Showing {{ pagedRows.length }} of {{ filteredAndSortedRows.length }} results
+        <span v-if="searchQuery">(filtered from {{ rows.length }} total)</span>
+      </div>
+    </div>
+
+    <!-- Task Detail Modal -->
+    <div v-if="showModal" class="scanner-modal" @click="closeModal">
+      <div class="scanner-container" @click.stop>
+        <div class="scanner-header">
+          <h3>Task Details</h3>
+          <button @click="closeModal" class="close-btn">×</button>
+        </div>
+
+        <div v-if="loadingTaskDetail" class="loading">
+          Loading task details...
+        </div>
+
+        <div v-else-if="taskDetail" class="form">
+          <div class="form-group">
+            <span>Task ID</span>
+            <p>{{ taskDetail.task_id }}</p>
+          </div>
+
+          <div class="form-group">
+            <span>Tag</span>
+            <p>{{ taskDetail.tag }}</p>
+          </div>
+          
+          <div class="form-group">
+            <span>Production Order</span>
+            <p>{{ taskDetail.product_order }}</p>
+          </div>
+
+          <div class="form-group">
+            <span>Material</span>
+            <p>{{ taskDetail.material_no }}</p>
+          </div>
+
+          <div class="form-group">
+            <span>Material Description</span>
+            <p>{{ taskDetail.material_des }}</p>
+          </div>
+
+          <div class="form-group">
+            <span>Part Name</span>
+            <p>{{ taskDetail.name_product }}</p>
+          </div>
+
+          <div class="form-group">
+            <span>Surface</span>
+            <p>{{ taskDetail.surface || 'N/A' }}</p>
+          </div>
+
+          <div class="form-group">
+            <span>Type</span>
+            <p>{{ taskDetail.type || 'N/A' }}</p>
+          </div>
+
+          <div class="form-group">
+            <span>Capacity</span>
+            <p>{{ taskDetail.rpm || 'N/A' }}</p>
+          </div>
+
+          <div class="form-group">
+            <span>Amount</span>
+            <p>{{ taskDetail.amount }}</p>
+          </div>
+
+          <div class="form-group">
+            <span>Amount Auto</span>
+            <p>{{ taskDetail.amount_auto || 'N/A' }}</p>
+          </div>
+
+          <div class="form-group">
+            <span>Line</span>
+            <p>{{ taskDetail.line }}</p>
+          </div>
+
+          <div v-if="taskDetail.ps" class="form-group">
+            <span>หมายเหตุ</span>
+            <p>{{ taskDetail.ps }}</p>
+          </div>
+
+          <div v-if="taskDetail.images" class="form-group">
+            <div class="image-gallery">
+              <div v-for="(imageUrl, index) in taskDetail.images" :key="index" class="image-item">
+                <img :src="imageUrl" :alt="`Product Image ${index + 1}`" class="product-image"
+              </div>
+            </div>
+          </div>
+        </div>
+
+        <div v-else class="error-message">
+          Failed to load task details
+        </div>
       </div>
     </div>
   </div>
@@ -149,20 +267,45 @@ const rows = ref([])
 const currentPage = ref(1)
 const pageSize = 10
 const searchQuery = ref('')
-const sortKey = ref('')
-const sortOrder = ref('asc')
+const debouncedSearchQuery = ref('')
+const sortKey = ref('task_id')
+const sortOrder = ref('desc')
+
+// Modal and task detail states
+const showModal = ref(false)
+const taskDetail = ref(null)
+
+const loadingTaskDetail = ref(false)
+
+// Debounce timer
+let searchTimeout = null
 
 const tableTitle = computed(() =>
   viewTable.value === 'table_task_order' ? 'Task Order' : 'Delivery Time'
 )
 
-// Filter and sort the rows
+// Watch for search query changes and debounce
+watch(searchQuery, (newQuery) => {
+  // Clear existing timeout
+  if (searchTimeout) {
+    clearTimeout(searchTimeout)
+  }
+
+  // Set new timeout for debouncing (300ms delay)
+  searchTimeout = setTimeout(() => {
+    debouncedSearchQuery.value = newQuery
+    // Reset to page 1 when search changes
+    currentPage.value = 1
+  }, 300)
+})
+
+// Filter and sort the rows using debounced search query
 const filteredAndSortedRows = computed(() => {
   let result = [...rows.value]
 
-  // Apply search filter
-  if (searchQuery.value) {
-    const query = searchQuery.value.toLowerCase()
+  // Apply search filter with debounced query
+  if (debouncedSearchQuery.value) {
+    const query = debouncedSearchQuery.value.toLowerCase()
     result = result.filter(row =>
       Object.values(row).some(value =>
         String(value).toLowerCase().includes(query)
@@ -198,6 +341,9 @@ async function loadTable() {
     const res = await axios.get(`${__API_BASE_URL__}/${viewTable.value}`)
     rows.value = Array.isArray(res.data) ? res.data : []
     currentPage.value = 1
+    // Clear search when switching tables
+    searchQuery.value = ''
+    debouncedSearchQuery.value = ''
   } catch (err) {
     console.error(err)
     rows.value = []
@@ -226,7 +372,43 @@ function sortBy(key) {
     sortKey.value = key
     sortOrder.value = 'asc'
   }
+  // Reset to page 1 when sorting changes
+  currentPage.value = 1
 }
+
+async function showTaskDetail(row) {
+  showModal.value = true
+  loadingTaskDetail.value = true
+  taskDetail.value = null
+  
+  try {
+    // Fetch task details using task_id
+    const taskRes = await axios.post(`${__API_BASE_URL__}/product_task_order_lookup`, {
+      task_id: row.task_id || row.product_order,
+    })
+    console.log("taskRes.data", taskRes.data)
+
+    // Handle response - could be array or single object
+    if (taskRes.data) {
+      // If it's an array, take the first item. If it's an object, use it directly.
+      taskDetail.value = Array.isArray(taskRes.data) ? taskRes.data[0] : taskRes.data
+      
+      console.log("taskDetail.value", taskDetail.value)
+      
+      
+    }
+  } catch (err) {
+    console.error('Error fetching task details:', err)
+  } finally {
+    loadingTaskDetail.value = false
+  }
+}
+
+function closeModal() {
+  showModal.value = false
+  taskDetail.value = null
+}
+
 </script>
 
 <style scoped>
@@ -341,6 +523,15 @@ th.sortable:hover {
   color: #8DBAED;
 }
 
+.clickable-row {
+  cursor: pointer;
+  transition: background-color 0.2s ease;
+}
+
+.clickable-row:hover {
+  background-color: #f8f9fa;
+}
+
 td {
   padding: 0.75rem;
   border-bottom: 1px solid #e2e8f0;
@@ -371,6 +562,21 @@ tr:hover td {
 
 .image-cell img:hover {
   transform: scale(1.05);
+}
+
+.no-results {
+  text-align: center;
+  padding: 2rem;
+  color: #666;
+  font-style: italic;
+}
+
+.results-info {
+  margin-top: 1rem;
+  padding: 0.5rem;
+  font-size: 0.9rem;
+  color: #666;
+  text-align: center;
 }
 
 .pagination {
@@ -414,6 +620,111 @@ tr:hover td {
   color: #2c3e50;
   font-weight: 600;
   font-size: 1rem;
+}
+
+.scanner-modal {
+  position: fixed;
+  top: 0;
+  left: 0;
+  width: 100%;
+  height: 100%;
+  background-color: rgba(0, 0, 0, 0.85);
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  z-index: 1000;
+  backdrop-filter: blur(4px);
+}
+
+.scanner-container {
+  background: white;
+  border-radius: 16px;
+  padding: 1.5rem;
+  max-width: 90vw;
+  max-height: 90vh;
+  width: 450px;
+  box-shadow: 0 20px 40px rgba(0, 0, 0, 0.2);
+  overflow: auto;
+}
+
+.scanner-header {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  margin-bottom: 1rem;
+  padding-bottom: 0.5rem;
+  border-bottom: 1px solid #eee;
+}
+
+.scanner-header h3 {
+  margin: 0;
+  color: #333;
+}
+
+.close-btn {
+  background: none;
+  border: none;
+  font-size: 1.5rem;
+  cursor: pointer;
+  padding: 0.25rem;
+  border-radius: 50%;
+  width: 2rem;
+  height: 2rem;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  color: #666;
+}
+
+.close-btn:hover {
+  background-color: #f5f5f5;
+  color: #333;
+}
+
+.form-group {
+  margin-bottom: 1rem;
+}
+
+.form-group span {
+  display: block;
+  font-weight: 600;
+  color: #555;
+  margin-bottom: 0.25rem;
+  font-size: 0.9rem;
+}
+
+.form-group p {
+  margin: 0;
+  padding: 0.5rem;
+  background-color: #f8f9fa;
+  border-radius: 6px;
+  border: 1px solid #e9ecef;
+  color: #333;
+  min-height: 1.2rem;
+}
+
+.loading {
+  text-align: center;
+  padding: 2rem;
+  color: #666;
+}
+
+.error-message {
+  text-align: center;
+  padding: 2rem;
+  color: #dc3545;
+}
+
+.image-container {
+  margin-top: 0.5rem;
+}
+
+.product-image {
+  max-width: 100%;
+  height: auto;
+  border-radius: 8px;
+  border: 1px solid #ddd;
+  box-shadow: 0 2px 8px rgba(0, 0, 0, 0.1);
 }
 
 @media (max-width: 480px) {

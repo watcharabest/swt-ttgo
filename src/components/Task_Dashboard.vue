@@ -82,7 +82,7 @@
               <span class="time-card-title">Step 1 → 2</span>
             </div>
             <div class="time-card-value">{{ formatTime(avgTimes.step1to2) }}</div>
-            <div class="time-card-subtitle">create_pre → AUTO</div>
+            <div class="time-card-subtitle">create_pre → modify_auto</div>
           </div>
 
           <div class="time-card green">
@@ -91,7 +91,7 @@
               <span class="time-card-title">Step 2 → 3</span>
             </div>
             <div class="time-card-value">{{ formatTime(avgTimes.step2to3) }}</div>
-            <div class="time-card-subtitle">AUTO → modify_auto</div>
+            <div class="time-card-subtitle">modify_auto → AUTO</div>
           </div>
 
           <div class="time-card yellow">
@@ -100,7 +100,7 @@
               <span class="time-card-title">Step 3 → 4</span>
             </div>
             <div class="time-card-value">{{ formatTime(avgTimes.step3to4) }}</div>
-            <div class="time-card-subtitle">modify_auto → PRE</div>
+            <div class="time-card-subtitle">AUTO → PRE</div>
           </div>
 
           <div class="time-card purple">
@@ -109,7 +109,7 @@
               <span class="time-card-title">Total (2 → 4)</span>
             </div>
             <div class="time-card-value">{{ formatTime(avgTimes.total) }}</div>
-            <div class="time-card-subtitle">AUTO → PRE duration</div>
+            <div class="time-card-subtitle">modify_auto → PRE duration</div>
           </div>
         </div>
       </div>
@@ -226,12 +226,20 @@ const rawData = ref([]);
 const chartInstance = ref(null);
 const selectedMonth = ref('all');
 const availableMonths = ref([]);
-const sortKey = ref('totalDuration');
+const sortKey = ref('unique_tray_id');
 const sortOrder = ref('desc');
 const pageSize = 8;
 const currentPage = ref(1);
 const selectedWeek = ref('all');
 const availableWeeks = ref([]);
+
+const WORKING_HOURS = {
+  normalStart: 8,    // 08:00
+  normalEnd: 17,     // 17:00
+  otEnd: 21,         // 21:00 (เมื่อมี OT)
+  otThreshold: 18    // 18:00 (เกินเวลานี้ถือว่ามี OT)
+};
+
 
 onMounted(async () => {
   try {
@@ -248,16 +256,16 @@ onMounted(async () => {
 const patternDescriptions = {
   '1,2,3,4': 'Complete Process (ครบทุก step)',
   '1,2,3': 'Missing Final Step (ขาด PRE)',
-  '1,2,4': 'Missing Modify Step (ขาด modify_auto)',
-  '1,3,4': 'Missing AUTO Step (ขาด AUTO)',
-  '1,2': 'Stopped at AUTO (หยุดที่ AUTO)',
-  '1,3': 'Missing AUTO & PRE (ขาด AUTO,PRE)',
+  '1,2,4': 'Missing AUTO Step (ขาด AUTO)',
+  '1,3,4': 'Missing Modify Step (ขาด modify_auto)',
+  '1,2': 'Stopped at modify_auto (หยุดที่ modify_auto)',
+  '1,3': 'Missing modify_auto & PRE (ขาด modify_auto,PRE)',
   '1,4': 'Only Start & End (มีแค่ create_pre,PRE)',
   '1': 'Only Initial Step (มีแค่ create_pre)',
   '2,3,4': 'Missing create_pre (ขาด create_pre)',
-  '2,3': 'AUTO to modify_auto only',
-  '2,4': 'AUTO to PRE only',
-  '3,4': 'modify_auto to PRE only'
+  '2,3': 'modify_auto to AUTO only',
+  '2,4': 'modify_auto to PRE only',
+  '3,4': 'AUTO to PRE only'
 };
 
 function sortBy(key) {
@@ -268,6 +276,134 @@ function sortBy(key) {
     sortOrder.value = 'asc'
   }
 }
+
+// Fix: Change analysisDataUpdated to analysisData
+const analysisData = computed(() => {
+  const filteredData = getFilteredData();
+  if (!filteredData || filteredData.length === 0) {
+    return { patterns: {}, timeDurations: [], totalRecords: 0 };
+  }
+
+  const trayGroups = {};
+  const displayTrayIds = {};
+  const productOrders = {};
+
+  filteredData.forEach(row => {
+    const trayId = row.unique_tray_id;
+
+    if (!trayGroups[trayId]) {
+      trayGroups[trayId] = [];
+    }
+    trayGroups[trayId].push(row);
+
+    if (!displayTrayIds[trayId]) {
+      displayTrayIds[trayId] = row.tray_id;
+    }
+    if (!productOrders[row.product_order]) {
+      productOrders[row.product_order] = row.product_order;
+    }
+  });
+
+  const patterns = {};
+  const timeDurations = [];
+
+  Object.keys(trayGroups).forEach(trayId => {
+    const trayData = trayGroups[trayId];
+
+    trayData.sort((a, b) => {
+      const timeA = parseTimestamp(a.timestamp);
+      const timeB = parseTimestamp(b.timestamp);
+      return timeA - timeB;
+    });
+
+    const stepsPresent = new Set();
+    const stepTimestamps = {};
+    const taskIds = new Set();
+    const allTimestamps = []; // *** เพิ่มตัวแปรนี้ ***
+
+    trayData.forEach(row => {
+      if (row.task_id) {
+        taskIds.add(row.task_id);
+      }
+
+      const step = getStepFromLocation(row.location);
+      if (step) {
+        stepsPresent.add(step);
+        const timestamp = parseTimestamp(row.timestamp);
+
+        if (timestamp) {
+          allTimestamps.push(timestamp); // *** เพิ่มบรรทัดนี้ ***
+          
+          if (!stepTimestamps[step]) {
+            stepTimestamps[step] = [];
+          }
+          stepTimestamps[step].push(timestamp);
+        }
+      }
+    });
+
+    Object.keys(stepTimestamps).forEach(step => {
+      stepTimestamps[step].sort((a, b) => a - b);
+    });
+
+    const sortedSteps = Array.from(stepsPresent).sort();
+    const patternKey = sortedSteps.join(',');
+
+    if (!patterns[patternKey]) {
+      patterns[patternKey] = { count: 0, percentage: 0 };
+    }
+    patterns[patternKey].count++;
+
+    if (stepTimestamps['2'] && stepTimestamps['4']) {
+      const step2Time = stepTimestamps['2'][0];
+      const step4Time = stepTimestamps['4'][stepTimestamps['4'].length - 1];
+      
+      // *** คำนวณ Total Duration (2→4) เฉพาะเมื่อมี step 2 และ 4 ***
+      const totalDuration = calculateWorkingHoursWithOT(step2Time, step4Time, allTimestamps);
+
+      const durationData = {
+        unique_tray_id: trayId,
+        display_tray_id: displayTrayIds[trayId],
+        product_order: productOrders[trayData[0].product_order],
+        task_ids: taskIds.size > 0 ? Array.from(taskIds) : [],
+        totalDuration: totalDuration,
+        step1to2: null,
+        step2to3: null,
+        step3to4: null
+      };
+
+      // *** คำนวณ step 1→2 เฉพาะเมื่อมี step 1 และ 2 ***
+      if (stepTimestamps['1'] && stepTimestamps['2']) {
+        const step1Time = stepTimestamps['1'][stepTimestamps['1'].length - 1];
+        const step2Time = stepTimestamps['2'][0];
+        durationData.step1to2 = calculateWorkingHoursWithOT(step1Time, step2Time, allTimestamps);
+      }
+      
+      // *** คำนวณ step 2→3 เฉพาะเมื่อมี step 2 และ 3 ***
+      if (stepTimestamps['2'] && stepTimestamps['3']) {
+        const step2Time = stepTimestamps['2'][stepTimestamps['2'].length - 1];
+        const step3Time = stepTimestamps['3'][0];
+        durationData.step2to3 = calculateWorkingHoursWithOT(step2Time, step3Time, allTimestamps);
+      }
+      
+      // *** คำนวณ step 3→4 เฉพาะเมื่อมี step 3 และ 4 ***
+      if (stepTimestamps['3'] && stepTimestamps['4']) {
+        const step3Time = stepTimestamps['3'][stepTimestamps['3'].length - 1];
+        const step4Time = stepTimestamps['4'][0];
+        durationData.step3to4 = calculateWorkingHoursWithOT(step3Time, step4Time, allTimestamps);
+      }
+
+      timeDurations.push(durationData);
+    }
+  });
+
+  const totalRecords = Object.keys(trayGroups).length;
+  Object.keys(patterns).forEach(key => {
+    patterns[key].percentage = (patterns[key].count / totalRecords * 100).toFixed(1);
+  });
+
+  return { patterns, timeDurations, totalRecords };
+});
 
 const filteredAndSortedRows = computed(() => {
   let result = [...analysisData.value.timeDurations]
@@ -300,6 +436,104 @@ function prevPage() {
 function nextPage() {
   if (currentPage.value < totalPages.value) currentPage.value++
 }
+
+const hasOvertimeOnDate = (date, allTimestamps) => {
+  const dateStr = date.toDateString();
+  
+  // หา timestamps ทั้งหมดในวันนั้น
+  const dayTimestamps = allTimestamps.filter(timestamp => {
+    return timestamp && timestamp.toDateString() === dateStr;
+  });
+  
+  // ตรวจสอบว่ามี timestamp ใดเกิน 18:00 หรือไม่
+  return dayTimestamps.some(timestamp => {
+    const hour = timestamp.getHours() + timestamp.getMinutes() / 60;
+    return hour > WORKING_HOURS.otThreshold;
+  });
+};
+
+const getWorkingEndTime = (date, allTimestamps) => {
+  const hasOT = hasOvertimeOnDate(date, allTimestamps);
+  return hasOT ? WORKING_HOURS.otEnd : WORKING_HOURS.normalEnd;
+};
+
+// ฟังก์ชันคำนวณเวลาทำงานในวันเดียว
+const calculateSingleDayWorkingHours = (dayStart, dayEnd, workingEndTime) => {
+  const startHour = dayStart.getHours() + dayStart.getMinutes() / 60;
+  const endHour = dayEnd.getHours() + dayEnd.getMinutes() / 60;
+  
+  // หาช่วงเวลาที่ทับซ้อนกับเวลาทำงาน
+  const workingStartHour = Math.max(startHour, WORKING_HOURS.normalStart);
+  const workingEndHour = Math.min(endHour, workingEndTime);
+  
+  if (workingStartHour >= workingEndHour) {
+    return 0; // ไม่มีเวลาทำงานในช่วงนี้
+  }
+  
+  const workingHours = workingEndHour - workingStartHour;
+  return Math.max(0, workingHours * 60); // แปลงเป็นนาที
+};
+
+const calculateWorkingHoursWithOT = (startTime, endTime, allTimestampsInRange) => {
+  if (!startTime || !endTime) return null;
+  if (endTime <= startTime) return 0;
+  
+  // ถ้าอยู่ในวันเดียวกัน ไม่ต้องคำนวณข้ามวัน
+  const isSameDay = startTime.toDateString() === endTime.toDateString();
+  if (isSameDay) {
+    const workingEndTime = getWorkingEndTime(startTime, allTimestampsInRange);
+    return calculateSingleDayWorkingHours(startTime, endTime, workingEndTime);
+  }
+  
+  let totalWorkingMinutes = 0;
+  let currentDate = new Date(startTime);
+  const endDate = new Date(endTime);
+  
+  // ลูปคำนวณทีละวัน
+  while (currentDate.toDateString() !== endDate.toDateString()) {
+    const dayOfWeek = currentDate.getDay();
+    
+    // ตรวจสอบว่าเป็นวันทำงานหรือไม่ (จันทร์-ศุกร์)
+    if (dayOfWeek >= 1 && dayOfWeek <= 5) {
+      // หาเวลาสิ้นสุดการทำงานในวันนี้
+      const workingEndTime = getWorkingEndTime(currentDate, allTimestampsInRange);
+      
+      // วันแรก: จากเวลาเริ่มต้นจนถึงสิ้นสุดวันทำงาน
+      let dayStart = currentDate;
+      let dayEnd = new Date(currentDate);
+      dayEnd.setHours(workingEndTime, 0, 0, 0);
+      
+      // ถ้าเริ่มต้นหลังเวลาทำงาน ข้ามวันนี้
+      const startHour = currentDate.getHours() + currentDate.getMinutes() / 60;
+      if (startHour < workingEndTime) {
+        const dayWorkingMinutes = calculateSingleDayWorkingHours(dayStart, dayEnd, workingEndTime);
+        totalWorkingMinutes += dayWorkingMinutes;
+      }
+    }
+    
+    // ไปวันถัดไป
+    currentDate.setDate(currentDate.getDate() + 1);
+    currentDate.setHours(WORKING_HOURS.normalStart, 0, 0, 0); // เริ่มต้นวันใหม่ที่ 8:00
+  }
+  
+  // วันสุดท้าย: จากเริ่มต้นวันทำงานจนถึงเวลาสิ้นสุด
+  const finalDayOfWeek = endDate.getDay();
+  if (finalDayOfWeek >= 1 && finalDayOfWeek <= 5) {
+    const workingEndTime = getWorkingEndTime(endDate, allTimestampsInRange);
+    
+    let finalDayStart = new Date(endDate);
+    finalDayStart.setHours(WORKING_HOURS.normalStart, 0, 0, 0);
+    
+    // ถ้าสิ้นสุดก่อนเวลาทำงาน หรือ หลังเวลาทำงาน
+    const endHour = endDate.getHours() + endDate.getMinutes() / 60;
+    if (endHour > WORKING_HOURS.normalStart) {
+      const finalDayWorkingMinutes = calculateSingleDayWorkingHours(finalDayStart, endDate, workingEndTime);
+      totalWorkingMinutes += finalDayWorkingMinutes;
+    }
+  }
+  
+  return totalWorkingMinutes;
+};
 
 const parseTimestamp = (timestamp) => {
   if (!timestamp) return null;
@@ -409,8 +643,8 @@ const getStepFromLocation = (location) => {
   if (!location) return null;
 
   if (location === 'create_pre') return '1';
-  if (location.startsWith('AUTO')) return '2';
-  if (location === 'modify_auto') return '3';
+  if (location === 'modify_auto') return '2';
+  if (location.startsWith('AUTO')) return '3';
   if (location.startsWith('PRE')) return '4';
 
   return null;
@@ -443,117 +677,6 @@ const getFilteredData = () => {
 
   return filteredData;
 };
-
-const analysisData = computed(() => {
-  const filteredData = getFilteredData();
-  if (!filteredData || filteredData.length === 0) {
-    return { patterns: {}, timeDurations: [], totalRecords: 0 };
-  }
-
-  const trayGroups = {};
-  const displayTrayIds = {};
-  const trayProductOrders = {};
-  const productOrders = {};
-
-  filteredData.forEach(row => {
-    const trayId = row.unique_tray_id;
-
-    if (!trayGroups[trayId]) {
-      trayGroups[trayId] = [];
-    }
-    trayGroups[trayId].push(row);
-
-    if (!displayTrayIds[trayId]) {
-      displayTrayIds[trayId] = row.tray_id;
-    }
-    if (!productOrders[row.product_order]) {
-      productOrders[row.product_order] = row.product_order;
-    }
-  });
-
-  const patterns = {};
-  const timeDurations = [];
-
-  Object.keys(trayGroups).forEach(trayId => {
-    const trayData = trayGroups[trayId];
-
-    trayData.sort((a, b) => {
-      const timeA = parseTimestamp(a.timestamp);
-      const timeB = parseTimestamp(b.timestamp);
-      return timeA - timeB;
-    });
-
-    const stepsPresent = new Set();
-    const stepTimestamps = {};
-    const taskIds = new Set();
-
-    trayData.forEach(row => {
-      if (row.task_id) {
-        taskIds.add(row.task_id);
-      }
-
-      const step = getStepFromLocation(row.location);
-      if (step) {
-        stepsPresent.add(step);
-        const timestamp = parseTimestamp(row.timestamp);
-
-        if (!stepTimestamps[step]) {
-          stepTimestamps[step] = [];
-        }
-        stepTimestamps[step].push(timestamp);
-      }
-    });
-
-    Object.keys(stepTimestamps).forEach(step => {
-      stepTimestamps[step].sort((a, b) => a - b);
-    });
-
-    const sortedSteps = Array.from(stepsPresent).sort();
-    const patternKey = sortedSteps.join(',');
-
-    if (!patterns[patternKey]) {
-      patterns[patternKey] = { count: 0, percentage: 0 };
-    }
-    patterns[patternKey].count++;
-
-    if (stepTimestamps['2'] && stepTimestamps['4']) {
-      const step2Time = stepTimestamps['2'][0];
-      const step4Time = stepTimestamps['4'][stepTimestamps['4'].length - 1];
-      const totalDuration = (step4Time - step2Time) / 1000 / 60;
-
-
-      const durationData = {
-        unique_tray_id: trayId,
-        display_tray_id: displayTrayIds[trayId],
-        product_order: productOrders[trayData[0].product_order],
-        task_ids: taskIds.size > 0 ? Array.from(taskIds) : [],
-        totalDuration: totalDuration,
-        step1to2: null,
-        step2to3: null,
-        step3to4: null
-      };
-      if (stepTimestamps['1'] && stepTimestamps['2']) {
-        durationData.step1to2 = (stepTimestamps['2'][0] - stepTimestamps['1'][stepTimestamps['1'].length - 1]) / 1000 / 60;
-      }
-      if (stepTimestamps['2'] && stepTimestamps['3']) {
-        durationData.step2to3 = (stepTimestamps['3'][0] - stepTimestamps['2'][stepTimestamps['2'].length - 1]) / 1000 / 60;
-      }
-      if (stepTimestamps['3'] && stepTimestamps['4']) {
-        durationData.step3to4 = (stepTimestamps['4'][0] - stepTimestamps['3'][stepTimestamps['3'].length - 1]) / 1000 / 60;
-      }
-
-      timeDurations.push(durationData);
-    }
-  });
-
-  const totalRecords = Object.keys(trayGroups).length;
-  Object.keys(patterns).forEach(key => {
-    patterns[key].percentage = (patterns[key].count / totalRecords * 100).toFixed(1);
-  });
-
-  return { patterns, timeDurations, totalRecords };
-});
-
 
 const patternData = computed(() => {
   return Object.entries(analysisData.value.patterns)
@@ -595,26 +718,30 @@ const avgTimes = computed(() => {
   };
 });
 
-const formatTime = (seconds) => {
-  if (seconds === 'N/A') {
+const formatTime = (minutes) => {
+  if (minutes === 'N/A' || minutes === null) {
     return 'N/A';
   }
 
-  if (typeof seconds !== 'number' || isNaN(seconds)) {
+  if (typeof minutes !== 'number' || isNaN(minutes)) {
     return 'N/A';
   }
 
-  if (seconds < 60) {
-    return `${seconds.toFixed(1)}mins`;
-  } else if (seconds < 3600) {
-    const minutes = Math.floor(seconds / 60);
-    const remainingSeconds = seconds % 60;
-    return `${minutes}mins ${remainingSeconds.toFixed(1)}secs`;
-  } else {
-    const hours = Math.floor(seconds / 3600);
-    const minutes = Math.floor((seconds % 3600) / 60);
-    const remainingSeconds = seconds % 60;
-    return `${hours}h ${minutes}mins ${remainingSeconds.toFixed(1)}secs`;
+  if (minutes < 1) {
+    const seconds = minutes * 60;
+    return `${seconds.toFixed(1)}secs`;
+  } 
+  else if (minutes < 60) {
+    return `${minutes.toFixed(1)}mins`;
+  } 
+  else {
+    const hours = Math.floor(minutes / 60);
+    const remainingMinutes = minutes % 60;
+    if (remainingMinutes === 0) {
+      return `${hours}h`;
+    } else {
+      return `${hours}h ${remainingMinutes.toFixed(1)}mins`;
+    }
   }
 };
 
@@ -732,7 +859,7 @@ select {
   background: rgba(255, 255, 255, 0.95);
   box-shadow: 0 8px 32px rgba(0, 0, 0, 0.1);
   transition: transform 0.3s ease;
-  height: 180px;
+  height: 220px;
   align-items: center;
 }
 
@@ -760,6 +887,7 @@ select {
   display: flex;
   align-items: center;
   justify-content: center;
+  margin-top: 1rem;
 }
 
 .card-title {
@@ -770,11 +898,13 @@ select {
 }
 
 .card-value {
-  font-size: 2rem;
+  font-size: 1.75rem;
   font-weight: bold;
   color: #2c3e50;
   display: flex;
   justify-content: center;
+  white-space: nowrap;
+  margin-top: 1rem;
 }
 
 .card-subtitle {
@@ -914,6 +1044,7 @@ td {
   font-size: 0.75rem;
   text-transform: uppercase;
   letter-spacing: 0.5px;
+  white-space: nowrap;
 }
 
 .table th.sortable {

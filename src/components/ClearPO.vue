@@ -1,4 +1,4 @@
-<template>
+<!-- <template>
     <div class="form-page">
     <h1>Clear Tray ID</h1
         >
@@ -163,4 +163,4 @@ input.invalid {
     padding: 0.75rem;
   }
 }
-</style>
+</style> -->

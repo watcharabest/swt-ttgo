@@ -62,14 +62,13 @@
     <div class="group-scan">
       <div class="scan-container">
         <button type="button" @click="toggleScanner('Automate')" :disabled="loading" class="scan-btn">
-          Click to Scan Check In<br><span style="font-size: 1.5rem; color: #0066cc;"> Automate </span><span
+          Click to Scan Check In/Out<br><span style="font-size: 1.5rem; color: #0066cc;"> Automate </span><span
             style="font-size: 1.5rem; color: #666 ;"> & </span><span style="font-size: 1.5rem; color: #00cc41 ;">
             Pre-Plate </span>
         </button>
       </div>
     </div>
 
-    <!-- QR Scanner Modal -->
     <div v-if="showScanner" class="scanner-modal" @click="closeScanner">
       <div class="scanner-container" @click.stop>
         <div class="scanner-header">
@@ -78,7 +77,7 @@
         </div>
 
         <div class="scanner-content">
-          <QrcodeStream @detect="onDetect" @error="onError" class="scanner-video" :constraints="{
+          <QrcodeStream :key="scannerKey" @detect="onDetect" @error="onError" class="scanner-video" :constraints="{
             facingMode: currentCamera,
             width: { ideal: isMicroMode ? 640 : 480 },
             height: { ideal: isMicroMode ? 480 : 360 },
@@ -95,18 +94,31 @@
               ? 'Switch to Back Camera'
               : 'Switch to Front Camera'
               ">
-              {{ currentCamera === "user" ? "📷" : "📱" }}
+              <i class="fa-solid fa-camera-rotate"></i>
             </button>
           </div>
         </div>
         <div class="scanner-footer">
-          <p v-if="scannerError" class="scanner-error">{{ scannerError }}</p>
-          <p v-if="scannerSuccess" class="scanner-success">{{ scannerSuccess }}</p>
-          <!-- <div class="scanner-tips">
-            <button type="button" @click="changeLocation" class="change-btn">
-              Change Location
-            </button>
-          </div> -->
+          <button type="button" @click="toggleMicroMode" class="change-mode-btn">
+            {{ isMicroMode ? "Normal Mode" : "Micro Mode" }}
+          </button>
+          <div class="type-reference" v-if="scannedData.length > 0">
+            <div class="type-list">
+              <div v-for="(scan, index) in scannedData" :key="index"
+                :class="['type-item', scan.type.toLowerCase().replace(' ', '-')]">
+                <span class="type-label">{{ scan.type }}:</span>
+                <span class="type-format">{{ scan.value }}</span>
+                <div v-if="scan.type === 'Location'" class="shelf-location-controls">
+                  <label class="checkbox-container">
+                    <input type="checkbox" v-model="StatusForRemember" class="shelf-checkbox" />
+                    <span v-if="StatusForRemember" class="custom-checkbox">✓</span>
+                    <span v-else class="custom-checkbox"></span>
+                    <span class="checkbox-label">Remember</span>
+                  </label>
+                </div>
+              </div>
+            </div>
+          </div>
         </div>
       </div>
     </div>
@@ -146,9 +158,13 @@ const rememberlocataionPreplate = ref(false);
 
 const bluetoothBuffer = ref("");
 
+const taskDetail = ref(null)
+
+const loadingTaskDetail = ref(false)
+
 const classifyData = (data) => {
-  if (/^tw/i.test(data)) {
-    return "Tray";
+  if (/^tg/i.test(data)) {
+    return "TAG";
   }
   return "Unknown";
 };
@@ -256,33 +272,65 @@ const onDetect = async (detectedCodes) => {
 };
 
 const handleFirstScan = async (currentDataType, trimmedData) => {
-  if (currentDataType === "Tray") {
+  if (currentDataType === "TAG") {
     try {
       const res = await axios.get(`${__API_BASE_URL__}/check_task_form`, {
         params: { tray_id: trimmedData },
       });
-      checkTaskForm.value = res.data?.task_id?.[0] || '';
+      checkTaskForm.value = res.data?.task_id || '';
       resetScanState()
+
       if (checkTaskForm.value) {
         if (/^AUTO/i.test(store.line)) {
           axios.post(`${__API_BASE_URL__}/check_in_auto`, {
             tray_id: trimmedData,
             location: store.line,
           });
-          console.log("check in tray : ", trimmedData)
-          resetScanState()
+          const res = await axios.get(`${__API_BASE_URL__}/check_task_form_forAuto`, {
+            params: { tray_id: trimmedData },
+          });
+          checkTaskForm.value = res.data?.pre_task_id || ''
+          console.log(checkTaskForm.value)
+          await showTaskDetail(checkTaskForm.value);
+
+          resetScanState();
+
+          // Build HTML with actual task details
+          let taskDetailHtml = `
+            <div style="text-align: left;">
+              <p><strong>Tray:</strong> ${trimmedData}</p>`;
+
+          if (taskDetail.value) {
+            if (taskDetail.value.line) {
+              taskDetailHtml += `<p><strong>Task Line:</strong> ${taskDetail.value.line}</p>`;
+            }
+            if (taskDetail.value.images && taskDetail.value.images.length > 0) {
+              taskDetailHtml += `<div class="form-group">
+                <p><strong>Images:</strong></p>
+                <div class="image-gallery" style="display: flex; flex-wrap: wrap; gap: 10px; margin-top: 10px;">`;
+
+              taskDetail.value.images.forEach((imageUrl) => {
+                taskDetailHtml += `<div class="image-item">
+                  <img src="${imageUrl}" alt="Product Image" style="width: 100px; height: 100px; object-fit: cover; border-radius: 5px; border: 1px solid #ddd;" />
+                </div>`;
+              });
+
+              taskDetailHtml += `</div></div>`;
+            }
+          } else {
+            taskDetailHtml += `<p><em>No additional task details available</em></p>`;
+          }
+
+          taskDetailHtml += `</div>`;
+
           await Swal.fire({
             icon: "success",
-            title: "Check In Tray Success",
-            html: `
-            <div style="text-align: left;">
-                <p><strong>Tray:</strong> ${trimmedData}</p>
-                <p><strong>Location:</strong> ${store.line}</p>
-            </div>`,
+            title: "Check Out Tray Success",
+            html: taskDetailHtml,
             toast: true,
             position: "top-end",
             showConfirmButton: false,
-            timer: 5000,
+            timer: 10000,
             timerProgressBar: true,
             didOpen: (toast) => {
               toast.onmouseenter = Swal.stopTimer;
@@ -290,12 +338,12 @@ const handleFirstScan = async (currentDataType, trimmedData) => {
             }
           });
           return true;
+
         } else if (/^PRE/i.test(store.line)) {
           axios.post(`${__API_BASE_URL__}/check_in_pre`, {
             tray_id: trimmedData,
             location: store.line,
           });
-          console.log("check in tray : ", trimmedData)
           resetScanState()
           await Swal.fire({
             icon: "success",
@@ -317,8 +365,7 @@ const handleFirstScan = async (currentDataType, trimmedData) => {
           });
           return true
         }
-      }
-      else {
+      } else {
         await Swal.fire({
           icon: "error",
           title: "Check In Tray Failed",
@@ -342,6 +389,33 @@ const handleFirstScan = async (currentDataType, trimmedData) => {
       }, 2000);
       throw err;
     }
+  }
+}
+
+async function showTaskDetail(row) {
+  loadingTaskDetail.value = true
+  taskDetail.value = null
+
+  try {
+    // Fetch task details using task_id
+    const taskRes = await axios.post(`${__API_BASE_URL__}/product_task_order_lookup`, {
+      task_id: row,
+    })
+    console.log("taskRes.data", taskRes.data)
+
+    // Handle response - could be array or single object
+    if (taskRes.data) {
+      // If it's an array, take the first item. If it's an object, use it directly.
+      taskDetail.value = Array.isArray(taskRes.data) ? taskRes.data[0] : taskRes.data
+
+      console.log("taskDetail.value", taskDetail.value)
+
+
+    }
+  } catch (err) {
+    console.error('Error fetching task details:', err)
+  } finally {
+    loadingTaskDetail.value = false
   }
 }
 
@@ -518,6 +592,10 @@ const paintBoundingBox = (detectedCodes, ctx) => {
     ctx.font = "bold 18px Arial";
     ctx.fillStyle = isMicroMode.value ? "#8DBAED" : "#00ff00";
   }
+};
+
+const toggleMicroMode = () => {
+  isMicroMode.value = !isMicroMode.value;
 };
 
 onMounted(() => {
@@ -720,9 +798,77 @@ h2 {
 }
 
 .scanner-video {
-  width: 100% !important;
+  width: 100%;
   height: 350px !important;
-  transform: scaleX(-1);
+  border-radius: 12px;
+  background: #000;
+  filter: contrast(1.2) brightness(1.1);
+  object-fit: cover;
+}
+
+.scanner-video.micro-mode {
+  filter: contrast(1.5) brightness(1.3) saturate(1.2);
+  transform: scale(0.8);
+  transform-origin: center;
+}
+
+.scanner-overlay {
+  position: absolute;
+  top: 0;
+  left: 0;
+  width: 100%;
+  height: 100%;
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  pointer-events: none;
+}
+
+.scanner-frame {
+  width: 220px;
+  height: 220px;
+  border: 3px solid #00ff00;
+  border-radius: 12px;
+  background: transparent;
+  box-shadow: 0 0 0 9999px rgba(0, 0, 0, 0.7);
+  animation: pulse 2s infinite;
+  backdrop-filter: contrast(1.2) brightness(1.1);
+  transition: all 0.3s ease;
+}
+
+.scanner-frame.micro-mode {
+  border-color: #8dbaed;
+  box-shadow: 0 0 0 9999px rgba(0, 0, 0, 0.7), 0 0 20px rgba(141, 186, 237, 0.3);
+  backdrop-filter: contrast(1.5) brightness(1.3) saturate(1.2);
+  animation: pulseMicro 2s infinite;
+}
+
+@keyframes pulseMicro {
+  0% {
+    box-shadow: 0 0 0 0 rgba(141, 186, 237, 0.4), 0 0 0 9999px rgba(0, 0, 0, 0.7);
+  }
+
+  70% {
+    box-shadow: 0 0 0 10px rgba(141, 186, 237, 0), 0 0 0 9999px rgba(0, 0, 0, 0.7);
+  }
+
+  100% {
+    box-shadow: 0 0 0 0 rgba(141, 186, 237, 0), 0 0 0 9999px rgba(0, 0, 0, 0.7);
+  }
+}
+
+.change-mode-btn {
+  background-color: #8dbaed;
+  color: #fff;
+  border: none;
+  padding: 0.75rem;
+  border-radius: 8px;
+  cursor: pointer;
+  font-weight: 600;
+  transition: all 0.3s ease;
+  box-shadow: 0 2px 4px rgba(141, 186, 237, 0.2);
+  flex: 1;
+  min-width: 150px;
 }
 
 .scanner-tips {
@@ -782,5 +928,13 @@ h2 {
   flex: 1;
   min-width: 150px;
   background-color: #fccf61;
+}
+
+.product-image {
+  max-width: 100%;
+  height: auto;
+  border-radius: 8px;
+  border: 1px solid #ddd;
+  box-shadow: 0 2px 8px rgba(0, 0, 0, 0.1);
 }
 </style>

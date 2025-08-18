@@ -82,7 +82,7 @@
               <span class="link-text">Task Form</span>
             </router-link>
             <router-link to="/task-checkin" class="nav-link" @click="closeMobileMenu">
-              <span class="link-text">Task Checkin</span>
+              <span class="link-text">Task Checkin/Checkout</span>
             </router-link>
             <router-link to="/task-table" class="nav-link" @click="closeMobileMenu">
               <span class="link-text">Task Table</span>
@@ -167,7 +167,7 @@
               <span class="link-text">Task Form</span>
             </router-link>
             <router-link to="/task-checkin" class="nav-link" @click="closeMobileMenu">
-              <span class="link-text">Task Checkin</span>
+              <span class="link-text">Task Checkin/Checkout</span>
             </router-link>
             <router-link to="/task-table" class="nav-link" @click="closeMobileMenu">
               <span class="link-text">Task Table</span>
