@@ -237,7 +237,7 @@ const WORKING_HOURS = {
   normalStart: 8,    // 08:00
   normalEnd: 17,     // 17:00
   otEnd: 21,         // 21:00 (เมื่อมี OT)
-  otThreshold: 18    // 18:00 (เกินเวลานี้ถือว่ามี OT)
+  otThreshold: 17    // 18:00 (เกินเวลานี้ถือว่ามี OT)
 };
 
 
@@ -319,7 +319,7 @@ const analysisData = computed(() => {
     const stepsPresent = new Set();
     const stepTimestamps = {};
     const taskIds = new Set();
-    const allTimestamps = []; // *** เพิ่มตัวแปรนี้ ***
+    const allTimestamps = [];
 
     trayData.forEach(row => {
       if (row.task_id) {
@@ -332,8 +332,8 @@ const analysisData = computed(() => {
         const timestamp = parseTimestamp(row.timestamp);
 
         if (timestamp) {
-          allTimestamps.push(timestamp); // *** เพิ่มบรรทัดนี้ ***
-          
+          allTimestamps.push(timestamp);
+
           if (!stepTimestamps[step]) {
             stepTimestamps[step] = [];
           }
@@ -342,6 +342,7 @@ const analysisData = computed(() => {
       }
     });
 
+    // เรียงลำดับ timestamps ในแต่ละ step
     Object.keys(stepTimestamps).forEach(step => {
       stepTimestamps[step].sort((a, b) => a - b);
     });
@@ -354,11 +355,13 @@ const analysisData = computed(() => {
     }
     patterns[patternKey].count++;
 
+    // คำนวณ duration เฉพาะเมื่อมี step 2 และ 4
     if (stepTimestamps['2'] && stepTimestamps['4']) {
+      // ใช้ timestamp แรกของ step 2 และ timestamp สุดท้ายของ step 4
       const step2Time = stepTimestamps['2'][0];
       const step4Time = stepTimestamps['4'][stepTimestamps['4'].length - 1];
-      
-      // *** คำนวณ Total Duration (2→4) เฉพาะเมื่อมี step 2 และ 4 ***
+
+      // คำนวณ Total Duration (2→4)
       const totalDuration = calculateWorkingHoursWithOT(step2Time, step4Time, allTimestamps);
 
       const durationData = {
@@ -372,24 +375,24 @@ const analysisData = computed(() => {
         step3to4: null
       };
 
-      // *** คำนวณ step 1→2 เฉพาะเมื่อมี step 1 และ 2 ***
+      // คำนวณ step 1→2
       if (stepTimestamps['1'] && stepTimestamps['2']) {
-        const step1Time = stepTimestamps['1'][stepTimestamps['1'].length - 1];
-        const step2Time = stepTimestamps['2'][0];
+        const step1Time = stepTimestamps['1'][stepTimestamps['1'].length - 1]; // timestamp สุดท้ายของ step 1
+        const step2Time = stepTimestamps['2'][0]; // timestamp แรกของ step 2
         durationData.step1to2 = calculateWorkingHoursWithOT(step1Time, step2Time, allTimestamps);
       }
-      
-      // *** คำนวณ step 2→3 เฉพาะเมื่อมี step 2 และ 3 ***
+
+      // คำนวณ step 2→3
       if (stepTimestamps['2'] && stepTimestamps['3']) {
-        const step2Time = stepTimestamps['2'][stepTimestamps['2'].length - 1];
-        const step3Time = stepTimestamps['3'][0];
+        const step2Time = stepTimestamps['2'][stepTimestamps['2'].length - 1]; // timestamp สุดท้ายของ step 2
+        const step3Time = stepTimestamps['3'][0]; // timestamp แรกของ step 3
         durationData.step2to3 = calculateWorkingHoursWithOT(step2Time, step3Time, allTimestamps);
       }
-      
-      // *** คำนวณ step 3→4 เฉพาะเมื่อมี step 3 และ 4 ***
+
+      // คำนวณ step 3→4
       if (stepTimestamps['3'] && stepTimestamps['4']) {
-        const step3Time = stepTimestamps['3'][stepTimestamps['3'].length - 1];
-        const step4Time = stepTimestamps['4'][0];
+        const step3Time = stepTimestamps['3'][stepTimestamps['3'].length - 1]; // timestamp สุดท้ายของ step 3
+        const step4Time = stepTimestamps['4'][0]; // timestamp แรกของ step 4
         durationData.step3to4 = calculateWorkingHoursWithOT(step3Time, step4Time, allTimestamps);
       }
 
@@ -404,6 +407,7 @@ const analysisData = computed(() => {
 
   return { patterns, timeDurations, totalRecords };
 });
+
 
 const filteredAndSortedRows = computed(() => {
   let result = [...analysisData.value.timeDurations]
@@ -439,16 +443,20 @@ function nextPage() {
 
 const hasOvertimeOnDate = (date, allTimestamps) => {
   const dateStr = date.toDateString();
-  
+
   // หา timestamps ทั้งหมดในวันนั้น
   const dayTimestamps = allTimestamps.filter(timestamp => {
     return timestamp && timestamp.toDateString() === dateStr;
   });
-  
+
   // ตรวจสอบว่ามี timestamp ใดเกิน 18:00 หรือไม่
   return dayTimestamps.some(timestamp => {
-    const hour = timestamp.getHours() + timestamp.getMinutes() / 60;
-    return hour > WORKING_HOURS.otThreshold;
+    const hour = timestamp.getHours();
+    const minute = timestamp.getMinutes();
+    const totalMinutes = hour * 60 + minute;
+    const otThresholdMinutes = WORKING_HOURS.otThreshold * 60; // 18:00 = 1080 นาที
+
+    return totalMinutes >= otThresholdMinutes; // เปลี่ยนจาก > เป็น >=
   });
 };
 
@@ -461,15 +469,15 @@ const getWorkingEndTime = (date, allTimestamps) => {
 const calculateSingleDayWorkingHours = (dayStart, dayEnd, workingEndTime) => {
   const startHour = dayStart.getHours() + dayStart.getMinutes() / 60;
   const endHour = dayEnd.getHours() + dayEnd.getMinutes() / 60;
-  
+
   // หาช่วงเวลาที่ทับซ้อนกับเวลาทำงาน
   const workingStartHour = Math.max(startHour, WORKING_HOURS.normalStart);
   const workingEndHour = Math.min(endHour, workingEndTime);
-  
+
   if (workingStartHour >= workingEndHour) {
     return 0; // ไม่มีเวลาทำงานในช่วงนี้
   }
-  
+
   const workingHours = workingEndHour - workingStartHour;
   return Math.max(0, workingHours * 60); // แปลงเป็นนาที
 };
@@ -477,63 +485,55 @@ const calculateSingleDayWorkingHours = (dayStart, dayEnd, workingEndTime) => {
 const calculateWorkingHoursWithOT = (startTime, endTime, allTimestampsInRange) => {
   if (!startTime || !endTime) return null;
   if (endTime <= startTime) return 0;
-  
-  // ถ้าอยู่ในวันเดียวกัน ไม่ต้องคำนวณข้ามวัน
+
   const isSameDay = startTime.toDateString() === endTime.toDateString();
+
   if (isSameDay) {
+    // กรณีเดียวกัน - ใช้วันเริ่มต้นในการตรวจสอบ OT
     const workingEndTime = getWorkingEndTime(startTime, allTimestampsInRange);
     return calculateSingleDayWorkingHours(startTime, endTime, workingEndTime);
   }
-  
+
+  // กรณีข้ามวัน
   let totalWorkingMinutes = 0;
   let currentDate = new Date(startTime);
   const endDate = new Date(endTime);
-  
-  // ลูปคำนวณทีละวัน
+
   while (currentDate.toDateString() !== endDate.toDateString()) {
     const dayOfWeek = currentDate.getDay();
-    
-    // ตรวจสอบว่าเป็นวันทำงานหรือไม่ (จันทร์-ศุกร์)
-    if (dayOfWeek >= 1 && dayOfWeek <= 5) {
-      // หาเวลาสิ้นสุดการทำงานในวันนี้
+
+    if (dayOfWeek >= 1 && dayOfWeek <= 6) { // จันทร์-เสาร์
       const workingEndTime = getWorkingEndTime(currentDate, allTimestampsInRange);
-      
-      // วันแรก: จากเวลาเริ่มต้นจนถึงสิ้นสุดวันทำงาน
-      let dayStart = currentDate;
-      let dayEnd = new Date(currentDate);
-      dayEnd.setHours(workingEndTime, 0, 0, 0);
-      
-      // ถ้าเริ่มต้นหลังเวลาทำงาน ข้ามวันนี้
-      const startHour = currentDate.getHours() + currentDate.getMinutes() / 60;
-      if (startHour < workingEndTime) {
-        const dayWorkingMinutes = calculateSingleDayWorkingHours(dayStart, dayEnd, workingEndTime);
-        totalWorkingMinutes += dayWorkingMinutes;
-      }
+
+      // สำหรับวันแรก: ใช้เวลาจริงที่เริ่มต้น
+      const dayStart = currentDate.toDateString() === startTime.toDateString()
+        ? new Date(startTime)
+        : new Date(currentDate.getFullYear(), currentDate.getMonth(), currentDate.getDate(), WORKING_HOURS.normalStart, 0, 0, 0);
+
+      const dayEnd = new Date(currentDate.getFullYear(), currentDate.getMonth(), currentDate.getDate(), workingEndTime, 0, 0, 0);
+
+      totalWorkingMinutes += calculateSingleDayWorkingHours(dayStart, dayEnd, workingEndTime);
     }
-    
+
     // ไปวันถัดไป
     currentDate.setDate(currentDate.getDate() + 1);
-    currentDate.setHours(WORKING_HOURS.normalStart, 0, 0, 0); // เริ่มต้นวันใหม่ที่ 8:00
+    currentDate.setHours(0, 0, 0, 0); // รีเซ็ตเวลาเป็น 00:00
   }
-  
-  // วันสุดท้าย: จากเริ่มต้นวันทำงานจนถึงเวลาสิ้นสุด
+
+  // วันสุดท้าย: คำนวณจาก 08:00 จนถึง endTime จริง
   const finalDayOfWeek = endDate.getDay();
-  if (finalDayOfWeek >= 1 && finalDayOfWeek <= 5) {
+  if (finalDayOfWeek >= 1 && finalDayOfWeek <= 6) {
     const workingEndTime = getWorkingEndTime(endDate, allTimestampsInRange);
-    
-    let finalDayStart = new Date(endDate);
-    finalDayStart.setHours(WORKING_HOURS.normalStart, 0, 0, 0);
-    
-    // ถ้าสิ้นสุดก่อนเวลาทำงาน หรือ หลังเวลาทำงาน
-    const endHour = endDate.getHours() + endDate.getMinutes() / 60;
-    if (endHour > WORKING_HOURS.normalStart) {
-      const finalDayWorkingMinutes = calculateSingleDayWorkingHours(finalDayStart, endDate, workingEndTime);
-      totalWorkingMinutes += finalDayWorkingMinutes;
-    }
+
+    const finalDayStart = new Date(endDate.getFullYear(), endDate.getMonth(), endDate.getDate(), WORKING_HOURS.normalStart, 0, 0, 0);
+    const finalDayEnd = new Date(endTime);
+
+    totalWorkingMinutes += calculateSingleDayWorkingHours(finalDayStart, finalDayEnd, workingEndTime);
   }
-  
+
   return totalWorkingMinutes;
 };
+
 
 const parseTimestamp = (timestamp) => {
   if (!timestamp) return null;
@@ -719,28 +719,31 @@ const avgTimes = computed(() => {
 });
 
 const formatTime = (minutes) => {
-  if (minutes === 'N/A' || minutes === null) {
+  if (minutes === 'N/A' || minutes === null || minutes === undefined) {
     return 'N/A';
   }
 
-  if (typeof minutes !== 'number' || isNaN(minutes)) {
+  if (typeof minutes !== 'number' || isNaN(minutes) || minutes < 0) {
     return 'N/A';
   }
 
-  if (minutes < 1) {
-    const seconds = minutes * 60;
-    return `${seconds.toFixed(1)}secs`;
+  // ปัดทศนิยมให้แม่นยำ
+  const roundedMinutes = Math.round(minutes * 100) / 100; // ปัด 2 ทศนิยม
+
+  if (roundedMinutes < 1) {
+    const seconds = Math.round(roundedMinutes * 60);
+    return `${seconds}secs`;
   } 
-  else if (minutes < 60) {
-    return `${minutes.toFixed(1)}mins`;
+  else if (roundedMinutes < 60) {
+    return `${Math.round(roundedMinutes * 100) / 100}mins`;
   } 
   else {
-    const hours = Math.floor(minutes / 60);
-    const remainingMinutes = minutes % 60;
+    const hours = Math.floor(roundedMinutes / 60);
+    const remainingMinutes = Math.round((roundedMinutes % 60) * 100) / 100;
     if (remainingMinutes === 0) {
       return `${hours}h`;
     } else {
-      return `${hours}h ${remainingMinutes.toFixed(1)}mins`;
+      return `${hours}h ${remainingMinutes}mins`;
     }
   }
 };
@@ -791,12 +794,13 @@ body {
     gap: 3rem;
   }
 
-  .summary-cards,.time-cards {
+  .summary-cards,
+  .time-cards {
     grid-template-columns: repeat(auto-fit, minmax(clamp(150px, 30vw, 200px), 1fr));
   }
 
   .card-subtitle {
-    display :none !important;
+    display: none !important;
   }
 }
 
@@ -833,7 +837,7 @@ select {
   border: 1px solid #e2e8f0;
   background: #eeeeee;
   box-shadow: inset 4px 4px 6px #dcdee0, inset -4px -4px 6px #f0f5fa;
-  width: 50%;
+  width: fit-content;
   justify-content: center;
   margin: auto;
   font-size: 1rem;
@@ -1062,6 +1066,7 @@ td {
   box-shadow: 0 4px 6px rgba(0, 0, 0, 0.1);
   overflow: hidden;
   padding: 1rem;
+
 }
 
 .progress-fill {

@@ -11,21 +11,21 @@
       <div class="sidebar-header">
         <div class="logo" @click="goHome">
           <span class="logo-icon">●</span>
-          <span class="logo-text">user0000001</span>
+          <span class="logo-text">{{ store.line }}</span>
         </div>
       </div>
 
       <nav class="sidebar-nav">
-        <div @click="toggleSubMenu" class="nav-link-header">
+        <!-- <div class="nav-link-header">
           <span class="link-text">Mapping TTGO</span>
           <span class="submenu-arrow">{{ showSubMenu ? '▲' : '▼' }}</span>
-        </div>
+        </div> -->
 
-        <transition name="submenu-slide">
-          <div v-show="showSubMenu" class="submenu-wrapper">
-            <router-link to="/" class="nav-link" @click="closeMobileMenu">
+        <!-- <transition name="submenu-slide">
+          <div v-show="showSubMenu" class="submenu-wrapper"> -->
+            <!-- <router-link to="/" class="nav-link" @click="closeMobileMenu">
               <span class="link-text">Scan TTGO</span>
-            </router-link>
+            </router-link> -->
             <!-- <router-link to="/update-tray" class="nav-link" @click="closeMobileMenu">
               <i class="fas fa-map-marked-alt"></i>
               <span class="link-text">Map TTGO to Tray</span>
@@ -42,24 +42,24 @@
               <i class="fas fa-edit"></i>
               <span class="link-text">Edit Database</span>
             </router-link> -->
-            <router-link to="/showtable" class="nav-link" @click="closeMobileMenu">
+            <!-- <router-link to="/showtable" class="nav-link" @click="closeMobileMenu">
               <span class="link-text">Show Table</span>
-            </router-link>
+            </router-link> -->
             <!-- <router-link to="/clear" class="nav-link" @click="closeMobileMenu">
               <i class="fas fa-broom"></i>
               <span class="link-text">Clear</span>
             </router-link> -->
-          </div>
-        </transition>
+          <!-- </div>
+        </transition> -->
 
-        <div @click="toggleRackMenu" class="nav-link-header">
+        <!-- <div class="nav-link-header">
           <span class="link-text">Rack Tracking</span>
           <span class="submenu-arrow">{{ showRackMenu ? '▲' : '▼' }}</span>
-        </div>
+        </div> -->
 
-        <transition name="submenu-slide">
+        <!-- <transition name="submenu-slide">
           <div v-show="showRackMenu" class="submenu-wrapper">
-            <router-link to="/scan-rack" class="nav-link" @click="closeMobileMenu">
+            <router-link to="/scan-rack" class="nav-link">
               <span class="link-text">Scan Rack</span>
             </router-link>
             <router-link to="/rack" class="nav-link" @click="closeMobileMenu">
@@ -69,26 +69,26 @@
               <span class="link-text">Rack Production Order</span>
             </router-link>
           </div>
-        </transition>
+        </transition> -->
 
         <div @click="toggleTaskMenu" class="nav-link-header">
-          <span class="link-text">Task Form</span>
+          <span class="link-text">Pre-Plate / Automate</span>
           <span class="submenu-arrow">{{ showTaskMenu ? '▲' : '▼' }}</span>
         </div>
 
         <transition name="submenu-slide">
           <div v-show="showTaskMenu" class="submenu-wrapper">
             <router-link to="/task-form" class="nav-link" @click="closeMobileMenu">
-              <span class="link-text">Task Form</span>
+              <span class="link-text">Form</span>
             </router-link>
             <router-link to="/task-checkin" class="nav-link" @click="closeMobileMenu">
-              <span class="link-text">Task Checkin/Checkout</span>
+              <span class="link-text">Checkin/Checkout</span>
             </router-link>
             <router-link to="/task-table" class="nav-link" @click="closeMobileMenu">
-              <span class="link-text">Task Table</span>
+              <span class="link-text">Table</span>
             </router-link>
             <router-link to="/task-dashboard" class="nav-link" @click="closeMobileMenu">
-              <span class="link-text">Task Dashboard</span>
+              <span class="link-text">Dashboard</span>
             </router-link>
           </div>
         </transition>
@@ -104,18 +104,18 @@
         </button>
         <div class="mobile-title" @click="goHome">
           <span class="logo-icon">●</span>
-          <span>Product Order</span>
+          <span>{{ store.line }}</span>
         </div>
-        <div @click="toggleSubMenu" class="nav-link-header">
+        <!-- <div class="nav-link-header">
           <span class="link-text">Mapping TTGO</span>
           <span class="submenu-arrow">{{ showSubMenu ? '▲' : '▼' }}</span>
-        </div>
+        </div> -->
 
-        <transition name="submenu-slide">
+        <!-- <transition name="submenu-slide">
           <div v-show="showSubMenu" class="submenu-wrapper">
             <router-link to="/" class="nav-link" @click="closeMobileMenu">
               <span class="link-text">Scan TTGO</span>
-            </router-link>
+            </router-link> -->
             <!-- <router-link to="/update-tray" class="nav-link" @click="closeMobileMenu">
               <span class="link-text">Map TTGO to Tray</span>
             </router-link>
@@ -128,21 +128,21 @@
             <router-link to="/table" class="nav-link" @click="closeMobileMenu">
               <span class="link-text">Edit Database</span>
             </router-link> -->
-            <router-link to="/showtable" class="nav-link" @click="closeMobileMenu">
+            <!-- <router-link to="/showtable" class="nav-link" @click="closeMobileMenu">
               <span class="link-text">Show Table</span>
-            </router-link>
+            </router-link> -->
             <!-- <router-link to="/clear" class="nav-link" @click="closeMobileMenu">
               <span class="link-text">Clear</span>
             </router-link> -->
-          </div>
-        </transition>
+          <!-- </div>
+        </transition> -->
 
-        <div @click="toggleRackMenu" class="nav-link-header">
+        <!-- <div  class="nav-link-header">
           <span class="link-text">Rack Tracking</span>
           <span class="submenu-arrow">{{ showRackMenu ? '▲' : '▼' }}</span>
-        </div>
+        </div> -->
 
-        <transition name="submenu-slide">
+        <!-- <transition name="submenu-slide">
           <div v-show="showRackMenu" class="submenu-wrapper">
             <router-link to="/scan-rack" class="nav-link" @click="closeMobileMenu">
               <span class="link-text">Scan Rack</span>
@@ -154,26 +154,26 @@
               <span class="link-text">Rack Production Order</span>
             </router-link>
           </div>
-        </transition>
+        </transition> -->
 
         <div @click="toggleTaskMenu" class="nav-link-header">
-          <span class="link-text">Task Form</span>
+          <span class="link-text">Pre-Plate / Automate</span>
           <span class="submenu-arrow">{{ showTaskMenu ? '▲' : '▼' }}</span>
         </div>
 
         <transition name="submenu-slide">
           <div v-show="showTaskMenu" class="submenu-wrapper">
             <router-link to="/task-form" class="nav-link" @click="closeMobileMenu">
-              <span class="link-text">Task Form</span>
+              <span class="link-text">Form</span>
             </router-link>
             <router-link to="/task-checkin" class="nav-link" @click="closeMobileMenu">
-              <span class="link-text">Task Checkin/Checkout</span>
+              <span class="link-text">Checkin/Checkout</span>
             </router-link>
             <router-link to="/task-table" class="nav-link" @click="closeMobileMenu">
-              <span class="link-text">Task Table</span>
+              <span class="link-text">Table</span>
             </router-link>
             <router-link to="/task-dashboard" class="nav-link" @click="closeMobileMenu">
-              <span class="link-text">Task Dashboard</span>
+              <span class="link-text">Dashboard</span>
             </router-link>
           </div>
         </transition>
@@ -200,7 +200,9 @@
 <script setup>
 import { ref, onMounted, onUnmounted, watch } from 'vue'
 import { useRouter } from 'vue-router'
+import { useMyVar } from "@/myVar";
 
+const store = useMyVar()
 const router = useRouter()
 const mobileMenuOpen = ref(false)
 const isScrolled = ref(false)
@@ -209,22 +211,22 @@ const showSubMenu = ref(false)
 const showRackMenu = ref(false)
 const showTaskMenu = ref(false)
 
-const toggleSubMenu = () => {
-  showSubMenu.value = !showSubMenu.value
-  // Close rack menu when opening this one
-  if (showSubMenu.value) {
-    showRackMenu.value = false
-    showTaskMenu.value = false
-  }
-}
+// const toggleSubMenu = () => {
+//   showSubMenu.value = !showSubMenu.value
+//   // Close rack menu when opening this one
+//   if (showSubMenu.value) {
+//     showRackMenu.value = false
+//     showTaskMenu.value = false
+//   }
+// }
 
-const toggleRackMenu = () => {
-  showRackMenu.value = !showRackMenu.value
-  if (showRackMenu.value) {
-    showSubMenu.value = false
-    showTaskMenu.value = false
-  }
-}
+// const toggleRackMenu = () => {
+//   showRackMenu.value = !showRackMenu.value
+//   if (showRackMenu.value) {
+//     showSubMenu.value = false
+//     showTaskMenu.value = false
+//   }
+// }
 
 const toggleTaskMenu = () => {
   showTaskMenu.value = !showTaskMenu.value
@@ -306,22 +308,6 @@ onUnmounted(() => {
 
 <style scoped>
 @import url('https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap');
-
-:root {
-  --primary: #2563eb;
-  --primary-hover: #1d4ed8;
-  --text: #0f172a;
-  --text-muted: #64748b;
-  --bg: #ffffff;
-  --bg-secondary: #f8fafc;
-  --border: #e2e8f0;
-  --shadow: 0 1px 3px 0 rgb(0 0 0 / 0.1), 0 1px 2px -1px rgb(0 0 0 / 0.1);
-  --shadow-lg: 0 10px 15px -3px rgb(0 0 0 / 0.1), 0 4px 6px -4px rgb(0 0 0 / 0.1);
-  --shadow-xl: 0 20px 25px -5px rgb(0 0 0 / 0.1), 0 8px 10px -6px rgb(0 0 0 / 0.1);
-  --radius: 8px;
-  --transition: all 0.2s cubic-bezier(0.4, 0, 0.2, 1);
-}
-
 * {
   margin: 0;
   padding: 0;
@@ -338,8 +324,6 @@ onUnmounted(() => {
   background-image: linear-gradient(0deg, transparent 24%, var(--color) 25%, var(--color) 26%, transparent 27%, transparent 74%, var(--color) 75%, var(--color) 76%, transparent 77%, transparent),
     linear-gradient(90deg, transparent 24%, var(--color) 25%, var(--color) 26%, transparent 27%, transparent 74%, var(--color) 75%, var(--color) 76%, transparent 77%, transparent);
   background-size: 55px 55px;
-
-
   display: flex;
   flex-direction: column;
 }
@@ -361,7 +345,6 @@ body {
 }
 
 .submenu-wrapper {
-  margin-left: 1rem;
   overflow: hidden;
 }
 
@@ -384,51 +367,8 @@ body {
   opacity: 1;
 }
 
-
-
-/* Simple Logo */
-.logo {
-  display: flex;
-  align-items: center;
-  gap: 0.5rem;
-  font-weight: 400;
-  font-size: 1.25rem;
-  color: var(--text);
-  transition: var(--transition);
-  cursor: pointer;
-}
-
-.logo:hover {
-  transform: translateY(-1px);
-}
-
-.logo-icon {
-  color: var(--primary);
-  font-size: 1.5rem;
-  animation: pulse 2s infinite;
-}
-
-@keyframes pulse {
-
-  0%,
-  100% {
-    opacity: 1;
-  }
-
-  50% {
-    opacity: 0.7;
-  }
-}
-
 .logo-text {
-  letter-spacing: -0.025em;
-}
-
-/* Layout */
-#app {
-  display: flex;
-  min-height: 100vh;
-  transition: margin-left 0.3s ease;
+  font-size: 3rem;
 }
 
 .sidebar {
@@ -529,7 +469,10 @@ body {
   transition: all 0.2s;
   white-space: nowrap;
   cursor: pointer;
-  margin: 10px;
+}
+
+.nav-link-header span {
+  margin-left: 0.5rem;
 }
 
 .nav-link-header:hover,
@@ -553,6 +496,10 @@ body {
   margin-right: 15px;
   width: 20px;
   text-align: center;
+}
+
+.nav-link span {
+  margin-left: 2rem;
 }
 
 .nav-link:hover,
