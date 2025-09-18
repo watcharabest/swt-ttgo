@@ -274,17 +274,7 @@
         </div>
 
         <div class="scanner-content">
-          <QrcodeStream :key="scannerKey" @detect="onDetect" @error="onError" class="scanner-video" :constraints="{
-            facingMode: currentCamera,
-            width: { ideal: isMicroMode ? 640 : 480 },
-            height: { ideal: isMicroMode ? 480 : 360 },
-            zoom: isMicroMode ? 4 : 1,
-            focusMode: 'continuous',
-            pointsOfInterest: [{ x: 0.5, y: 0.5 }],
-            advanced: isMicroMode
-              ? [{ contrast: 100 }, { brightness: 0 }, { sharpness: 100 }]
-              : [],
-          }" :track="paintBoundingBox" />
+          <QrcodeStream :key="scannerKey" @detect="onDetect" @error="onError" class="scanner-video" :constraints="getCameraConstraints()" :track="paintBoundingBox" />
           <div class="scanner-overlay">
             <div class="scanner-frame" :class="{ 'micro-mode': isMicroMode }"></div>
             <button v-if="hasMultipleCameras" @click="switchCamera" class="floating-camera-btn" :title="currentCamera === 'user'
@@ -331,7 +321,7 @@
 
           <!-- Camera Switch Button -->
           <button v-if="hasMultipleCameras" @click="switchCameraInModal" class="floating-camera-switch-btn"
-            :title="currentCameraFacing === 'user' ? 'Switch to Back Camera' : 'Switch to Front Camera'">
+            :title="currentCameraFacing === 'environment' ? 'Switch to Back Camera' : 'Switch to Front Camera'">
             <i class="fa-solid fa-camera-rotate"></i>
           </button>
         </div>
@@ -471,81 +461,241 @@ function handleFileChange(e, imageIndex) {
   }
 }
 
-const isMobileDevice = () => {
-  return /Android|webOS|iPhone|iPad|iPod|BlackBerry|IEMobile|Opera Mini/i.test(navigator.userAgent) ||
-    (navigator.maxTouchPoints && navigator.maxTouchPoints > 2 && /MacIntel/.test(navigator.platform))
-}
 
+// เพิ่ม debug version ของ takePhoto function
 async function takePhoto(imageIndex) {
-  if (isMobileDevice()) {
-    document.getElementById(`cameraInput${imageIndex}`).click()
-  } else {
-    try {
-      const stream = await navigator.mediaDevices.getUserMedia({
-        video: {
-          facingMode: currentCameraFacing.value,
-          width: { ideal: 1280 },
-          height: { ideal: 720 }
-        }
-      })
+  try {
+    console.log('currentCameraFacing.value:', currentCameraFacing.value);
+    console.log('hasMultipleCameras.value:', hasMultipleCameras.value);
+    
+    // ตรวจสอบ permission ก่อน
+    console.log('Checking camera permission...');
+    const permissionStatus = await navigator.permissions.query({ name: 'camera' });
+    console.log('Camera permission status:', permissionStatus.state);
+    
+    let stream;
+    let success = false;
+    
+    // เปิดกล้องหลังเป็นค่าเริ่มต้นก่อน (environment)
+    currentCameraFacing.value = 'environment';
 
-      currentCameraIndex.value = imageIndex
-      cameraStream.value = stream
-      showCameraModal.value = true
+    const constraintOptions = [
+      // Option 1: พยายามใช้กล้องหลังแบบ exact ก่อน (สำหรับอุปกรณ์ที่มีหลายกล้อง)
+      { video: { facingMode: { exact: 'environment' }, width: { ideal: 1280, min: 640 }, height: { ideal: 720, min: 480 } } },
+      // Option 2: ใช้ ideal กล้องหลัง
+      { video: { facingMode: { ideal: 'environment' }, width: { ideal: 1280, min: 640 }, height: { ideal: 720, min: 480 } } },
+      // Option 3: ถ้าไม่มี environment ให้ลองกล้องหน้าเป็น fallback
+      { video: { facingMode: { ideal: 'user' }, width: { ideal: 1280, min: 640 }, height: { ideal: 720, min: 480 } } },
+      // Option 4: ไม่ระบุ facingMode เลย
+      { video: true }
+    ];
 
-    } catch (error) {
-      console.error('Camera access denied:', error)
-      document.getElementById(`cameraInput${imageIndex}`).click()
+    console.log('Trying camera constraints for rear camera first...');
+    for (let i = 0; i < constraintOptions.length; i++) {
+      try {
+        console.log(`Trying constraint option ${i + 1}:`, constraintOptions[i]);
+        stream = await navigator.mediaDevices.getUserMedia(constraintOptions[i]);
+        success = true;
+        break;
+      } catch (err) {
+        console.log(`❌ Constraint option ${i + 1} failed:`, err.name, err.message);
+      }
     }
+
+    if (success && stream) {
+      
+      currentCameraIndex.value = imageIndex;
+      cameraStream.value = stream;
+      
+      // รอให้ DOM update
+      await new Promise(resolve => setTimeout(resolve, 100));
+      
+      showCameraModal.value = true;
+      
+      // ตรวจสอบ video element หลังจาก modal เปิด
+      setTimeout(() => {
+        const videoElement = document.getElementById('cameraVideo');
+        if (videoElement) {
+        }
+      }, 500);
+      
+    } else {
+      throw new Error('Failed to get camera stream');
+    }
+
+  } catch (error) {
+    console.error('❌ All camera attempts failed:', error);
+    console.error('Error name:', error.name);
+    console.error('Error message:', error.message);
+    console.error('Error stack:', error.stack);
+    
+    document.getElementById(`cameraInput${imageIndex}`).click();
   }
 }
 
 async function switchCameraInModal() {
   try {
+    console.log('Current camera facing:', currentCameraFacing.value);
+    
+    // ถ้ามีกล้องเดียว ไม่ต้องสลับ
+    if (!hasMultipleCameras.value) {
+      console.log('Only one camera available, cannot switch');
+      return;
+    }
+    
     // Stop current stream
     if (cameraStream.value) {
-      cameraStream.value.getTracks().forEach(track => track.stop())
+      cameraStream.value.getTracks().forEach(track => {
+        track.stop();
+      });
+      cameraStream.value = null;
+    }
+    
+    // สลับกล้อง
+    currentCameraFacing.value = currentCameraFacing.value === 'environment' ? 'user' : 'environment';
+    console.log('Switching to:', currentCameraFacing.value);
+    
+    // ลอง constraints หลายแบบตามลำดับ
+    const constraintOptions = [
+      // Option 1: exact constraint (สำหรับอุปกรณ์ที่มีหลายกล้อง)
+      {
+        video: {
+          facingMode: { exact: currentCameraFacing.value },
+          width: { ideal: 1280, min: 640 },
+          height: { ideal: 720, min: 480 }
+        }
+      },
+      // Option 2: ideal constraint
+      {
+        video: {
+          facingMode: { ideal: currentCameraFacing.value },
+          width: { ideal: 1280, min: 640 },
+          height: { ideal: 720, min: 480 }
+        }
+      },
+      // Option 3: facingMode อย่างเดียว
+      {
+        video: {
+          facingMode: { ideal: currentCameraFacing.value }
+        }
+      },
+      // Option 4: ไม่ระบุ facingMode
+      {
+        video: {
+          width: { ideal: 1280, min: 640 },
+          height: { ideal: 720, min: 480 }
+        }
+      }
+    ];
+
+    let stream = null;
+    let success = false;
+    
+    for (let i = 0; i < constraintOptions.length; i++) {
+      try {
+        console.log(`Trying constraint option ${i + 1}:`, constraintOptions[i]);
+        stream = await navigator.mediaDevices.getUserMedia(constraintOptions[i]);
+        console.log(`Success with option ${i + 1}`);
+        success = true;
+        break;
+      } catch (err) {
+        console.log(`Option ${i + 1} failed:`, err.message);
+        if (i === constraintOptions.length - 1) {
+          throw err;
+        }
+      }
     }
 
-    // Switch camera facing
-    currentCameraFacing.value = currentCameraFacing.value === 'environment' ? 'user' : 'environment'
-
-    // Get new stream with switched camera
-    const stream = await navigator.mediaDevices.getUserMedia({
-      video: {
-        facingMode: currentCameraFacing.value,
-        width: { ideal: 1280 },
-        height: { ideal: 720 }
+    if (success && stream) {
+      cameraStream.value = stream;
+      
+      // ตรวจสอบว่าได้กล้องที่ต้องการจริงหรือไม่
+      const videoTrack = stream.getVideoTracks()[0];
+      if (videoTrack) {
+        const settings = videoTrack.getSettings();
+        console.log('Actual camera settings:', {
+          facingMode: settings.facingMode,
+          width: settings.width,
+          height: settings.height
+        });
+        
+        // ถ้าไม่ได้กล้องที่ต้องการ อาจต้องแจ้งเตือนผู้ใช้
+        if (settings.facingMode && settings.facingMode !== currentCameraFacing.value) {
+          console.log(`Warning: Requested ${currentCameraFacing.value} camera but got ${settings.facingMode}`);
+        }
       }
-    })
-
-    cameraStream.value = stream
+    }
 
   } catch (error) {
-    console.error('Failed to switch camera:', error)
+    console.error('Camera switch failed:', error);
+    
     // Revert to previous camera if switch fails
-    currentCameraFacing.value = currentCameraFacing.value === 'environment' ? 'user' : 'environment'
+    const originalFacing = currentCameraFacing.value;
+    currentCameraFacing.value = currentCameraFacing.value === 'environment' ? 'user' : 'environment';
+    console.log('Reverting to:', currentCameraFacing.value);
+    
+    // ลองเปิดกล้องเดิมใหม่
+    try {
+      const revertStream = await navigator.mediaDevices.getUserMedia({
+        video: {
+          facingMode: { ideal: currentCameraFacing.value },
+          width: { ideal: 1280, min: 640 },
+          height: { ideal: 720, min: 480 }
+        }
+      });
+      cameraStream.value = revertStream;
+      console.log('Successfully reverted to previous camera');
+    } catch (revertError) {
+      console.error('Failed to revert camera:', revertError);
+      
+      // ถ้า revert ไม่ได้ ลองเปิดกล้องอะไรก็ได้
+      try {
+        const anyStream = await navigator.mediaDevices.getUserMedia({
+          video: true
+        });
+        cameraStream.value = anyStream;
+        console.log('Opened any available camera as fallback');
+      } catch (finalError) {
+        console.error('All camera recovery attempts failed:', finalError);
+        // อาจต้องปิด modal หรือแสดง error message
+        closeCameraModal();
+      }
+    }
   }
 }
 
 function capturePhoto() {
-  const video = document.getElementById('cameraVideo')
-  const canvas = document.createElement('canvas')
-  const context = canvas.getContext('2d')
-
-  canvas.width = video.videoWidth
-  canvas.height = video.videoHeight
-  context.drawImage(video, 0, 0)
-
-  canvas.toBlob((blob) => {
-    if (blob) {
-      const file = new File([blob], `image_${currentCameraIndex.value + 1}.jpg`, { type: 'image/jpeg' })
-      images.value[currentCameraIndex.value].file = file
-      images.value[currentCameraIndex.value].previewUrl = URL.createObjectURL(file)
-      errors[`image${currentCameraIndex.value}`] = false
+  try {
+    const video = document.getElementById('cameraVideo')
+    
+    if (!video || !video.videoWidth || !video.videoHeight) {
+      throw new Error('Video not ready or invalid dimensions')
     }
-    closeCameraModal()
-  }, 'image/jpeg', 0.8)
+    
+    const canvas = document.createElement('canvas')
+    const context = canvas.getContext('2d')
+
+    canvas.width = video.videoWidth
+    canvas.height = video.videoHeight
+    context.drawImage(video, 0, 0)
+
+    canvas.toBlob((blob) => {
+      if (blob) {
+        const file = new File([blob], `image_${currentCameraIndex.value + 1}.jpg`, { type: 'image/jpeg' })
+        images.value[currentCameraIndex.value].file = file
+        images.value[currentCameraIndex.value].previewUrl = URL.createObjectURL(file)
+        errors[`image${currentCameraIndex.value}`] = false
+      } else {
+        console.error('Failed to create blob from canvas')
+        alert('ไม่สามารถบันทึกรูปภาพได้ กรุณาลองใหม่')
+      }
+      closeCameraModal()
+    }, 'image/jpeg', 0.8)
+    
+  } catch (error) {
+    console.error('Capture photo error:', error)
+    alert('เกิดข้อผิดพลาดในการถ่ายรูป กรุณาลองใหม่')
+  }
 }
 
 function closeCameraModal() {
@@ -554,8 +704,6 @@ function closeCameraModal() {
     cameraStream.value = null
   }
   showCameraModal.value = false
-  // Reset camera facing to default
-  currentCameraFacing.value = 'environment'
 }
 
 function removeImage(imageIndex) {
@@ -740,12 +888,59 @@ const checkCameraSupport = async () => {
   try {
     const devices = await navigator.mediaDevices.enumerateDevices();
     const videoDevices = devices.filter((device) => device.kind === "videoinput");
+    
     hasMultipleCameras.value = videoDevices.length > 1;
+    
     return videoDevices.length > 0;
   } catch (err) {
     console.error("Camera check failed:", err);
     return false;
   }
+};
+
+const getCameraConstraints = () => {
+  const baseConstraints = {
+    width: { ideal: isMicroMode.value ? 640 : 480 },
+    height: { ideal: isMicroMode.value ? 480 : 360 },
+    zoom: isMicroMode.value ? 4 : 1,
+    focusMode: 'continuous',
+    pointsOfInterest: [{ x: 0.5, y: 0.5 }],
+    advanced: isMicroMode.value
+      ? [{ contrast: 100 }, { brightness: 0 }, { sharpness: 100 }]
+      : [],
+  };
+
+  // แก้ไขการจัดการ facingMode
+  if (hasMultipleCameras.value) {
+    // มีหลายกล้อง ใช้ exact constraint
+    if (currentCamera.value === "environment") {
+      return {
+        ...baseConstraints,
+        facingMode: { exact: "environment" },
+      };
+    } else if (currentCamera.value === "user") {
+      return {
+        ...baseConstraints,
+        facingMode: { exact: "user" },
+      };
+    }
+  } else {
+    // มีกล้องเดียว ใช้ ideal แทน exact หรือไม่ระบุ facingMode
+    if (currentCamera.value === "environment") {
+      return {
+        ...baseConstraints,
+        facingMode: { ideal: "environment" },
+      };
+    } else if (currentCamera.value === "user") {
+      return {
+        ...baseConstraints,
+        facingMode: { ideal: "user" },
+      };
+    }
+  }
+
+  // fallback - ไม่ระบุ facingMode เลย ใช้กล้องอันไหนก็ได้
+  return baseConstraints;
 };
 
 const toggleScanner = async () => {
@@ -755,15 +950,22 @@ const toggleScanner = async () => {
       scannerError.value = "No camera found on this device";
       return;
     }
+    // ตั้งค่ากล้องเริ่มต้นเป็นกล้องหลังเสมอเมื่อเปิดสแกนเนอร์
+    currentCamera.value = "environment";
     startScanner();
   } else {
     closeScanner();
   }
 };
 
-const switchCamera = () => {
-  if (hasMultipleCameras.value) {
+const switchCamera = async () => {
+  if (hasMultipleCameras.value) { 
     currentCamera.value = currentCamera.value === "environment" ? "user" : "environment";
+    console.log('Switching to camera:', currentCamera.value);
+    
+    showScanner.value = true; // เปิด scanner ใหม่
+  } else {
+    console.log('Only one camera available, cannot switch');
   }
 };
 
@@ -771,9 +973,33 @@ const startScanner = async () => {
   try {
     showScanner.value = true;
     scannerError.value = "";
+    
+    // เพิ่ม error handling ที่ดีขึ้น
+    const constraints = { video: getCameraConstraints() };
+    console.log('Using camera constraints:', constraints);
+    
   } catch (err) {
     console.error("Scanner start failed:", err);
-    scannerError.value = `Camera error: ${err.message}`;
+    
+    // จัดการ error แต่ละประเภท
+    if (err.name === 'OverconstrainedError') {
+      console.log('Overconstrained error, trying fallback...');
+      scannerError.value = `Camera constraint error: ${err.message}`;
+      
+      // ลอง fallback constraints
+      try {
+        const fallbackConstraints = { video: { width: 640, height: 480 } };
+        console.log('Trying fallback constraints:', fallbackConstraints);
+        
+        // ถ้า fallback ก็ยังไม่ได้ ให้แสดง error
+        scannerError.value = "Cannot access camera with current settings";
+      } catch (fallbackErr) {
+        console.error('Fallback also failed:', fallbackErr);
+        scannerError.value = "Camera not accessible";
+      }
+    } else {
+      scannerError.value = `Camera error: ${err.message}`;
+    }
   }
 };
 
@@ -879,10 +1105,25 @@ const handleFirstScan = async (currentDataType, trimmedData) => {
     return false
   }
 }
-const onError = (err) => {
-  console.error("QR Scanner error:", err);
-  scannerError.value = `Scanner error: ${err.message || "Camera access denied"}`;
-};
+
+const onError = async (error) => {
+  console.error("QR Scanner error:", error);
+  
+  if (error.name === 'OverConstrainedError' || error.name === 'ConstraintNotSatisfiedError') {
+    console.log("Constraint error detected, trying alternative camera...");
+    
+    // ลอง switch ไปกล้องอื่น
+    if (currentCamera.value === "environment") {
+      currentCamera.value = "user";
+      scannerKey.value++; // Force re-render
+      scannerError.value = "Switched to front camera";
+    } else {
+      scannerError.value = "No compatible camera found";
+    }
+  } else {
+    scannerError.value = `Scanner error: ${error.message}`;
+  }
+}
 
 const handleImageError = (event) => {
   console.error('Failed to load image:', event.target.src);

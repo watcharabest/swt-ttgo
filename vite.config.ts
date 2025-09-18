@@ -14,8 +14,8 @@ export default defineConfig({
   },
   server: {
     https: {
-      key: fs.readFileSync('./cert/key.pem'),
-      cert: fs.readFileSync('./cert/cert.pem'),
+      key: fs.readFileSync('./cert-20250910T025057Z-1-001/cert/key-domain.pem'),
+      cert: fs.readFileSync('./cert-20250910T025057Z-1-001/cert/cert-domain.pem'),
     },
     host: '0.0.0.0',
     allowedHosts: true,
@@ -32,8 +32,8 @@ export default defineConfig({
   },
   preview: {
     https: {
-      key: fs.readFileSync('./cert/key.pem'),
-      cert: fs.readFileSync('./cert/cert.pem'),
+      key: fs.readFileSync('./cert-20250910T025057Z-1-001/cert/key-domain.pem'),
+      cert: fs.readFileSync('./cert-20250910T025057Z-1-001/cert/cert-domain.pem'),
     },
     host: '0.0.0.0',
     port: 4173,

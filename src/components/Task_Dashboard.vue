@@ -1,217 +1,319 @@
 <template>
-  <div class="task-dashboard">
-    <div class="header">
-      <div class="group-select">
-        <label>Select Month</label>
-        <select id="month-select" v-model="selectedMonth" @change="onMonthChange">
-          <option value="all">All</option>
-          <option v-for="month in availableMonths" :key="month.value" :value="month.value">
-            {{ month.label }}
-          </option>
-        </select>
+  <div>
+    <div class="task-dashboard">
+      <div class="header">
+        <div class="group-select">
+          <label>Select Month</label>
+          <select id="month-select" v-model="selectedMonth" @change="onMonthChange">
+            <option value="all">ทั้งหมด</option>
+            <option v-for="month in availableMonths" :key="month.value" :value="month.value">
+              {{ month.label }}
+            </option>
+          </select>
+        </div>
+
+        <div class="group-select">
+          <label>Select Week</label>
+          <select id="week-select" v-model="selectedWeek" :disabled="weeksInSelectedMonth.length === 0">
+            <option value="all">ทั้งหมด</option>
+            <option v-for="week in weeksInSelectedMonth" :key="week.value" :value="week.value">
+              {{ week.label }}
+            </option>
+          </select>
+        </div>
       </div>
 
-      <div class="group-select">
-        <label>Select Week</label>
-        <select id="week-select" v-model="selectedWeek" :disabled="weeksInSelectedMonth.length === 0">
-          <option value="all">All</option>
-          <option v-for="week in weeksInSelectedMonth" :key="week.value" :value="week.value">
-            {{ week.label }}
-          </option>
-        </select>
-      </div>
-    </div>
-
-    <div class="dashboard">
-      <div class="summary-cards">
-        <div class="card card1">
-          <div class="card-header">
-            <div>
-              <i class="bi bi-eye"></i>
-              <div class="card-value">{{ analysisData.totalRecords }}</div>
-              <div class="card-title">Total Records</div>
-              <div style="height: 19.2px;"></div>
+      <div class="dashboard">
+        <div class="summary-cards">
+          <div class="card card1">
+            <div class="card-header">
+              <div>
+                <i class="bi bi-eye"></i>
+                <div class="card-value">{{ analysisData.totalRecords }}</div>
+                <div class="card-title">จำนวนงานทั้งหมด</div>
+                <div style="height: 19.2px;"></div>
+              </div>
             </div>
           </div>
-        </div>
 
-        <div class="card card2">
-          <div class="card-header">
-            <div>
-              <i class="bi bi-check2"></i>
-              <div class="card-value">{{ getPatternCount('1,2,3,4') }}</div>
-              <div class="card-title">Complete Process (1→2→3→4)</div>
-              <div class="card-subtitle">{{ getPatternPercentage('1,2,3,4') }}%</div>
+          <div class="card card2">
+            <div class="card-header">
+              <div>
+                <i class="bi bi-check2"></i>
+                <div class="card-value">{{ getPatternCount('1,2,3,4') }}</div>
+                <div class="card-title">เสร็จสมบูรณ์ (1→2→3→4)</div>
+                <div class="card-subtitle">{{ getPatternPercentage('1,2,3,4') }}%</div>
+              </div>
             </div>
           </div>
-        </div>
 
-        <div class="card card3">
-          <div class="card-header">
-            <div>
-              <i class="bi bi-alarm"></i>
-              <div class="card-value">{{ formatTime(avgTimes?.total) }}</div>
-              <div class="card-title">Avg Total Time (2→4)</div>
-              <div style="height: 19.2px;"></div>
+          <div class="card card3">
+            <div class="card-header">
+              <div>
+                <i class="bi bi-alarm"></i>
+                <div class="card-value">{{ formatTime(avgTimes?.total) }}</div>
+                <div class="card-title">เวลาเฉลี่ย (2→4)</div>
+                <div style="height: 19.2px;"></div>
+              </div>
             </div>
           </div>
-        </div>
 
-        <div class="card card4">
-          <div class="card-header">
-            <div>
-              <i class="bi bi-x-circle"></i>
-              <div class="card-value">{{ analysisData.totalRecords - getPatternCount('1,2,3,4') }}</div>
-              <div class="card-title">Incomplete Records</div>
-              <div class="card-subtitle">
-                {{ ((analysisData.totalRecords - getPatternCount('1,2,3,4')) / analysisData.totalRecords *
-                  100).toFixed(1)
-                }}%
+          <div class="card card4">
+            <div class="card-header">
+              <div>
+                <i class="bi bi-x-circle"></i>
+                <div class="card-value">{{ analysisData.totalRecords - getPatternCount('1,2,3,4') }}</div>
+                <div class="card-title">ไม่สมบูรณ์</div>
+                <div class="card-subtitle">
+                  {{ ((analysisData.totalRecords - getPatternCount('1,2,3,4')) / analysisData.totalRecords *
+                    100).toFixed(1)
+                  }}%
+                </div>
               </div>
             </div>
           </div>
         </div>
-      </div>
 
-      <div class="time-analysis" v-if="avgTimes">
-        <div class="chart-title">Average Processing Time Analysis</div>
-        <div class="time-cards">
-          <div class="time-card blue">
-            <div class="time-card-header">
-              <span class="time-card-icon"><i class="bi bi-clock"></i></span>
-              <span class="time-card-title">Step 1 → 2</span>
+        <div class="time-analysis" v-if="avgTimes">
+          <div class="chart-title">เวลาเฉลี่ยในแต่ละขั้นตอน</div>
+          <div class="time-cards">
+            <div class="time-card blue">
+              <div class="time-card-header">
+                <span class="time-card-icon"><i class="bi bi-clock"></i></span>
+                <span class="time-card-title">Step 1 → 2</span>
+              </div>
+              <div class="time-card-value">{{ formatTime(avgTimes.step1to2) }}</div>
+              <div class="time-card-subtitle">create_pre → modify_auto</div>
             </div>
-            <div class="time-card-value">{{ formatTime(avgTimes.step1to2) }}</div>
-            <div class="time-card-subtitle">create_pre → modify_auto</div>
-          </div>
 
-          <div class="time-card green">
-            <div class="time-card-header">
-              <span class="time-card-icon"><i class="bi bi-clock"></i></span>
-              <span class="time-card-title">Step 2 → 3</span>
+            <div class="time-card green">
+              <div class="time-card-header">
+                <span class="time-card-icon"><i class="bi bi-clock"></i></span>
+                <span class="time-card-title">Step 2 → 3</span>
+              </div>
+              <div class="time-card-value">{{ formatTime(avgTimes.step2to3) }}</div>
+              <div class="time-card-subtitle">modify_auto → AUTO</div>
             </div>
-            <div class="time-card-value">{{ formatTime(avgTimes.step2to3) }}</div>
-            <div class="time-card-subtitle">modify_auto → AUTO</div>
-          </div>
 
-          <div class="time-card yellow">
-            <div class="time-card-header">
-              <span class="time-card-icon"><i class="bi bi-clock"></i></span>
-              <span class="time-card-title">Step 3 → 4</span>
+            <div class="time-card yellow">
+              <div class="time-card-header">
+                <span class="time-card-icon"><i class="bi bi-clock"></i></span>
+                <span class="time-card-title">Step 3 → 4</span>
+              </div>
+              <div class="time-card-value">{{ formatTime(avgTimes.step3to4) }}</div>
+              <div class="time-card-subtitle">AUTO → PRE</div>
             </div>
-            <div class="time-card-value">{{ formatTime(avgTimes.step3to4) }}</div>
-            <div class="time-card-subtitle">AUTO → PRE</div>
-          </div>
 
-          <div class="time-card purple">
-            <div class="time-card-header">
-              <span class="time-card-icon"><i class="bi bi-clock"></i></span>
-              <span class="time-card-title">Total (2 → 4)</span>
+            <div class="time-card purple">
+              <div class="time-card-header">
+                <span class="time-card-icon"><i class="bi bi-clock"></i></span>
+                <span class="time-card-title">Total (2 → 4)</span>
+              </div>
+              <div class="time-card-value">{{ formatTime(avgTimes.total) }}</div>
+              <div class="time-card-subtitle">modify_auto → PRE duration</div>
             </div>
-            <div class="time-card-value">{{ formatTime(avgTimes.total) }}</div>
-            <div class="time-card-subtitle">modify_auto → PRE duration</div>
           </div>
         </div>
-      </div>
-      <div v-else>
-        <p>No data available ( Don't have step 2 and 4)</p>
-      </div>
-
-      <div class="table-container">
-        <div class="table-header">
-          <div class="table-title">Detailed Pattern Analysis</div>
+        <div v-else>
+          <p>No data available ( Don't have step 2 and 4)</p>
         </div>
-        <div class="table-body">
-          <table class="table">
-            <thead>
-              <tr>
-                <th>Pattern</th>
-                <th>Description</th>
-                <th>Count</th>
-                <th>Percentage</th>
-              </tr>
-            </thead>
-            <tbody>
-              <tr v-for="(item, index) in patternData" :key="index">
-                <td><strong>{{ item.pattern }}</strong></td>
-                <td>{{ item.label }}</td>
-                <td>{{ item.count }}</td>
-                <td>
-                  <div class="progress-container">
-                    <div class="progress-bar">
-                      <div class="progress-fill" :style="{ width: item.percentage + '%' }"></div>
+
+        <div class="table-container">
+          <div class="table-header">
+            <div class="table-title">Detailed Pattern Analysis</div>
+          </div>
+          <div class="table-body">
+            <table class="table">
+              <thead>
+                <tr>
+                  <th>Pattern</th>
+                  <th>Description</th>
+                  <th>Count</th>
+                  <th>Percentage</th>
+                </tr>
+              </thead>
+              <tbody>
+                <tr v-for="(item, index) in patternData" :key="index" @click="filterByPattern(item.pattern)"
+                  :class="{ 'active-row': selectedPattern === item.pattern }" style="cursor: pointer;">
+                  <td><strong>{{ item.pattern }}</strong></td>
+                  <td>{{ item.label }}</td>
+                  <td>{{ item.count }}</td>
+                  <td>
+                    <div class="progress-container">
+                      <div class="progress-bar">
+                        <div class="progress-fill" :style="{ width: item.percentage + '%' }"></div>
+                      </div>
+                      {{ item.percentage }}%
                     </div>
-                    {{ item.percentage }}%
-                  </div>
-                </td>
-              </tr>
-            </tbody>
-          </table>
+                  </td>
+                </tr>
+              </tbody>
+            </table>
+          </div>
         </div>
-      </div>
 
-      <div class="table-container">
-        <div class="table-header">
-          <div class="table-title">Detailed Duration Analysis</div>
-        </div>
-        <div class="table-body">
-          <table class="table">
-            <thead>
-              <tr>
-                <th @click="sortBy('unique_tray_id')" class="sortable">
-                  Tray ID
-                  <span v-if="sortKey === 'unique_tray_id'" class="sort-icon">
-                    {{ sortOrder === 'asc' ? '↑' : '↓' }}
-                  </span>
-                </th>
-                <th @click="sortBy('product_order')" class="sortable">
-                  Product Order
-                  <span v-if="sortKey === 'product_order'" class="sort-icon">
-                    {{ sortOrder === 'asc' ? '↑' : '↓' }}
-                  </span>
-                </th>
-                <th @click="sortBy('step1to2')" class="sortable">
-                  Duration (1→2)
-                  <span v-if="sortKey === 'step1to2'" class="sort-icon">
-                    {{ sortOrder === 'asc' ? '↑' : '↓' }}
-                  </span>
-                </th>
-                <th @click="sortBy('step2to3')" class="sortable">
-                  Duration (2→3)
-                  <span v-if="sortKey === 'step2to3'" class="sort-icon">
-                    {{ sortOrder === 'asc' ? '↑' : '↓' }}
-                  </span>
-                </th>
-                <th @click="sortBy('step3to4')" class="sortable">
-                  Duration (3→4)
-                  <span v-if="sortKey === 'step3to4'" class="sort-icon">
-                    {{ sortOrder === 'asc' ? '↑' : '↓' }}
-                  </span>
-                </th>
-                <th @click="sortBy('totalDuration')" class="sortable">
-                  Duration (2→4)
-                  <span v-if="sortKey === 'totalDuration'" class="sort-icon">
-                    {{ sortOrder === 'asc' ? '↑' : '↓' }}
-                  </span>
-                </th>
-              </tr>
-            </thead>
-            <tbody>
-              <tr v-for="(item, index) in pagedRows" :key="index">
-                <td>{{ item.unique_tray_id }}</td>
-                <td>{{ item.product_order }}</td>
-                <td>{{ formatTime(item.step1to2) }}</td>
-                <td>{{ formatTime(item.step2to3) }}</td>
-                <td>{{ formatTime(item.step3to4) }}</td>
-                <td>{{ formatTime(item.totalDuration) }}</td>
-              </tr>
-            </tbody>
-          </table>
+        <div class="table-container">
+          <div class="table-header">
+            <div class="table-title">Detailed Duration Analysis
+              <select id="line" v-model="selectedLine" class="table-select">
+                <option value="">All</option>
+                <optgroup label="SMT4">
+                  <option value="AUTO4">AUTO4</option>
+                  <option value="PRE4101">PRE4101</option>
+                  <option value="PRE4102">PRE4102</option>
+                  <option value="PRE4103">PRE4103</option>
+                  <option value="PRE4104">PRE4104</option>
+                  <option value="PRE4105">PRE4105</option>
+                  <option value="PRE4106">PRE4106</option>
+                  <option value="PRE4107">PRE4107</option>
+                  <option value="PRE4108">PRE4108</option>
+                  <option value="PRE4109">PRE4109</option>
+                  <option value="PRE4110">PRE4110</option>
+                  <option value="PRE4201">PRE4201</option>
+                  <option value="PRE4202">PRE4202</option>
+                  <option value="PRE4203">PRE4203</option>
+                  <option value="PRE4204">PRE4204</option>
+                  <option value="PRE4205">PRE4205</option>
+                  <option value="PRE4206">PRE4206</option>
+                  <option value="PRE4207">PRE4207</option>
+                  <option value="PRE4208">PRE4208</option>
+                  <option value="PRE4209">PRE4209</option>
+                  <option value="PRE4210">PRE4210</option>
+                  <option value="PRE4211">PRE4211</option>
+                  <option value="PRE4212">PRE4212</option>
+                  <option value="PRE4213">PRE4213</option>
+                </optgroup>
+                <optgroup label="SMT5">
+                  <option value="AUTO5">AUTO5</option>
+                  <option value="PRE5102">PRE5102</option>
+                  <option value="PRE5103">PRE5103</option>
+                  <option value="PRE5104">PRE5104</option>
+                  <option value="PRE5105">PRE5105</option>
+                  <option value="PRE5106">PRE5106</option>
+                  <option value="PRE5107">PRE5107</option>
+                  <option value="PRE5108">PRE5108</option>
+                  <option value="PRE5109">PRE5109</option>
+                  <option value="PRE5110">PRE5110</option>
+                  <option value="PRE5201">PRE5201</option>
+                  <option value="PRE5202">PRE5202</option>
+                  <option value="PRE5203">PRE5203</option>
+                  <option value="PRE5204">PRE5204</option>
+                  <option value="PRE5205">PRE5205</option>
+                  <option value="PRE5206">PRE5206</option>
+                  <option value="PRE5207">PRE5207</option>
+                  <option value="PRE5208">PRE5208</option>
+                  <option value="PRE5209">PRE5209</option>
+                  <option value="PRE5210">PRE5210</option>
+                  <option value="PRE5211">PRE5211</option>
+                  <option value="PRE5212">PRE5212</option>
+                  <option value="PRE5213">PRE5213</option>
+                </optgroup>
+              </select>
+            </div>
+          </div>
+          <div class="table-body">
+            <table class="table">
+              <thead>
+                <tr>
+                  <th @click="sortBy('unique_tray_id')" class="sortable">
+                    Tray ID_เวลาสร้างฟอร์ม
+                    <span v-if="sortKey === 'unique_tray_id'" class="sort-icon">
+                      {{ sortOrder === 'asc' ? '↑' : '↓' }}
+                    </span>
+                  </th>
+                  <th @click="sortBy('product_order')" class="sortable">
+                    Product Order
+                    <span v-if="sortKey === 'product_order'" class="sort-icon">
+                      {{ sortOrder === 'asc' ? '↑' : '↓' }}
+                    </span>
+                  </th>
+                  <th @click="sortBy('step1to2')" class="sortable">
+                    Duration (1→2)
+                    <span v-if="sortKey === 'step1to2'" class="sort-icon">
+                      {{ sortOrder === 'asc' ? '↑' : '↓' }}
+                    </span>
+                  </th>
+                  <th @click="sortBy('step2to3')" class="sortable">
+                    Duration (2→3)
+                    <span v-if="sortKey === 'step2to3'" class="sort-icon">
+                      {{ sortOrder === 'asc' ? '↑' : '↓' }}
+                    </span>
+                  </th>
+                  <th @click="sortBy('step3to4')" class="sortable">
+                    Duration (3→4)
+                    <span v-if="sortKey === 'step3to4'" class="sort-icon">
+                      {{ sortOrder === 'asc' ? '↑' : '↓' }}
+                    </span>
+                  </th>
+                  <th @click="sortBy('totalDuration')" class="sortable">
+                    Duration (2→4)
+                    <span v-if="sortKey === 'totalDuration'" class="sort-icon">
+                      {{ sortOrder === 'asc' ? '↑' : '↓' }}
+                    </span>
+                  </th>
+                </tr>
+              </thead>
+              <tbody>
+                <tr v-for="(item, index) in pagedRows" :key="index"
+                  @click="showTaskDetails(item.task_ids[0], item.unique_tray_id)" style="cursor: pointer;">
+                  <td>{{ item.unique_tray_id }}</td>
+                  <td>{{ item.product_order }}</td>
+                  <td>{{ formatTime(item.step1to2) }}</td>
+                  <td>{{ formatTime(item.step2to3) }}</td>
+                  <td>{{ formatTime(item.step3to4) }}</td>
+                  <td>{{ formatTime(item.totalDuration) }}</td>
+                </tr>
+              </tbody>
+            </table>
+
+          </div>
           <div v-if="totalPages > 1" class="pagination">
             <button @click="prevPage" :disabled="currentPage === 1">Prev</button>
             <span>Page {{ currentPage }} of {{ totalPages }}</span>
             <button @click="nextPage" :disabled="currentPage === totalPages">Next</button>
           </div>
+        </div>
+      </div>
+    </div>
+
+    <div v-if="showModal" class="scanner-modal" @click="closeModal">
+      <div class="scanner-container" @click.stop>
+        <div class="scanner-header">
+          <h3>Tray & Task History</h3>
+          <button @click="closeModal" class="close-btn">×</button>
+        </div>
+
+        <div v-if="loadingTaskDetail" class="loading">
+          Loading details...
+        </div>
+
+        <div v-else-if="taskDetail" class="form">
+          <div class="form-group">
+            <span>Production Order</span>
+            <p>{{ taskDetail.product_order }}</p>
+          </div>
+          <div class="form-group">
+            <div class="history-log">
+              <table>
+                <thead>
+                  <tr>
+                    <th>Status</th>
+                    <th>Timestamp</th>
+                  </tr>
+                </thead>
+                <tbody>
+                  <tr v-for="log in selectedTrayHistory" :key="log.timestamp + log.location">
+                    <td>{{ translateLocation(log.location) }}</td>
+                    <td>{{ log.timestamp }}</td>
+                  </tr>
+                </tbody>
+              </table>
+            </div>
+          </div>
+        </div>
+
+        <div v-else class="error-message">
+          Failed to load task details.
         </div>
       </div>
     </div>
@@ -221,17 +323,25 @@
 <script setup>
 import { ref, computed, onMounted, onUnmounted } from 'vue';
 import axios from 'axios';
+import { useMyVar } from '../myVar';
 
 const rawData = ref([]);
-const chartInstance = ref(null);
+const store = useMyVar();
 const selectedMonth = ref('all');
 const availableMonths = ref([]);
-const sortKey = ref('unique_tray_id');
+const sortKey = ref('timestamp');
 const sortOrder = ref('desc');
 const pageSize = 8;
 const currentPage = ref(1);
 const selectedWeek = ref('all');
 const availableWeeks = ref([]);
+const selectedPattern = ref('all');
+const selectedLine = ref(store.line || '');
+
+const showModal = ref(false);
+const loadingTaskDetail = ref(false);
+const taskDetail = ref(null);
+const selectedTrayHistory = ref([]);
 
 const WORKING_HOURS = {
   normalStart: 8,    // 08:00
@@ -254,19 +364,74 @@ onMounted(async () => {
 });
 
 const patternDescriptions = {
-  '1,2,3,4': 'Complete Process (ครบทุก step)',
-  '1,2,3': 'Missing Final Step (ขาด PRE)',
-  '1,2,4': 'Missing AUTO Step (ขาด AUTO)',
-  '1,3,4': 'Missing Modify Step (ขาด modify_auto)',
-  '1,2': 'Stopped at modify_auto (หยุดที่ modify_auto)',
-  '1,3': 'Missing modify_auto & PRE (ขาด modify_auto,PRE)',
-  '1,4': 'Only Start & End (มีแค่ create_pre,PRE)',
-  '1': 'Only Initial Step (มีแค่ create_pre)',
+  '1,2,3,4': 'Complete Process',
+  '1,2,3': 'Missing Check in at PRE',
+  '1,2,4': 'Missing Check Out at Auto',
+  '1,3,4': 'Missing Modify Auto Form',
+  '1,2': 'Stop at Auto Form',
+  '1,3': 'Missing Modift Form at Auto & Moissing Check in PRE',
+  '1,4': 'Missing Modify Form at Auto & Missing Check Out Auto',
+  '1': 'Waiting to Automate (รอ AUTO)',
   '2,3,4': 'Missing create_pre (ขาด create_pre)',
   '2,3': 'modify_auto to AUTO only',
   '2,4': 'modify_auto to PRE only',
   '3,4': 'AUTO to PRE only'
 };
+
+// Add this function to handle row clicks
+function filterByPattern(pattern) {
+  // Toggle behavior: if the user clicks the currently active pattern, reset the filter.
+  if (selectedPattern.value === pattern) {
+    selectedPattern.value = 'all';
+  } else {
+    selectedPattern.value = pattern;
+  }
+  currentPage.value = 1; // Reset to the first page when filter changes
+}
+
+// Replace your old showTaskDetails and closeModal functions with these
+
+function showTaskDetails(taskId, uniqueTrayId) {
+  loadingTaskDetail.value = true;
+  showModal.value = true;
+  taskDetail.value = null;
+  selectedTrayHistory.value = [];
+
+  // หา record ของ task นี้
+  const taskInfo = rawData.value.find(row => row.task_id === taskId);
+
+  if (taskInfo) {
+    taskDetail.value = {
+      task_id: taskInfo.task_id,
+      product_order: taskInfo.product_order,
+      timestamp: taskInfo.timestamp,
+      unique_tray_id: taskInfo.unique_tray_id
+    };
+  } else {
+    taskDetail.value = { task_id: taskId, product_order: 'N/A' };
+  }
+
+  // หาประวัติของ unique_tray_id นี้เท่านั้น (= 1 complete process flow)
+  const history = rawData.value
+    .filter(row => row.unique_tray_id === uniqueTrayId)
+    .sort((a, b) => parseTimestamp(a.timestamp) - parseTimestamp(b.timestamp));
+
+  selectedTrayHistory.value = history;
+  loadingTaskDetail.value = false;
+}
+
+function translateLocation(location) {
+  if (!location) return 'N/A';
+  if (location === 'create_pre') return 'สร้างฟอร์ม';
+  if (location === 'modify_auto') return 'แก้ไขฟอร์ม';
+  if (location.startsWith('AUTO')) return 'Check out AUTO';
+  if (location.startsWith('PRE')) return 'Check in PRE';
+  return location;
+}
+
+function closeModal() {
+  showModal.value = false;
+}
 
 function sortBy(key) {
   if (sortKey.value === key) {
@@ -284,33 +449,32 @@ const analysisData = computed(() => {
     return { patterns: {}, timeDurations: [], totalRecords: 0 };
   }
 
-  const trayGroups = {};
-  const displayTrayIds = {};
-  const productOrders = {};
+  // จัดกลุ่มตาม product_order + unique_tray_id = 1 complete process flow
+  const processGroups = {};
 
   filteredData.forEach(row => {
-    const trayId = row.unique_tray_id;
-
-    if (!trayGroups[trayId]) {
-      trayGroups[trayId] = [];
+    // แต่ละ product_order + unique_tray_id = process flow เดียว
+    const groupKey = `${row.product_order}_${row.unique_tray_id}`;
+    
+    if (!processGroups[groupKey]) {
+      processGroups[groupKey] = {
+        product_order: row.product_order,
+        unique_tray_id: row.unique_tray_id,
+        tray_id: row.tray_id,
+        records: []
+      };
     }
-    trayGroups[trayId].push(row);
-
-    if (!displayTrayIds[trayId]) {
-      displayTrayIds[trayId] = row.tray_id;
-    }
-    if (!productOrders[row.product_order]) {
-      productOrders[row.product_order] = row.product_order;
-    }
+    processGroups[groupKey].records.push(row);
   });
 
   const patterns = {};
   const timeDurations = [];
 
-  Object.keys(trayGroups).forEach(trayId => {
-    const trayData = trayGroups[trayId];
+  Object.values(processGroups).forEach(group => {
+    const { product_order, unique_tray_id, tray_id, records } = group;
 
-    trayData.sort((a, b) => {
+    // เรียงตามเวลา
+    records.sort((a, b) => {
       const timeA = parseTimestamp(a.timestamp);
       const timeB = parseTimestamp(b.timestamp);
       return timeA - timeB;
@@ -321,19 +485,15 @@ const analysisData = computed(() => {
     const taskIds = new Set();
     const allTimestamps = [];
 
-    trayData.forEach(row => {
-      if (row.task_id) {
-        taskIds.add(row.task_id);
-      }
-
+    records.forEach(row => {
+      if (row.task_id) taskIds.add(row.task_id);
+      
       const step = getStepFromLocation(row.location);
       if (step) {
         stepsPresent.add(step);
         const timestamp = parseTimestamp(row.timestamp);
-
         if (timestamp) {
           allTimestamps.push(timestamp);
-
           if (!stepTimestamps[step]) {
             stepTimestamps[step] = [];
           }
@@ -342,7 +502,7 @@ const analysisData = computed(() => {
       }
     });
 
-    // เรียงลำดับ timestamps ในแต่ละ step
+    // เรียง timestamps ในแต่ละ step
     Object.keys(stepTimestamps).forEach(step => {
       stepTimestamps[step].sort((a, b) => a - b);
     });
@@ -355,52 +515,48 @@ const analysisData = computed(() => {
     }
     patterns[patternKey].count++;
 
-    // คำนวณ duration เฉพาะเมื่อมี step 2 และ 4
+    // สร้าง duration data สำหรับแต่ละ process flow
+    const durationData = {
+      unique_tray_id: unique_tray_id,
+      display_tray_id: tray_id,
+      product_order: product_order,
+      timestamp: records[0].timestamp,
+      task_ids: Array.from(taskIds),
+      pattern: patternKey,
+      totalDuration: null,
+      step1to2: null,
+      step2to3: null,
+      step3to4: null
+    };
+
+    // คำนวณ duration แต่ละขั้นตอน
+    if (stepTimestamps['1'] && stepTimestamps['2']) {
+      const step1Time = stepTimestamps['1'][stepTimestamps['1'].length - 1];
+      const step2Time = stepTimestamps['2'][0];
+      durationData.step1to2 = calculateWorkingHoursWithOT(step1Time, step2Time, allTimestamps);
+    }
+    if (stepTimestamps['2'] && stepTimestamps['3']) {
+      const step2Time = stepTimestamps['2'][stepTimestamps['2'].length - 1];
+      const step3Time = stepTimestamps['3'][0];
+      durationData.step2to3 = calculateWorkingHoursWithOT(step2Time, step3Time, allTimestamps);
+    }
+    if (stepTimestamps['3'] && stepTimestamps['4']) {
+      const step3Time = stepTimestamps['3'][stepTimestamps['3'].length - 1];
+      const step4Time = stepTimestamps['4'][0];
+      durationData.step3to4 = calculateWorkingHoursWithOT(step3Time, step4Time, allTimestamps);
+    }
+
+    // Total Duration (2→4)
     if (stepTimestamps['2'] && stepTimestamps['4']) {
-      // ใช้ timestamp แรกของ step 2 และ timestamp สุดท้ายของ step 4
       const step2Time = stepTimestamps['2'][0];
       const step4Time = stepTimestamps['4'][stepTimestamps['4'].length - 1];
-
-      // คำนวณ Total Duration (2→4)
-      const totalDuration = calculateWorkingHoursWithOT(step2Time, step4Time, allTimestamps);
-
-      const durationData = {
-        unique_tray_id: trayId,
-        display_tray_id: displayTrayIds[trayId],
-        product_order: productOrders[trayData[0].product_order],
-        task_ids: taskIds.size > 0 ? Array.from(taskIds) : [],
-        totalDuration: totalDuration,
-        step1to2: null,
-        step2to3: null,
-        step3to4: null
-      };
-
-      // คำนวณ step 1→2
-      if (stepTimestamps['1'] && stepTimestamps['2']) {
-        const step1Time = stepTimestamps['1'][stepTimestamps['1'].length - 1]; // timestamp สุดท้ายของ step 1
-        const step2Time = stepTimestamps['2'][0]; // timestamp แรกของ step 2
-        durationData.step1to2 = calculateWorkingHoursWithOT(step1Time, step2Time, allTimestamps);
-      }
-
-      // คำนวณ step 2→3
-      if (stepTimestamps['2'] && stepTimestamps['3']) {
-        const step2Time = stepTimestamps['2'][stepTimestamps['2'].length - 1]; // timestamp สุดท้ายของ step 2
-        const step3Time = stepTimestamps['3'][0]; // timestamp แรกของ step 3
-        durationData.step2to3 = calculateWorkingHoursWithOT(step2Time, step3Time, allTimestamps);
-      }
-
-      // คำนวณ step 3→4
-      if (stepTimestamps['3'] && stepTimestamps['4']) {
-        const step3Time = stepTimestamps['3'][stepTimestamps['3'].length - 1]; // timestamp สุดท้ายของ step 3
-        const step4Time = stepTimestamps['4'][0]; // timestamp แรกของ step 4
-        durationData.step3to4 = calculateWorkingHoursWithOT(step3Time, step4Time, allTimestamps);
-      }
-
-      timeDurations.push(durationData);
+      durationData.totalDuration = calculateWorkingHoursWithOT(step2Time, step4Time, allTimestamps);
     }
+
+    timeDurations.push(durationData);
   });
 
-  const totalRecords = Object.keys(trayGroups).length;
+  const totalRecords = Object.keys(processGroups).length;
   Object.keys(patterns).forEach(key => {
     patterns[key].percentage = (patterns[key].count / totalRecords * 100).toFixed(1);
   });
@@ -409,9 +565,40 @@ const analysisData = computed(() => {
 });
 
 
+
 const filteredAndSortedRows = computed(() => {
-  let result = [...analysisData.value.timeDurations]
-  if (sortKey.value) {
+  let result = [...analysisData.value.timeDurations];
+
+  // 1) Filter by selected pattern (affects only the table)
+  if (selectedPattern.value !== 'all') {
+    result = result.filter(row => row.pattern === selectedPattern.value);
+  }
+
+  // 2) Filter by selected line
+  if (selectedLine.value) {
+    // Use month/week filtered raw data to find trays that include this line
+    const monthWeekFiltered = getFilteredData();
+    const traysWithSelectedLine = new Set(
+      monthWeekFiltered
+        .filter(r => (r.location || '').startsWith(selectedLine.value))
+        .map(r => r.unique_tray_id)
+    );
+
+    result = result.filter(row => traysWithSelectedLine.has(row.unique_tray_id));
+  }
+
+  if (sortKey.value === 'timestamp') {
+    result.sort((a, b) => {
+      const aValue = parseTimestampForSort(a[sortKey.value])
+      const bValue = parseTimestampForSort(b[sortKey.value])
+
+      if (sortOrder.value === 'asc') {
+        return aValue > bValue ? 1 : -1
+      } else {
+        return aValue < bValue ? 1 : -1
+      }
+    })
+  } else {
     result.sort((a, b) => {
       const aValue = a[sortKey.value]
       const bValue = b[sortKey.value]
@@ -548,6 +735,19 @@ const parseTimestamp = (timestamp) => {
   }
 };
 
+const parseTimestampForSort = (timestamp) => {
+  if (!timestamp) return null;
+  try {
+    const [datePart, timePart] = timestamp.split(' ');
+    const [day, month, year] = datePart.split('/');
+    const fullYear = `20${year}`;
+    return `${fullYear}-${month}-${day} ${timePart}`;
+  } catch (error) {
+    console.error('Error parsing timestamp:', timestamp, error);
+    return null;
+  }
+};
+
 const getWeekNumber = (date) => {
   const startOfYear = new Date(date.getFullYear(), 0, 1);
   const diffInTime = date - startOfYear + (startOfYear.getTimezoneOffset() - date.getTimezoneOffset()) * 60 * 1000;
@@ -577,7 +777,7 @@ const generateAvailableMonths = () => {
     const [year, month] = monthKey.split('-');
     const monthNames = [
       'January', 'February', 'March', 'April', 'May', 'June',
-      'July', 'August', 'September', 'October', 'November', 'December'
+      'July', 'สิงหาคม', 'กันยายน', 'October', 'November', 'December'
     ];
     return {
       value: monthKey,
@@ -733,17 +933,17 @@ const formatTime = (minutes) => {
   if (roundedMinutes < 1) {
     const seconds = Math.round(roundedMinutes * 60);
     return `${seconds}secs`;
-  } 
+  }
   else if (roundedMinutes < 60) {
-    return `${Math.round(roundedMinutes * 100) / 100}mins`;
-  } 
+    return `${Math.round(roundedMinutes * 100) / 100}นาที`;
+  }
   else {
     const hours = Math.floor(roundedMinutes / 60);
     const remainingMinutes = Math.round((roundedMinutes % 60) * 100) / 100;
     if (remainingMinutes === 0) {
       return `${hours}h`;
     } else {
-      return `${hours}h ${remainingMinutes}mins`;
+      return `${hours}h ${remainingMinutes}นาที`;
     }
   }
 };
@@ -751,11 +951,7 @@ const formatTime = (minutes) => {
 const getPatternCount = pattern => analysisData.value.patterns[pattern]?.count || 0;
 const getPatternPercentage = pattern => analysisData.value.patterns[pattern]?.percentage || 0;
 
-onUnmounted(() => {
-  if (chartInstance.value) {
-    chartInstance.value.destroy();
-  }
-});
+
 </script>
 
 <style scoped>
@@ -843,6 +1039,11 @@ select {
   font-size: 1rem;
 }
 
+.table-select {
+  justify-self: end;
+  margin-right: 1rem;
+}
+
 .summary-cards {
   width: 100%;
   display: grid;
@@ -899,6 +1100,7 @@ select {
   color: #2c3e50;
   display: flex;
   text-align: center;
+  justify-content: center;
 }
 
 .card-value {
@@ -1011,6 +1213,7 @@ select {
   border-radius: 12px;
   box-shadow: 0 4px 6px rgba(0, 0, 0, 0.1);
   overflow: hidden;
+  min-height: 629px;
 }
 
 .table-header {
@@ -1022,6 +1225,9 @@ select {
 .table-title {
   font-size: 1.5rem;
   font-weight: bold;
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
 }
 
 .table-body {
@@ -1033,6 +1239,13 @@ select {
   border-collapse: collapse;
 }
 
+
+.table tbody tr.active-row {
+  background-color: #d0e7ff;
+  /* A light blue to indicate selection */
+  font-weight: bold;
+}
+
 .table th,
 .table td {
   padding: 15px;
@@ -1042,7 +1255,6 @@ select {
 
 .table th,
 td {
-  background: #f8f9fa;
   font-weight: 600;
   color: #2c3e50;
   font-size: 0.75rem;
@@ -1058,15 +1270,6 @@ td {
 
 .table tr:hover {
   background: #f8f9fa;
-}
-
-.chart-container {
-  background: white;
-  border-radius: 12px;
-  box-shadow: 0 4px 6px rgba(0, 0, 0, 0.1);
-  overflow: hidden;
-  padding: 1rem;
-
 }
 
 .progress-fill {
@@ -1137,4 +1340,113 @@ td {
   font-weight: 600;
   font-size: 1rem;
 }
+
+.scanner-modal {
+  position: fixed;
+  top: 0;
+  left: 0;
+  width: 100%;
+  height: 100%;
+  background-color: rgba(0, 0, 0, 0.6);
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  z-index: 1000;
+  backdrop-filter: blur(5px);
+  /* Adds a nice frosted glass effect */
+}
+
+/* The main modal container/box */
+.scanner-container {
+  background-color: #ffffff;
+  border-radius: 16px;
+  box-shadow: 0 8px 30px rgba(0, 0, 0, 0.15);
+  width: 90%;
+  max-width: 650px;
+  max-height: 90vh;
+  display: flex;
+  flex-direction: column;
+  overflow: hidden;
+  /* Important for the header gradient */
+}
+
+/* Header section with a colorful gradient */
+.scanner-header {
+  background: linear-gradient(135deg, #34495e, #2c3e50);
+  color: #fff;
+  padding: 20px 24px;
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+}
+
+.scanner-header h3 {
+  margin: 0;
+  font-size: 1.5rem;
+}
+
+.close-btn {
+  background: none;
+  border: none;
+  font-size: 2.5rem;
+  color: rgba(255, 255, 255, 0.8);
+  cursor: pointer;
+  transition: color 0.2s ease;
+}
+
+.close-btn:hover {
+  color: #fff;
+}
+
+/* --- Content Styles --- */
+.form {
+  padding: 24px;
+  overflow-y: auto;
+}
+
+.form-group {
+  margin-bottom: 20px;
+}
+
+.form-group span {
+  font-weight: 700;
+  font-size: 0.9rem;
+  color: #2c3e50;
+  /* Blue accent for labels */
+  display: block;
+  margin-bottom: 6px;
+}
+
+.form-group p {
+  margin: 0;
+  font-size: 1.1rem;
+  color: #2c3e50;
+}
+
+/* --- Colorful History Table --- */
+.history-log table {
+  width: 100%;
+  border-collapse: collapse;
+}
+
+.history-log th {
+  background-color: #f8f9fa;
+  padding: 12px 16px;
+  text-align: left;
+  font-size: 0.85rem;
+  color: #6c757d;
+  border-bottom: 2px solid #e9ecef;
+}
+
+.history-log td {
+  padding: 12px 16px;
+  border-bottom: 1px solid #f1f3f5;
+}
+
+/* Zebra-striping for readability */
+.history-log tbody tr:nth-child(even) {
+  background-color: #f8f9fa;
+}
+
+/* --- Location Status Badges --- */
 </style>

@@ -77,17 +77,7 @@
         </div>
 
         <div class="scanner-content">
-          <QrcodeStream :key="scannerKey" @detect="onDetect" @error="onError" class="scanner-video" :constraints="{
-            facingMode: currentCamera,
-            width: { ideal: isMicroMode ? 640 : 480 },
-            height: { ideal: isMicroMode ? 480 : 360 },
-            zoom: isMicroMode ? 4 : 1,
-            focusMode: 'continuous',
-            pointsOfInterest: [{ x: 0.5, y: 0.5 }],
-            advanced: isMicroMode
-              ? [{ contrast: 100 }, { brightness: 0 }, { sharpness: 100 }]
-              : [],
-          }" :track="paintBoundingBox" />
+          <QrcodeStream :key="scannerKey" @detect="onDetect" @error="onError" class="scanner-video" :constraints="getCameraConstraints()" :track="paintBoundingBox" />
           <div class="scanner-overlay">
             <div class="scanner-frame" :class="{ 'micro-mode': isMicroMode }"></div>
             <button v-if="hasMultipleCameras" @click="switchCamera" class="floating-camera-btn" :title="currentCamera === 'user'
@@ -171,9 +161,26 @@ const classifyData = (data) => {
 
 const checkCameraSupport = async () => {
   try {
+    // ขอ permission อย่างชัดเจน
+    const stream = await navigator.mediaDevices.getUserMedia({ video: true });
+    stream.getTracks().forEach(track => track.stop()); // หยุดทันที
+    
     const devices = await navigator.mediaDevices.enumerateDevices();
     const videoDevices = devices.filter((device) => device.kind === "videoinput");
+    
+    // Debug log
+    console.log('Available cameras:', videoDevices);
+    videoDevices.forEach((device, index) => {
+      console.log(`Camera ${index}: ${device.label} - ${device.deviceId}`);
+    });
+    
     hasMultipleCameras.value = videoDevices.length > 1;
+    
+    // ถ้ามีแค่กล้องเดียว ให้ใช้กล้องนั้น
+    if (videoDevices.length === 1) {
+      currentCamera.value = "any"; // ใช้กล้องไหนก็ได้ที่มี
+    }
+    
     return videoDevices.length > 0;
   } catch (err) {
     console.error("Camera check failed:", err);
@@ -194,22 +201,96 @@ const toggleScanner = async () => {
   }
 };
 
-const switchCamera = () => {
-  if (hasMultipleCameras.value) {
+const switchCamera = async () => {
+  if (hasMultipleCameras.value) { 
     currentCamera.value = currentCamera.value === "environment" ? "user" : "environment";
+    console.log('Switching to camera:', currentCamera.value);
+    
+    showScanner.value = true; // เปิด scanner ใหม่
+  } else {
+    console.log('Only one camera available, cannot switch');
   }
+};
+
+
+const getCameraConstraints = () => {
+  const baseConstraints = {
+    width: { ideal: isMicroMode.value ? 640 : 480 },
+    height: { ideal: isMicroMode.value ? 480 : 360 },
+    zoom: isMicroMode.value ? 4 : 1,
+    focusMode: 'continuous',
+    pointsOfInterest: [{ x: 0.5, y: 0.5 }],
+    advanced: isMicroMode.value
+      ? [{ contrast: 100 }, { brightness: 0 }, { sharpness: 100 }]
+      : [],
+  };
+
+  // แก้ไขการจัดการ facingMode
+  if (hasMultipleCameras.value) {
+    // มีหลายกล้อง ใช้ exact constraint
+    if (currentCamera.value === "environment") {
+      return {
+        ...baseConstraints,
+        facingMode: { exact: "environment" },
+      };
+    } else if (currentCamera.value === "user") {
+      return {
+        ...baseConstraints,
+        facingMode: { exact: "user" },
+      };
+    }
+  } else {
+    // มีกล้องเดียว ใช้ ideal แทน exact หรือไม่ระบุ facingMode
+    if (currentCamera.value === "environment") {
+      return {
+        ...baseConstraints,
+        facingMode: { ideal: "environment" },
+      };
+    } else if (currentCamera.value === "user") {
+      return {
+        ...baseConstraints,
+        facingMode: { ideal: "user" },
+      };
+    }
+  }
+
+  // fallback - ไม่ระบุ facingMode เลย ใช้กล้องอันไหนก็ได้
+  return baseConstraints;
 };
 
 const startScanner = async () => {
   try {
     showScanner.value = true;
     scannerError.value = "";
+    
+    // เพิ่ม error handling ที่ดีขึ้น
+    const constraints = { video: getCameraConstraints() };
+    console.log('Using camera constraints:', constraints);
+    
   } catch (err) {
     console.error("Scanner start failed:", err);
-    scannerError.value = `Camera error: ${err.message}`;
+    
+    // จัดการ error แต่ละประเภท
+    if (err.name === 'OverconstrainedError') {
+      console.log('Overconstrained error, trying fallback...');
+      scannerError.value = `Camera constraint error: ${err.message}`;
+      
+      // ลอง fallback constraints
+      try {
+        const fallbackConstraints = { video: { width: 640, height: 480 } };
+        console.log('Trying fallback constraints:', fallbackConstraints);
+        
+        // ถ้า fallback ก็ยังไม่ได้ ให้แสดง error
+        scannerError.value = "Cannot access camera with current settings";
+      } catch (fallbackErr) {
+        console.error('Fallback also failed:', fallbackErr);
+        scannerError.value = "Camera not accessible";
+      }
+    } else {
+      scannerError.value = `Camera error: ${err.message}`;
+    }
   }
 };
-
 const closeScanner = () => {
   showScanner.value = false;
   scannerError.value = "";
@@ -340,29 +421,88 @@ const handleFirstScan = async (currentDataType, trimmedData) => {
           return true;
 
         } else if (/^PRE/i.test(store.line)) {
-          axios.post(`${__API_BASE_URL__}/check_in_pre`, {
-            tray_id: trimmedData,
-            location: store.line,
-          });
+          await showTaskDetail(checkTaskForm.value);
+
           resetScanState()
-          await Swal.fire({
-            icon: "success",
-            title: "Check In Tray Success",
-            html: `
+
+          let taskDetailHtml = `
             <div style="text-align: left;">
-                <p><strong>Tray:</strong> ${trimmedData}</p>
-                <p><strong>Location:</strong> ${store.line}</p>
-            </div>`,
-            toast: true,
-            position: "top-end",
-            showConfirmButton: false,
-            timer: 5000,
-            timerProgressBar: true,
-            didOpen: (toast) => {
-              toast.onmouseenter = Swal.stopTimer;
-              toast.onmouseleave = Swal.resumeTimer;
+              <p><strong>Production Order:</strong> ${taskDetail.value.product_order}</p>`;
+
+          if (taskDetail.value) {
+            if (taskDetail.value.amount) {
+              taskDetailHtml += `<p><strong>จำนวนชิ้นงาน (PRE):</strong> ${taskDetail.value.amount}</p>`;
+            }
+            if (taskDetail.value.amount_auto) {
+              taskDetailHtml += `<p><strong>จำนวนชิ้นงาน (AUTO):</strong> ${taskDetail.value.amount_auto}</p>`;
+            }
+
+            taskDetailHtml += `
+              <div style="display: flex; align-items: baseline; border-top: 1px solid #eee;">
+                <label for="amount_pre_input" style="font-weight: bold; white-space: nowrap;">จำนวนชิ้นงาน (PRE Recheck):</label>
+                
+                <input type="number" min="0" id="amount_pre_input" class="swal2-input" placeholder="กรอกจำนวน" style="width: 150px;">
+              </div>
+            `;
+            if (taskDetail.value.images && taskDetail.value.images.length > 0) {
+              taskDetailHtml += `<div class="form-group">
+                <p><strong>Images:</strong></p>
+                <div class="image-gallery" style="display: flex; flex-wrap: wrap; gap: 10px; margin-top: 10px;">`;
+
+              taskDetail.value.images.forEach((imageUrl) => {
+                taskDetailHtml += `<div class="image-item">
+                  <img src="${imageUrl}" alt="Product Image" style="width: 100px; height: 100px; object-fit: cover; border-radius: 5px; border: 1px solid #ddd;" />
+                </div>`;
+              });
+
+              taskDetailHtml += `</div></div>`;
+            }
+          } else {
+            taskDetailHtml += `<p><em>No additional task details available</em></p>`;
+          }
+
+
+          taskDetailHtml += `</div>`;
+
+          const { value: formValues } = await Swal.fire({
+            icon: "question",
+            title: "Check In Tray Success",
+            html: taskDetailHtml,
+            width: '500px',
+            showConfirmButton: true, // MODIFIED
+            confirmButtonText: 'Confirm', // MODIFIED
+            showCancelButton: true,
+            cancelButtonText: 'Close',
+            allowOutsideClick: true,
+            focusConfirm: false,
+            preConfirm: () => {
+              const amount_pre = document.getElementById('amount_pre_input').value;
+              return {
+                amount_pre: amount_pre
+              };
             }
           });
+          if (formValues) {
+            const amount_pre = formValues.amount_pre;
+
+            try {
+              await axios.post(`${__API_BASE_URL__}/update_recheck_pre`, {
+                task_id: checkTaskForm.value,
+                amount_pre: amount_pre
+              });
+
+              await axios.post(`${__API_BASE_URL__}/check_in_pre`, {
+                tray_id: trimmedData,
+                location: store.line
+              });
+              Swal.fire('Saved!', 'Check In Tray Success', 'success');
+
+            } catch (apiError) {
+              console.error('API Error:', apiError);
+              const errorMessage = apiError.response?.data?.detail || apiError.message;
+              Swal.fire('Error', `เกิดข้อผิดพลาด: ${errorMessage}`, 'error');
+            }
+          }
           return true
         }
       } else {
@@ -551,9 +691,15 @@ async function showTaskDetail(row) {
 
 
 
-const onError = (err) => {
-  console.error("QR Scanner error:", err);
-  scannerError.value = `Scanner error: ${err.message || "Camera access denied"}`;
+const onError = async (err) => {
+  console.error('Scanner error:', err);
+  scannerError.value = `Scanner error: ${err.message}`;
+  
+  // หากเป็น overconstrained error ลองใช้ fallback constraints
+  if (err.name === 'OverconstrainedError' || err.name === 'NotReadableError') {
+    console.log('Trying fallback constraints...');
+    scannerKey.value++; // trigger re-render with fallback
+  }
 };
 
 const paintBoundingBox = (detectedCodes, ctx) => {

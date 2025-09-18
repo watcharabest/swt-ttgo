@@ -1,7 +1,7 @@
 <template>
   <div class="box view-box">
     <h2>{{ tableTitle }}</h2>
-    <div class="form-group">
+    <div class="form-group-header">
       <label for="viewTableSelect">Select Table to View</label>
       <select id="viewTableSelect" v-model="viewTable" class="table-select">
         <option value="table_task_order">Task Order</option>
@@ -43,12 +43,6 @@
                 {{ sortOrder === 'asc' ? '↑' : '↓' }}
               </span>
             </th>
-            <th @click="sortBy('name_product')" class="sortable">
-              Name Product
-              <span v-if="sortKey === 'name_product'" class="sort-icon">
-                {{ sortOrder === 'asc' ? '↑' : '↓' }}
-              </span>
-            </th>
             <th @click="sortBy('surface')" class="sortable">
               Surface
               <span v-if="sortKey === 'surface'" class="sort-icon">
@@ -56,7 +50,7 @@
               </span>
             </th>
             <th @click="sortBy('type')" class="sortable">
-              Type
+              Machine
               <span v-if="sortKey === 'type'" class="sort-icon">
                 {{ sortOrder === 'asc' ? '↑' : '↓' }}
               </span>
@@ -70,6 +64,18 @@
             <th @click="sortBy('amount')" class="sortable">
               Amount
               <span v-if="sortKey === 'amount'" class="sort-icon">
+                {{ sortOrder === 'asc' ? '↑' : '↓' }}
+              </span>
+            </th>
+            <th @click="sortBy('amount_auto')" class="sortable">
+              Amount Auto
+              <span v-if="sortKey === 'amount_auto'" class="sort-icon">
+                {{ sortOrder === 'asc' ? '↑' : '↓' }}
+              </span>
+            </th>
+            <th @click="sortBy('amount_pre')" class="sortable">
+              Recheck PRE
+              <span v-if="sortKey === 'amount_pre'" class="sort-icon">
                 {{ sortOrder === 'asc' ? '↑' : '↓' }}
               </span>
             </th>
@@ -124,11 +130,12 @@
             <td>{{ row.product_order }}</td>
             <td>{{ row.material_no }}</td>
             <td>{{ row.material_des }}</td>
-            <td>{{ row.name_product }}</td>
             <td>{{ row.surface }}</td>
             <td>{{ row.type }}</td>
             <td>{{ row.rpm }}</td>
             <td>{{ row.amount }}</td>
+            <td>{{ row.amount_auto }}</td>
+            <td>{{ row.amount_pre }}</td>
             <td>{{ row.line }}</td>
           </tr>
         </tbody>
@@ -176,82 +183,85 @@
         </div>
 
         <div v-else-if="taskDetail" class="form">
-          <div class="form-group">
-            <span>Task ID</span>
-            <p>{{ taskDetail.task_id }}</p>
-          </div>
+          <div>
+            <div class="form-group">
+              <span>Tag</span>
+              <p>{{ taskDetail.tag }}</p>
+            </div>
 
-          <div class="form-group">
-            <span>Tag</span>
-            <p>{{ taskDetail.tag }}</p>
-          </div>
-          
-          <div class="form-group">
-            <span>Production Order</span>
-            <p>{{ taskDetail.product_order }}</p>
-          </div>
+            <div class="form-group">
+              <span>Production Order</span>
+              <p>{{ taskDetail.product_order }}</p>
+            </div>
 
-          <div class="form-group">
-            <span>Material</span>
-            <p>{{ taskDetail.material_no }}</p>
-          </div>
+            <div class="form-group">
+              <span>Material</span>
+              <p>{{ taskDetail.material_no }}</p>
+            </div>
 
-          <div class="form-group">
-            <span>Material Description</span>
-            <p>{{ taskDetail.material_des }}</p>
-          </div>
+            <div class="form-group">
+              <span>Material Description</span>
+              <p>{{ taskDetail.material_des }}</p>
+            </div>
 
-          <div class="form-group">
-            <span>Part Name</span>
-            <p>{{ taskDetail.name_product }}</p>
-          </div>
+            <div class="form-group">
+              <span>Part Name</span>
+              <p>{{ taskDetail.name_product }}</p>
+            </div>
 
-          <div class="form-group">
-            <span>Surface</span>
-            <p>{{ taskDetail.surface || 'N/A' }}</p>
-          </div>
+            <div class="form-group">
+              <span>Surface</span>
+              <p>{{ taskDetail.surface || 'N/A' }}</p>
+            </div>
 
-          <div class="form-group">
-            <span>Type</span>
-            <p>{{ taskDetail.type || 'N/A' }}</p>
-          </div>
+            <div class="form-group">
+              <span>Machine
+              </span>
+              <p>{{ taskDetail.type || 'N/A' }}</p>
+            </div>
 
-          <div class="form-group">
-            <span>Capacity</span>
-            <p>{{ taskDetail.rpm || 'N/A' }}</p>
-          </div>
+            <div class="form-group">
+              <span>Capacity</span>
+              <p>{{ taskDetail.rpm || 'N/A' }}</p>
+            </div>
 
-          <div class="form-group">
-            <span>Amount</span>
-            <p>{{ taskDetail.amount }}</p>
-          </div>
+            <div class="form-group">
+              <span>Amount</span>
+              <p>{{ taskDetail.amount }}</p>
+            </div>
 
-          <div class="form-group">
-            <span>Amount Auto</span>
-            <p>{{ taskDetail.amount_auto || 'N/A' }}</p>
-          </div>
+            <div class="form-group">
+              <span>Amount Auto</span>
+              <p>{{ taskDetail.amount_auto || 'N/A' }}</p>
+            </div>
 
-          <div class="form-group">
-            <span>Line</span>
-            <p>{{ taskDetail.line }}</p>
-          </div>
+            <div class="form-group">
+              <span>Recheck PRE</span>
+              <p>{{ taskDetail.amount_pre || 'N/A' }}</p>
+            </div>
 
-          <div v-if="taskDetail.ps" class="form-group">
-            <span>หมายเหตุ</span>
-            <p>{{ taskDetail.ps }}</p>
-          </div>
+            <div class="form-group">
+              <span>Line</span>
+              <p>{{ taskDetail.line }}</p>
+            </div>
 
-          <div v-if="taskDetail.images" class="form-group">
-            <div class="image-gallery">
-              <div v-for="(imageUrl, index) in taskDetail.images" :key="index" class="image-item">
-                <img :src="imageUrl" :alt="`Product Image ${index + 1}`" class="product-image"
-              </div>
+            <div v-if="taskDetail.ps" class="form-group">
+              <span>หมายเหตุ</span>
+              <p>{{ taskDetail.ps }}</p>
             </div>
           </div>
-        </div>
-
-        <div v-else class="error-message">
-          Failed to load task details
+          <div>
+            <div v-if="taskDetail.images" class="form-group">
+              <div class="image-gallery">
+                <div v-for="(imageUrl, index) in taskDetail.images" :key="index" class="image-item">
+                  <img :src="imageUrl" :alt="`Product Image ${index + 1}`" class="product-image" />
+                </div>
+              </div>
+            </div>
+            <div v-else class="error-message">
+              Failed to load task details
+            </div>
+          </div>
         </div>
       </div>
     </div>
@@ -268,7 +278,7 @@ const currentPage = ref(1)
 const pageSize = 10
 const searchQuery = ref('')
 const debouncedSearchQuery = ref('')
-const sortKey = ref('task_id')
+const sortKey = ref('timestamp')
 const sortOrder = ref('desc')
 
 // Modal and task detail states
@@ -279,6 +289,19 @@ const loadingTaskDetail = ref(false)
 
 // Debounce timer
 let searchTimeout = null
+
+const parseTimestamp = (timestamp) => {
+  if (!timestamp) return null;
+  try {
+    const [datePart, timePart] = timestamp.split(' ');
+    const [day, month, year] = datePart.split('/');
+    const fullYear = `20${year}`;
+    return `${fullYear}-${month}-${day} ${timePart}`;
+  } catch (error) {
+    console.error('Error parsing timestamp:', timestamp, error);
+    return null;
+  }
+};
 
 const tableTitle = computed(() =>
   viewTable.value === 'table_task_order' ? 'Task Order' : 'Delivery Time'
@@ -314,7 +337,18 @@ const filteredAndSortedRows = computed(() => {
   }
 
   // Apply sorting
-  if (sortKey.value) {
+   if (sortKey.value === 'timestamp') {
+    result.sort((a, b) => {
+      const aValue = parseTimestamp(a[sortKey.value])
+      const bValue = parseTimestamp(b[sortKey.value])
+      
+      if (sortOrder.value === 'asc') {
+        return aValue > bValue ? 1 : -1
+      } else {
+        return aValue < bValue ? 1 : -1
+      }
+    })
+  } else {
     result.sort((a, b) => {
       const aValue = a[sortKey.value]
       const bValue = b[sortKey.value]
@@ -380,7 +414,7 @@ async function showTaskDetail(row) {
   showModal.value = true
   loadingTaskDetail.value = true
   taskDetail.value = null
-  
+
   try {
     // Fetch task details using task_id
     const taskRes = await axios.post(`${__API_BASE_URL__}/product_task_order_lookup`, {
@@ -392,10 +426,10 @@ async function showTaskDetail(row) {
     if (taskRes.data) {
       // If it's an array, take the first item. If it's an object, use it directly.
       taskDetail.value = Array.isArray(taskRes.data) ? taskRes.data[0] : taskRes.data
-      
+
       console.log("taskDetail.value", taskDetail.value)
-      
-      
+
+
     }
   } catch (err) {
     console.error('Error fetching task details:', err)
@@ -429,10 +463,6 @@ h2 {
   font-size: 2rem;
   font-weight: 600;
   text-align: center;
-}
-
-.form-group {
-  margin-bottom: 1.5rem;
 }
 
 label {
@@ -640,9 +670,8 @@ tr:hover td {
   background: white;
   border-radius: 16px;
   padding: 1.5rem;
-  max-width: 90vw;
+  max-width: 75%;
   max-height: 90vh;
-  width: 450px;
   box-shadow: 0 20px 40px rgba(0, 0, 0, 0.2);
   overflow: auto;
 }
@@ -681,16 +710,29 @@ tr:hover td {
   color: #333;
 }
 
+.form {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 2rem;
+  align-items: start;
+  position: relative;
+}
+
 .form-group {
-  margin-bottom: 1rem;
+  display: flex;
+  align-items: center;
+  justify-content: start;
+  width: 100%;
+  margin-bottom: 0.5rem;
+}
+
+.form-group-header {
+  margin-bottom: 1.5rem;
 }
 
 .form-group span {
-  display: block;
-  font-weight: 600;
-  color: #555;
-  margin-bottom: 0.25rem;
-  font-size: 0.9rem;
+  margin-right: 1rem;
+  white-space: nowrap;
 }
 
 .form-group p {
@@ -701,6 +743,7 @@ tr:hover td {
   border: 1px solid #e9ecef;
   color: #333;
   min-height: 1.2rem;
+  width: 100%
 }
 
 .loading {
