@@ -185,6 +185,7 @@
                 </optgroup>
                 <optgroup label="SMT5">
                   <option value="AUTO5">AUTO5</option>
+                  <option value="PRE5101">PRE5101</option>
                   <option value="PRE5102">PRE5102</option>
                   <option value="PRE5103">PRE5103</option>
                   <option value="PRE5104">PRE5104</option>
@@ -215,9 +216,9 @@
             <table class="table">
               <thead>
                 <tr>
-                  <th @click="sortBy('unique_tray_id')" class="sortable">
+                  <th @click="sortBy('timestamp')" class="sortable">
                     Tray ID_เวลาสร้างฟอร์ม
-                    <span v-if="sortKey === 'unique_tray_id'" class="sort-icon">
+                    <span v-if="sortKey === 'timestamp'" class="sort-icon">
                       {{ sortOrder === 'asc' ? '↑' : '↓' }}
                     </span>
                   </th>
@@ -397,7 +398,7 @@ function showTaskDetails(taskId, uniqueTrayId) {
   taskDetail.value = null;
   selectedTrayHistory.value = [];
 
-  // หา record ของ task นี้
+  // 1. Find a record for this task to get basic info like product_order
   const taskInfo = rawData.value.find(row => row.task_id === taskId);
 
   if (taskInfo) {
@@ -411,12 +412,13 @@ function showTaskDetails(taskId, uniqueTrayId) {
     taskDetail.value = { task_id: taskId, product_order: 'N/A' };
   }
 
-  // หาประวัติของ unique_tray_id นี้เท่านั้น (= 1 complete process flow)
+  // 2. Find all check-in logs for the associated tray
   const history = rawData.value
     .filter(row => row.unique_tray_id === uniqueTrayId)
-    .sort((a, b) => parseTimestamp(a.timestamp) - parseTimestamp(b.timestamp));
+    .sort((a, b) => parseTimestamp(a.timestamp) - parseTimestamp(b.timestamp)); // Sort by time
 
   selectedTrayHistory.value = history;
+
   loadingTaskDetail.value = false;
 }
 
@@ -449,32 +451,37 @@ const analysisData = computed(() => {
     return { patterns: {}, timeDurations: [], totalRecords: 0 };
   }
 
-  // จัดกลุ่มตาม product_order + unique_tray_id = 1 complete process flow
-  const processGroups = {};
+  const trayGroups = {};
+  const displayTrayIds = {};
+  const productOrders = {};
+  const timestmap = {};
 
   filteredData.forEach(row => {
-    // แต่ละ product_order + unique_tray_id = process flow เดียว
-    const groupKey = `${row.product_order}_${row.unique_tray_id}`;
-    
-    if (!processGroups[groupKey]) {
-      processGroups[groupKey] = {
-        product_order: row.product_order,
-        unique_tray_id: row.unique_tray_id,
-        tray_id: row.tray_id,
-        records: []
-      };
+    const trayId = row.unique_tray_id;
+
+    if (!trayGroups[trayId]) {
+      trayGroups[trayId] = [];
     }
-    processGroups[groupKey].records.push(row);
+    trayGroups[trayId].push(row);
+
+    if (!displayTrayIds[trayId]) {
+      displayTrayIds[trayId] = row.tray_id;
+    }
+    if (!productOrders[row.product_order]) {
+      productOrders[row.product_order] = row.product_order;
+    }
+    if (!timestmap[row.timestamp]) {
+      timestmap[row.timestamp] = row.timestamp;
+    }
   });
 
   const patterns = {};
   const timeDurations = [];
 
-  Object.values(processGroups).forEach(group => {
-    const { product_order, unique_tray_id, tray_id, records } = group;
+  Object.keys(trayGroups).forEach(trayId => {
+    const trayData = trayGroups[trayId];
 
-    // เรียงตามเวลา
-    records.sort((a, b) => {
+    trayData.sort((a, b) => {
       const timeA = parseTimestamp(a.timestamp);
       const timeB = parseTimestamp(b.timestamp);
       return timeA - timeB;
@@ -485,9 +492,10 @@ const analysisData = computed(() => {
     const taskIds = new Set();
     const allTimestamps = [];
 
-    records.forEach(row => {
-      if (row.task_id) taskIds.add(row.task_id);
-      
+    trayData.forEach(row => {
+      if (row.task_id) {
+        taskIds.add(row.task_id);
+      }
       const step = getStepFromLocation(row.location);
       if (step) {
         stepsPresent.add(step);
@@ -502,7 +510,6 @@ const analysisData = computed(() => {
       }
     });
 
-    // เรียง timestamps ในแต่ละ step
     Object.keys(stepTimestamps).forEach(step => {
       stepTimestamps[step].sort((a, b) => a - b);
     });
@@ -515,21 +522,22 @@ const analysisData = computed(() => {
     }
     patterns[patternKey].count++;
 
-    // สร้าง duration data สำหรับแต่ละ process flow
+    // ** MODIFICATION START **
+    // Create a duration data object for EVERY tray
     const durationData = {
-      unique_tray_id: unique_tray_id,
-      display_tray_id: tray_id,
-      product_order: product_order,
-      timestamp: records[0].timestamp,
-      task_ids: Array.from(taskIds),
-      pattern: patternKey,
+      unique_tray_id: trayId,
+      display_tray_id: displayTrayIds[trayId],
+      product_order: productOrders[trayData[0].product_order],
+      timestamp: timestmap[trayData[0].timestamp],
+      task_ids: taskIds.size > 0 ? Array.from(taskIds) : [],
+      pattern: patternKey, // Store the pattern for filtering
       totalDuration: null,
       step1to2: null,
       step2to3: null,
       step3to4: null
     };
 
-    // คำนวณ duration แต่ละขั้นตอน
+    // Conditionally calculate each duration step
     if (stepTimestamps['1'] && stepTimestamps['2']) {
       const step1Time = stepTimestamps['1'][stepTimestamps['1'].length - 1];
       const step2Time = stepTimestamps['2'][0];
@@ -546,7 +554,7 @@ const analysisData = computed(() => {
       durationData.step3to4 = calculateWorkingHoursWithOT(step3Time, step4Time, allTimestamps);
     }
 
-    // Total Duration (2→4)
+    // Calculate Total Duration (2→4) if possible
     if (stepTimestamps['2'] && stepTimestamps['4']) {
       const step2Time = stepTimestamps['2'][0];
       const step4Time = stepTimestamps['4'][stepTimestamps['4'].length - 1];
@@ -554,16 +562,16 @@ const analysisData = computed(() => {
     }
 
     timeDurations.push(durationData);
+    // ** MODIFICATION END **
   });
 
-  const totalRecords = Object.keys(processGroups).length;
+  const totalRecords = Object.keys(trayGroups).length;
   Object.keys(patterns).forEach(key => {
     patterns[key].percentage = (patterns[key].count / totalRecords * 100).toFixed(1);
   });
 
   return { patterns, timeDurations, totalRecords };
 });
-
 
 
 const filteredAndSortedRows = computed(() => {
@@ -591,7 +599,6 @@ const filteredAndSortedRows = computed(() => {
     result.sort((a, b) => {
       const aValue = parseTimestampForSort(a[sortKey.value])
       const bValue = parseTimestampForSort(b[sortKey.value])
-
       if (sortOrder.value === 'asc') {
         return aValue > bValue ? 1 : -1
       } else {
@@ -610,7 +617,6 @@ const filteredAndSortedRows = computed(() => {
       }
     })
   }
-
   return result
 })
 
@@ -796,19 +802,27 @@ const generateAvailableWeeks = () => {
       const weekNumber = getWeekNumber(timestamp);
       const monthKey = `${year}-${String(timestamp.getMonth() + 1).padStart(2, '0')}`;
       const weekKey = `${year}-W${String(weekNumber).padStart(2, '0')}`;
-
+      console.log(weekMap);
       if (!weekMap.has(weekKey)) {
-        const firstDayOfWeek = getFirstDayOfWeek(year, weekNumber);
-        const lastDayOfWeek = new Date(firstDayOfWeek);
-        lastDayOfWeek.setDate(lastDayOfWeek.getDate() + 6);
+        const anyDayInWeek = getFirstDayOfWeek(year, weekNumber);
+        // Compute Monday of that week
+        const monday = new Date(anyDayInWeek);
+        const daysSinceMonday = (monday.getDay() + 6) % 7; // 0 if Monday, 6 if Sunday
+        monday.setDate(monday.getDate() - daysSinceMonday);
+        monday.setHours(7, 0, 0, 0);
+
+        // Saturday of that week (Monday + 5 days)
+        const saturday = new Date(monday);
+        saturday.setDate(saturday.getDate() + 5);
+        saturday.setHours(21, 0, 0, 0);
 
         weekMap.set(weekKey, {
           value: weekKey,
           weekNumber: weekNumber,
           monthKey: monthKey,
-          startDate: firstDayOfWeek,
-          endDate: lastDayOfWeek,
-          label: `Week ${weekNumber} (${firstDayOfWeek.toLocaleDateString('en-GB', { day: '2-digit', month: '2-digit' })} - ${lastDayOfWeek.toLocaleDateString('en-GB', { day: '2-digit', month: '2-digit' })})`
+          startDate: monday,
+          endDate: saturday,
+          label: `Week ${weekNumber} (${monday.toLocaleDateString('en-GB', { day: '2-digit', month: '2-digit' })} - ${saturday.toLocaleDateString('en-GB', { day: '2-digit', month: '2-digit' })})`
         });
       }
     }

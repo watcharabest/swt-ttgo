@@ -32,6 +32,7 @@
           </optgroup>
           <optgroup label="SMT5">
             <option value="AUTO5">AUTO5</option>
+            <option value="PRE5101">PRE5101</option>
             <option value="PRE5102">PRE5102</option>
             <option value="PRE5103">PRE5103</option>
             <option value="PRE5104">PRE5104</option>
@@ -291,6 +292,7 @@ const startScanner = async () => {
     }
   }
 };
+
 const closeScanner = () => {
   showScanner.value = false;
   scannerError.value = "";

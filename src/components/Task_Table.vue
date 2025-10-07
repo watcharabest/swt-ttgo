@@ -62,19 +62,19 @@
               </span>
             </th>
             <th @click="sortBy('amount')" class="sortable">
-              Amount
+              จำนวน ( ก่อนส่ง )
               <span v-if="sortKey === 'amount'" class="sort-icon">
                 {{ sortOrder === 'asc' ? '↑' : '↓' }}
               </span>
             </th>
             <th @click="sortBy('amount_auto')" class="sortable">
-              Amount Auto
+              จำนวน ( Auto)
               <span v-if="sortKey === 'amount_auto'" class="sort-icon">
                 {{ sortOrder === 'asc' ? '↑' : '↓' }}
               </span>
             </th>
             <th @click="sortBy('amount_pre')" class="sortable">
-              Recheck PRE
+              จำนวน ( หลังส่ง )
               <span v-if="sortKey === 'amount_pre'" class="sort-icon">
                 {{ sortOrder === 'asc' ? '↑' : '↓' }}
               </span>
@@ -82,6 +82,12 @@
             <th @click="sortBy('line')" class="sortable">
               Line
               <span v-if="sortKey === 'line'" class="sort-icon">
+                {{ sortOrder === 'asc' ? '↑' : '↓' }}
+              </span>
+            </th>
+            <th @click="sortBy('ps')" class="sortable">
+              หมายเหตุ
+              <span v-if="sortKey === 'ps'" class="sort-icon">
                 {{ sortOrder === 'asc' ? '↑' : '↓' }}
               </span>
             </th>
@@ -137,6 +143,7 @@
             <td>{{ row.amount_auto }}</td>
             <td>{{ row.amount_pre }}</td>
             <td>{{ row.line }}</td>
+            <td>{{ row.ps }}</td>
           </tr>
         </tbody>
         <!-- Body สำหรับ table02 -->
@@ -202,11 +209,6 @@
             <div class="form-group">
               <span>Material Description</span>
               <p>{{ taskDetail.material_des }}</p>
-            </div>
-
-            <div class="form-group">
-              <span>Part Name</span>
-              <p>{{ taskDetail.name_product }}</p>
             </div>
 
             <div class="form-group">
@@ -537,6 +539,7 @@ th {
   text-align: left;
   border-bottom: 2px solid #e2e8f0;
   font-size: 0.95rem;
+  white-space: nowrap;
 }
 
 th.sortable {
